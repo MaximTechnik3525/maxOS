@@ -124,6 +124,7 @@ int pos_x = 400;
 int pos_y = 300;
 int theme = 1;
 int w_mode = 0;
+int km_mode = 0;
 void kmain() {
     char ftext[100];
     int textid = 0;
@@ -209,6 +210,292 @@ void kmain() {
                         draw_cursor(pos_x, pos_y);
                     }
                     if (click == 1) {
+                        if (pos_x <= win_x + 50 && pos_y <= win_y + 30) {
+                            int help_col = win_y + 45;
+                            drag = 1;
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 800 + x] = 0x0320;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 800 + x] = 0x6408;
+                                    }
+                                    else {
+                                        gfx_memory[y * 800 + x] = 0xFFFF;
+                                    }
+                                }
+                            }
+                            print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
+                            print_string("Use arrows to move window.", win_x + 30, help_col, 0x0000);
+                            print_string("Use c to clear screen and close windows.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Use 1-5 to change system theme.", win_x + 30, help_col + 30, 0x0000);
+                            print_string("Use F1 and F2 to enable and disable write mode.", win_x + 30, help_col + 45, 0x0000);
+                            print_string("Use f to format virtual disk.", win_x + 30, help_col + 60, 0x0000);
+                            print_string("Use F3 and F4 to enable and disable keyboard mouse.", win_x + 30, help_col + 75, 0x0000);
+                        }
+                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30) {
+                            int help_col = win_y + 45;
+                            drag = 1;
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 800 + x] = 0x0320;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 800 + x] = 0x6408;
+                                    }
+                                    else {
+                                        gfx_memory[y * 800 + x] = 0xFFFF;
+                                    }
+                                }
+                            }
+                            char cpu_name[49];
+                            get_cpu(cpu_name);
+                            print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
+                            print_string("Your CPU", win_x + 30, help_col, 0x0000);
+                            print_string(cpu_name, win_x + 110, help_col, 0x0000);
+                            print_string("Press c to close this window.", win_x + 30, help_col + 15, 0x0000);
+                        }
+                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30) {
+                            int help_col = win_y + 45;
+                            drag = 1;
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 800 + x] = 0x0320;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 800 + x] = 0x6408;
+                                    }
+                                    else {
+                                        gfx_memory[y * 800 + x] = 0xFFFF;
+                                    }
+                                }
+                            }
+                            create_file("Unnamed.txt", ftext);
+                            print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
+                            print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
+                            print_string("Press c to close this window.", win_x + 30, help_col + 15, 0x0000);
+                            if (fid <= 4) {
+                                fid++;
+                            }
+                            if (str_in(ftext, "theme1")) {
+                                theme = 1;
+                                draw_window();
+                                drag = 0;
+                            }
+                            if (str_in(ftext, "theme2")) {
+                                theme = 2;
+                                draw_window();
+                                drag = 0;
+                            }
+                            if (str_in(ftext, "theme3")) {
+                                theme = 3;
+                                draw_window();
+                                drag = 0;
+                            }
+                            if (str_in(ftext, "theme4")) {
+                                theme = 4;
+                                draw_window();
+                                drag = 0;
+                            }
+                            if (str_in(ftext, "theme5")) {
+                                theme = 5;
+                                draw_window();
+                                drag = 0;
+                            }
+                            if (str_in(ftext, "format")) {
+                                textid = 0;
+                                for (int i = 0; i < 99; i++) {
+                                    ftext[i] = '\0';}
+                                for (int i = 0; i < 5; i++) {
+                                    ram_disk[i].exists = 0;
+                                    ram_disk[i].size = 0;
+                                    for (int n = 0; n < 12; n++) {
+                                        ram_disk[i].name[n] = '\0';
+                                    }
+                                    for (int t = 0; t < 100; t++) {
+                                        ram_disk[i].content[t] = '\0';
+                                    }
+                                }
+                                fid = 0;
+                                print_string("Virtual disk formated!", 5, 590, 0xFFFF);
+                            }
+                            if (str_in(ftext, "clear")) {
+                                drag = 0;
+                                help_col = 65;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "winr")) {
+                                drag = 0;
+                                win_x += 50;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "winl")) {
+                                drag = 0;
+                                win_x -= 50;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "winu")) {
+                                drag = 0;
+                                win_y -= 50;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "wind")) {
+                                drag = 0;
+                                win_y += 50;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "speaker")) {
+                                play_sound(750);
+                                sleep(250);
+                                no_sound();
+                            }
+                            if (str_in(ftext, "fillscr")) {
+                                for (int y = 0; y < 600; y++) {
+                                    for (int x = 0; x < 800; x++) {
+                                        gfx_memory[y * 800 + x] = 0x0000;
+                                    }
+                                }
+                            }
+                            if (str_in(ftext, "statusbusy")) {
+                                drag = 1;
+                            }
+                            if (str_in(ftext, "statusfree")) { drag = 0; }
+                        }
+                    }
+                }   
+            }
+            else {
+                unsigned char scan_code = inb(0x60);
+                if (scan_code < 0x80 && w_mode == 0) {
+                    char ascii_char = scan_code_to_ascii(scan_code);
+                    if (ascii_char == 'R' && win_x < 300 && drag == 0 && km_mode == 0) {
+                        win_x += 20;
+                        draw_window();
+                    }
+                    if (ascii_char == 'L' && win_x > 0 && drag == 0 && km_mode == 0) {
+                        win_x-= 20;
+                        draw_window();
+                    }
+                    if (ascii_char == 'D' && win_y < 250 && drag == 0 && km_mode == 0) {
+                        win_y += 20;
+                        draw_window();
+                    }
+                    if (ascii_char == 'U' && win_y > 0 && drag == 0 && km_mode == 0) {
+                        win_y -= 20;
+                        draw_window();
+                    }
+                    if (ascii_char == 'c') {
+                        drag = 0;
+                        help_col = 65;
+                        draw_window();
+                        play_sound(900);
+                        sleep(100);
+                        no_sound();
+                    }
+                    if (ascii_char == '1' && drag == 0) {
+                        theme = 1;
+                        draw_window();
+                        play_sound(700);
+                        sleep(100);
+                        no_sound();
+                    }
+                    if (ascii_char == '2' && drag == 0) {
+                        theme = 2;
+                        draw_window();
+                        play_sound(700);
+                        sleep(100);
+                        no_sound();
+                    }                        
+                    if (ascii_char == '3' && drag == 0) {
+                        theme = 3;
+                        draw_window();
+                        play_sound(700);
+                        sleep(100);
+                        no_sound();
+                    }
+                    if (ascii_char == '4' && drag == 0) {
+                        theme = 4;
+                        draw_window();
+                        play_sound(700);
+                        sleep(100);
+                        no_sound();
+                    }
+                    if (ascii_char == '5' && drag == 0) {
+                        theme = 5;
+                        draw_window();
+                        play_sound(700);
+                        sleep(100);
+                        no_sound();
+                    }
+                    if (ascii_char == 'F' && drag == 0) {
+                        w_mode = 1;
+                        print_string("Write mode on!", 670, 5, 0xFFFF);
+                        play_sound(500);
+                        sleep(100);
+                        no_sound();
+                    }
+                    if (ascii_char == 'T' && km_mode == 0 && drag == 0) {
+                        km_mode = 1;
+                        print_string("Keyboard mouse on!", 640, 585, 0xFFFF);
+                        play_sound(200);
+                        sleep(100);
+                        no_sound();
+                    }
+                    if (ascii_char == 'U' && km_mode == 1 && pos_y > win_y + 30) {
+                        prev_cursor();
+                        pos_y -= 15;
+                        draw_cursor(pos_x, pos_y);
+                        if (theme == 3) { print_string("Abrikos", win_x + 5, win_y + 335, 0x0000); }
+                        if (theme == 4) { print_string("Tora", win_x + 5, win_y + 335, 0x0000); }
+                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
+                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
+                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
+                        draw_cursor(pos_x, pos_y);
+                    }
+                    if (ascii_char == 'D' && km_mode == 1 && pos_y < win_y + 315) {
+                        prev_cursor();
+                        pos_y += 15;
+                        draw_cursor(pos_x, pos_y);
+                        if (theme == 3) { print_string("Abrikos", win_x + 5, win_y + 335, 0x0000); }
+                        if (theme == 4) { print_string("Tora", win_x + 5, win_y + 335, 0x0000); }
+                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
+                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
+                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
+                        draw_cursor(pos_x, pos_y);
+                    }
+                    if (ascii_char == 'R' && km_mode == 1 && pos_x < win_x + 475) {
+                        prev_cursor();
+                        pos_x += 15;
+                        draw_cursor(pos_x, pos_y);
+                        if (theme == 3) { print_string("Abrikos", win_x + 5, win_y + 335, 0x0000); }
+                        if (theme == 4) { print_string("Tora", win_x + 5, win_y + 335, 0x0000); }
+                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
+                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
+                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
+                        draw_cursor(pos_x, pos_y);
+                    }
+                    if (ascii_char == 'L' && km_mode == 1 && pos_x > win_x + 15) {
+                        prev_cursor();
+                        pos_x -= 15;
+                        draw_cursor(pos_x, pos_y);
+                        if (theme == 3) { print_string("Abrikos", win_x + 5, win_y + 335, 0x0000); }
+                        if (theme == 4) { print_string("Tora", win_x + 5, win_y + 335, 0x0000); }
+                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
+                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
+                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
+                        draw_cursor(pos_x, pos_y);
+                    }
+                    if (ascii_char == 'G' && km_mode == 1 && drag == 0) {
+                        km_mode = 0;
+                        play_sound(1000);
+                        sleep(100);
+                        no_sound();
+                        draw_window();
+                    }
+                    if (ascii_char == 'e' && km_mode == 1 && drag == 0) {
                         if (pos_x <= win_x + 50 && pos_y <= win_y + 30) {
                             int help_col = win_y + 45;
                             drag = 1;
@@ -353,78 +640,6 @@ void kmain() {
                             }
                         }
                     }
-                }   
-            }
-            else {
-                unsigned char scan_code = inb(0x60);
-                if (scan_code < 0x80 && w_mode == 0) {
-                    char ascii_char = scan_code_to_ascii(scan_code);
-                    if (ascii_char == 'R' && win_x < 300 && drag == 0) {
-                        win_x += 20;
-                        draw_window();
-                    }
-                    if (ascii_char == 'L' && win_x > 0 && drag == 0) {
-                        win_x-= 20;
-                        draw_window();
-                    }
-                    if (ascii_char == 'D' && win_y < 250 && drag == 0) {
-                        win_y += 20;
-                        draw_window();
-                    }
-                    if (ascii_char == 'U' && win_y > 0 && drag == 0) {
-                        win_y -= 20;
-                        draw_window();
-                    }
-                    if (ascii_char == 'c') {
-                        drag = 0;
-                        help_col = 65;
-                        draw_window();
-                        play_sound(900);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == '1' && drag == 0) {
-                        theme = 1;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == '2' && drag == 0) {
-                        theme = 2;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }                        
-                    if (ascii_char == '3' && drag == 0) {
-                        theme = 3;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == '4' && drag == 0) {
-                        theme = 4;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == '5' && drag == 0) {
-                        theme = 5;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == 'F' && drag == 0) {
-                        w_mode = 1;
-                        print_string("Write mode on!", 670, 5, 0xFFFF);
-                        play_sound(500);
-                        sleep(100);
-                        no_sound();
-                    }
                     if (ascii_char == 'f' && drag == 0) {
                         textid = 0;
                         for (int i = 0; i < 99; i++) {
@@ -445,6 +660,7 @@ void kmain() {
                         sleep(100);
                         no_sound();
                     }
+                
                 }   
                 if (scan_code < 0x80 && w_mode == 1) {
                     char ascii_char = scan_code_to_ascii(scan_code);
@@ -676,6 +892,8 @@ char scan_code_to_ascii(unsigned char scan_code) {
     switch (scan_code) {
         case 0x3B: return 'F';
         case 0x3C: return 'S';
+        case 0x3D: return 'T';
+        case 0x3E: return 'G';
         case 0x39: return ' ';
         case 0x2E: return 'c';
         case 0x48: return 'U';
@@ -768,7 +986,8 @@ void draw_window() {
     }
     if (theme == 3) { print_string("Abrikos", win_x + 5, win_y + 335, 0x0000); }
     if (theme == 4) { print_string("Tora", win_x + 5, win_y + 335, 0x0000); }
-    print_string("maxOS 2.0 kernel", win_x + 10, win_y + 5, 0xFFFF);
+    if (km_mode == 1) { print_string("Keyboard mouse on!", 640, 585, 0xFFFF); }
+    print_string("maxOS 2.1 kernel", win_x + 10, win_y + 5, 0xFFFF);
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
     draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
