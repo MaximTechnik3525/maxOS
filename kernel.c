@@ -22,6 +22,8 @@ void init_mouse();
 void prev_cursor();
 void play_sound(unsigned int nfreq);
 void no_sound();
+void sleep(unsigned int ms);
+int str_in(char* main_string, char* substring);
 int create_file(char* name, char* text);
 unsigned char mouse_arrow[12][12] = {
     {1,1,0,0,0,0,0,0,0,0,0,0},
@@ -151,6 +153,15 @@ void kmain() {
     draw_cursor(pos_x, pos_y);
     int help_col = win_y + 35;
     init_mouse();
+    play_sound(100);
+    sleep(100);
+    no_sound();
+    play_sound(300);
+    sleep(100);
+    no_sound();
+    play_sound(500);
+    sleep(100);
+    no_sound();
     unsigned char packet[3];
     for (int i = 0; i < 5; i++) {
         ram_disk[i].size = 0;
@@ -268,6 +279,78 @@ void kmain() {
                             if (fid <= 4) {
                                 fid++;
                             }
+                            if (str_in(ftext, "theme1")) {
+                                theme = 1;
+                                draw_window();
+                                drag = 0;
+                            }
+                            if (str_in(ftext, "theme2")) {
+                                theme = 2;
+                                draw_window();
+                                drag = 0;
+                            }
+                            if (str_in(ftext, "theme3")) {
+                                theme = 3;
+                                draw_window();
+                                drag = 0;
+                            }
+                            if (str_in(ftext, "theme4")) {
+                                theme = 4;
+                                draw_window();
+                                drag = 0;
+                            }
+                            if (str_in(ftext, "theme5")) {
+                                theme = 5;
+                                draw_window();
+                                drag = 0;
+                            }
+                            if (str_in(ftext, "format")) {
+                                textid = 0;
+                                for (int i = 0; i < 99; i++) {
+                                    ftext[i] = '\0';}
+                                for (int i = 0; i < 5; i++) {
+                                    ram_disk[i].exists = 0;
+                                    ram_disk[i].size = 0;
+                                    for (int n = 0; n < 12; n++) {
+                                        ram_disk[i].name[n] = '\0';
+                                    }
+                                    for (int t = 0; t < 100; t++) {
+                                        ram_disk[i].content[t] = '\0';
+                                    }
+                                }
+                                fid = 0;
+                                print_string("Virtual disk formated!", 5, 590, 0xFFFF);
+                            }
+                            if (str_in(ftext, "clear")) {
+                                drag = 0;
+                                help_col = 65;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "winr")) {
+                                drag = 0;
+                                win_x += 50;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "winl")) {
+                                drag = 0;
+                                win_x -= 50;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "winu")) {
+                                drag = 0;
+                                win_y -= 50;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "wind")) {
+                                drag = 0;
+                                win_y += 50;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "speaker")) {
+                                play_sound(750);
+                                sleep(250);
+                                no_sound();
+                            }
                         }
                     }
                 }   
@@ -296,47 +379,50 @@ void kmain() {
                         drag = 0;
                         help_col = 65;
                         draw_window();
+                        play_sound(900);
+                        sleep(100);
+                        no_sound();
                     }
                     if (ascii_char == '1' && drag == 0) {
                         theme = 1;
                         draw_window();
-                        play_sound(710);
-                        for (int delay = 0; delay < 100000; delay++);
+                        play_sound(700);
+                        sleep(100);
                         no_sound();
                     }
                     if (ascii_char == '2' && drag == 0) {
                         theme = 2;
                         draw_window();
-                        play_sound(710);
-                        for (int delay = 0; delay < 100000; delay++);
+                        play_sound(700);
+                        sleep(100);
                         no_sound();
                     }                        
                     if (ascii_char == '3' && drag == 0) {
                         theme = 3;
                         draw_window();
-                        play_sound(710);
-                        for (int delay = 0; delay < 100000; delay++);
+                        play_sound(700);
+                        sleep(100);
                         no_sound();
                     }
                     if (ascii_char == '4' && drag == 0) {
                         theme = 4;
                         draw_window();
-                        play_sound(710);
-                        for (int delay = 0; delay < 100000; delay++);
+                        play_sound(700);
+                        sleep(100);
                         no_sound();
                     }
                     if (ascii_char == '5' && drag == 0) {
                         theme = 5;
                         draw_window();
-                        play_sound(710);
-                        for (int delay = 0; delay < 100000; delay++);
+                        play_sound(700);
+                        sleep(100);
                         no_sound();
                     }
                     if (ascii_char == 'F' && drag == 0) {
                         w_mode = 1;
                         print_string("Write mode on!", 670, 5, 0xFFFF);
-                        play_sound(510);
-                        for (int delay = 0; delay < 100000; delay++);
+                        play_sound(500);
+                        sleep(100);
                         no_sound();
                     }
                     if (ascii_char == 'f' && drag == 0) {
@@ -355,8 +441,8 @@ void kmain() {
                         }
                         fid = 0;
                         print_string("Virtual disk formated!", 5, 590, 0xFFFF);
-                        play_sound(810);
-                        for (int delay = 0; delay < 100000; delay++);
+                        play_sound(800);
+                        sleep(100);
                         no_sound();
                     }
                 }   
@@ -370,8 +456,8 @@ void kmain() {
                     if (ascii_char == 'S') {
                         w_mode = 0;
                         draw_window();
-                        play_sound(310);
-                        for (int delay = 0; delay < 100000; delay++);
+                        play_sound(300);
+                        sleep(100);
                         no_sound();
                     }
                     if (ascii_char == 'B') {
@@ -384,6 +470,29 @@ void kmain() {
             }
         }
     }
+}
+void sleep(unsigned int ms) {
+    for (unsigned int i = 0; i < ms; i++) {
+        outb(0x43, 0x30);
+        outb(0x40, 0xA9);
+        outb(0x40, 0x04);
+        unsigned char status = 0;
+        while ((status & 0x80) == 0) {
+            outb(0x43, 0xE2);
+            status = inb(0x40);
+        }
+    }
+} 
+int str_in(char* main_string, char* substring) {
+    int i = 0;
+    if (substring[0] == '\0') return 1;
+    while (main_string[i] != '\0') {
+        int j = 0;
+        while (main_string[i + j] == substring[j] && substring[j] != '\0') { j++; }
+        if (substring[j] == '\0') { return 1; }
+        i++;
+    }
+    return 0;
 }
 void play_sound(unsigned int nfreq) {
     unsigned int div;

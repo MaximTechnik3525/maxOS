@@ -18,7 +18,6 @@ echo [3/5] Linking binary...
 ld -m i386pe -s -X --file-alignment=32 --section-alignment=32 -Ttext 0x1000 -e kmain -o kernel.exe kernel.o
 if %errorlevel% neq 0 goto error
 
-
 :: 4. Создание чистого бинарника
 echo [4/5] Extracting flat binary...
 
@@ -34,7 +33,7 @@ echo =======================================
 echo    SUCCESS! Running maxOS in QEMU...
 echo =======================================
 rem Современный способ подключения звука QEMU к звуковой карте Windows (sdl или dsound)
-qemu-system-i386 -vga std -machine pcspk-audiodev=audio0 -audiodev sdl,id=audio0 -fda maxos.img
+qemu-system-i386 -vga cirrus -machine pcspk-audiodev=audio0 -audiodev sdl,id=audio0 -fda maxos.img
 goto end
 
 :error
