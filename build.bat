@@ -33,7 +33,8 @@ if %errorlevel% neq 0 goto error
 echo =======================================
 echo    SUCCESS! Running maxOS in QEMU...
 echo =======================================
-qemu-system-i386 -vga std -fda maxos.img
+rem Современный способ подключения звука QEMU к звуковой карте Windows (sdl или dsound)
+qemu-system-i386 -vga std -machine pcspk-audiodev=audio0 -audiodev sdl,id=audio0 -fda maxos.img
 goto end
 
 :error

@@ -20,6 +20,8 @@ void draw_window();
 void wait_mouse(unsigned char type);
 void init_mouse();
 void prev_cursor();
+void play_sound(unsigned int nfreq);
+void no_sound();
 int create_file(char* name, char* text);
 unsigned char mouse_arrow[12][12] = {
     {1,1,0,0,0,0,0,0,0,0,0,0},
@@ -298,26 +300,44 @@ void kmain() {
                     if (ascii_char == '1' && drag == 0) {
                         theme = 1;
                         draw_window();
+                        play_sound(710);
+                        for (int delay = 0; delay < 100000; delay++);
+                        no_sound();
                     }
                     if (ascii_char == '2' && drag == 0) {
                         theme = 2;
                         draw_window();
+                        play_sound(710);
+                        for (int delay = 0; delay < 100000; delay++);
+                        no_sound();
                     }                        
                     if (ascii_char == '3' && drag == 0) {
                         theme = 3;
                         draw_window();
+                        play_sound(710);
+                        for (int delay = 0; delay < 100000; delay++);
+                        no_sound();
                     }
                     if (ascii_char == '4' && drag == 0) {
                         theme = 4;
                         draw_window();
+                        play_sound(710);
+                        for (int delay = 0; delay < 100000; delay++);
+                        no_sound();
                     }
                     if (ascii_char == '5' && drag == 0) {
                         theme = 5;
                         draw_window();
+                        play_sound(710);
+                        for (int delay = 0; delay < 100000; delay++);
+                        no_sound();
                     }
                     if (ascii_char == 'F' && drag == 0) {
                         w_mode = 1;
                         print_string("Write mode on!", 670, 5, 0xFFFF);
+                        play_sound(510);
+                        for (int delay = 0; delay < 100000; delay++);
+                        no_sound();
                     }
                     if (ascii_char == 'f' && drag == 0) {
                         textid = 0;
@@ -335,11 +355,14 @@ void kmain() {
                         }
                         fid = 0;
                         print_string("Virtual disk formated!", 5, 590, 0xFFFF);
+                        play_sound(810);
+                        for (int delay = 0; delay < 100000; delay++);
+                        no_sound();
                     }
                 }   
                 if (scan_code < 0x80 && w_mode == 1) {
                     char ascii_char = scan_code_to_ascii(scan_code);
-                    if (ascii_char != 'F' && ascii_char != 'S' && textid < 49) {
+                    if (ascii_char != 'F' && ascii_char != 'S' && ascii_char != 'B' && textid < 49) {
                         ftext[textid] = ascii_char;
                         textid++;
                         ftext[textid] = '\0';
@@ -347,11 +370,36 @@ void kmain() {
                     if (ascii_char == 'S') {
                         w_mode = 0;
                         draw_window();
+                        play_sound(310);
+                        for (int delay = 0; delay < 100000; delay++);
+                        no_sound();
+                    }
+                    if (ascii_char == 'B') {
+                        if (textid > 0) {
+                            textid--;
+                            ftext[textid] = '\0';
+                        }
                     }
                 }
             }
         }
     }
+}
+void play_sound(unsigned int nfreq) {
+    unsigned int div;
+    unsigned char tmp;
+    div = 1193180 / nfreq;
+    outb(0x43, 0xB6);
+    outb(0x42, (unsigned char) (div & 0xFF));
+    outb(0x42, (unsigned char) ((div >> 8) & 0xFF));
+    tmp = inb(0x61);
+    if (tmp != (tmp | 3)) {
+        outb(0x61, tmp | 3);
+    }
+}
+void no_sound() {
+    unsigned char tmp = inb(0x61) & 0xFC;
+    outb(0x61, tmp);
 }
 int create_file(char* name, char* text) {
     for (int i = 0; i < 5; i++) {
@@ -560,6 +608,7 @@ char scan_code_to_ascii(unsigned char scan_code) {
         case 0x26: return 'l';
         case 0x13: return 'r';
         case 0x16: return 'u';
+        case 0x0E: return 'B';
         default: return 0;
     }
 }
@@ -608,9 +657,9 @@ void draw_window() {
             }
        }
     }
-    if (theme == 3) { print_string("abrikos", win_x + 5, win_y + 335, 0x0000); }
-    if (theme == 4) { print_string("tora", win_x + 5, win_y + 335, 0x0000); }
-    print_string("maxOS 1.9 kernel", win_x + 10, win_y + 5, 0xFFFF);
+    if (theme == 3) { print_string("Abrikos", win_x + 5, win_y + 335, 0x0000); }
+    if (theme == 4) { print_string("Tora", win_x + 5, win_y + 335, 0x0000); }
+    print_string("maxOS 2.0 kernel", win_x + 10, win_y + 5, 0xFFFF);
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
     draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
