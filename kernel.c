@@ -638,6 +638,17 @@ void kmain() {
                                 sleep(250);
                                 no_sound();
                             }
+                            if (str_in(ftext, "fillscr")) {
+                                for (int y = 0; y < 600; y++) {
+                                    for (int x = 0; x < 800; x++) {
+                                        gfx_memory[y * 800 + x] = 0x0000;
+                                    }
+                                }
+                            }
+                            if (str_in(ftext, "statusbusy")) {
+                                drag = 1;
+                            }
+                            if (str_in(ftext, "statusfree")) { drag = 0; }
                         }
                     }
                     if (ascii_char == 'f' && drag == 0) {
