@@ -188,8 +188,8 @@ void kmain() {
                         if (pos_x < win_x + 12) {pos_x = win_x + 12;}
                         if (pos_y > win_y + 328) {pos_y = win_y + 328;}
                         if (pos_y < win_y + 22) {pos_y = win_y + 22;}
-                        if (theme == 3) { print_string("abrikos", win_x + 5, win_y + 335, 0x0000); }
-                        if (theme == 4) { print_string("tora", win_x + 5, win_y + 335, 0x0000); }
+                        if (theme == 3) { print_string("Abrikos", win_x + 5, win_y + 335, 0x0000); }
+                        if (theme == 4) { print_string("Tora", win_x + 5, win_y + 335, 0x0000); }
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
                         draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
