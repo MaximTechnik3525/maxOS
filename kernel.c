@@ -437,6 +437,13 @@ void kmain() {
                         sleep(100);
                         no_sound();
                     }
+                    if (ascii_char == '6' && drag == 0) {
+                        theme = 6;
+                        draw_window();
+                        play_sound(700);
+                        sleep(100);
+                        no_sound();
+                    }
                     if (ascii_char == 'F' && drag == 0) {
                         w_mode = 1;
                         for (int y = win_y + 200; y < win_y + 300; y++) {

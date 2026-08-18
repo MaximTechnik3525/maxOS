@@ -45,4 +45,4 @@ echo "======================================="
 echo "   SUCCESS! Running maxOS in QEMU..."
 echo "======================================="
 # Чистый запуск графики эмулятора
-qemu-system-i386 -vga cirrus -fda maxos.img
+qemu-system-i386 -vga cirrus -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -display default,full-screen=on -fda maxos.img
