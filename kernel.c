@@ -305,6 +305,11 @@ void kmain() {
                                 draw_window();
                                 drag = 0;
                             }
+                            if (str_in(ftext, "theme6")) {
+                                theme = 6;
+                                draw_window();
+                                drag = 0;
+                            }
                             if (str_in(ftext, "format")) {
                                 textid = 0;
                                 for (int i = 0; i < 99; i++) {
@@ -610,6 +615,11 @@ void kmain() {
                             }
                             if (str_in(ftext, "theme5")) {
                                 theme = 5;
+                                draw_window();
+                                drag = 0;
+                            }
+                            if (str_in(ftext, "theme6")) {
+                                theme = 6;
                                 draw_window();
                                 drag = 0;
                             }
@@ -936,6 +946,10 @@ void draw_cursor(int mouse_x, int mouse_y) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x0000;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 800 + screen_x] = 0x05FF;}
                 }
+                if (theme == 6) {
+                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x03E0;}
+                    if (pixel_type == 2) {gfx_memory[screen_y * 800 + screen_x] = 0x8410;}
+                }
             }
         }
     }
@@ -1026,7 +1040,8 @@ void draw_window() {
                     gfx_memory[y * 800 + x] = 0xFFFA;}
                 if (theme == 3) { gfx_memory[y * 800 + x] = 0x7224; }
                 if (theme == 4) { gfx_memory[y * 800 + x] = 0x9CF3; }
-                if (theme == 5) { gfx_memory[y * 800 + x] = 0x1BFF ; }
+                if (theme == 5) { gfx_memory[y * 800 + x] = 0x1BFF; }
+                if (theme == 6) { gfx_memory[y * 800 + x] = 0x07E0; }
             }
             else if (y < win_y + 15) {
                 if (theme == 1) {
@@ -1037,6 +1052,7 @@ void draw_window() {
                 if (theme == 3) { gfx_memory[y * 800 + x] = 0xD460; }
                 if (theme == 4) { gfx_memory[y * 800 + x] = 0x4A29; }
                 if (theme == 5) { gfx_memory[y * 800 + x] = 0x3DFF; }
+                if (theme == 6) { gfx_memory[y * 800 + x] = 0x4408; }
             }
             else {
                 gfx_memory[y * 800 + x] = 0xFFFF;
