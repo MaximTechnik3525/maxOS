@@ -229,7 +229,7 @@ void kmain() {
                             print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Use arrows to move window.", win_x + 30, help_col, 0x0000);
                             print_string("Use c to clear screen and close windows.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Use 1-5 to change system theme.", win_x + 30, help_col + 30, 0x0000);
+                            print_string("Use 1-7 to change system theme.", win_x + 30, help_col + 30, 0x0000);
                             print_string("Use F1 and F2 to enable and disable write mode.", win_x + 30, help_col + 45, 0x0000);
                             print_string("Use f to format virtual disk.", win_x + 30, help_col + 60, 0x0000);
                             print_string("Use F3 and F4 to enable and disable keyboard mouse.", win_x + 25, help_col + 75, 0x0000);
@@ -310,6 +310,11 @@ void kmain() {
                                 draw_window();
                                 drag = 0;
                             }
+                            if (str_in(ftext, "theme7")) {
+                                theme = 7;
+                                draw_window();
+                                drag = 0;
+                            }
                             if (str_in(ftext, "format")) {
                                 textid = 0;
                                 for (int i = 0; i < 99; i++) {
@@ -375,6 +380,7 @@ void kmain() {
                                 drag = 1;
                             }
                             if (str_in(ftext, "stfree")) { drag = 0; }
+                            if (str_in(ftext, "printstr")) { print_string(ftext, 350, 300, 0x0000); }
                         }
                     }
                 }   
@@ -444,6 +450,13 @@ void kmain() {
                     }
                     if (ascii_char == '6' && drag == 0) {
                         theme = 6;
+                        draw_window();
+                        play_sound(700);
+                        sleep(100);
+                        no_sound();
+                    }
+                    if (ascii_char == '7' && drag == 0) {
+                        theme = 7;
                         draw_window();
                         play_sound(700);
                         sleep(100);
@@ -542,7 +555,7 @@ void kmain() {
                             print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Use arrows to move window.", win_x + 30, help_col, 0x0000);
                             print_string("Use c to clear screen and close windows.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Use 1-5 to change system theme.", win_x + 30, help_col + 30, 0x0000);
+                            print_string("Use 1-7 to change system theme.", win_x + 30, help_col + 30, 0x0000);
                             print_string("Use F1 and F2 to enable and disable write mode.", win_x + 30, help_col + 45, 0x0000);
                             print_string("Use f to format virtual disk.", win_x + 30, help_col + 60, 0x0000);
                             print_string("Use F3 and F4 to enable and disable keyboard mouse.", win_x + 25, help_col + 75, 0x0000);
@@ -623,6 +636,11 @@ void kmain() {
                                 draw_window();
                                 drag = 0;
                             }
+                            if (str_in(ftext, "theme7")) {
+                                theme = 7;
+                                draw_window();
+                                drag = 0;
+                            }
                             if (str_in(ftext, "format")) {
                                 textid = 0;
                                 for (int i = 0; i < 99; i++) {
@@ -688,6 +706,7 @@ void kmain() {
                                 drag = 1;
                             }
                             if (str_in(ftext, "stfree")) { drag = 0; }
+                            if (str_in(ftext, "printstr")) { print_string(ftext, 350, 300, 0x0000); }
                         }
                     }
                     if (ascii_char == 'f' && drag == 0) {
@@ -826,7 +845,10 @@ void prev_cursor() {
         for (int x = 0; x < 12; x++) {
             int erase_x = prev_x + x;
             int erase_y = prev_y + y;
-            gfx_memory[erase_y * 800 + erase_x] = 0xFFFF;
+            if (theme != 7) {
+                gfx_memory[erase_y * 800 + erase_x] = 0xFFFF;
+            }
+            else  { gfx_memory[erase_y * 800 + erase_x] = 0x4208; }
         }
     }
 }
@@ -947,8 +969,12 @@ void draw_cursor(int mouse_x, int mouse_y) {
                     if (pixel_type == 2) {gfx_memory[screen_y * 800 + screen_x] = 0x05FF;}
                 }
                 if (theme == 6) {
-                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x03E0;}
-                    if (pixel_type == 2) {gfx_memory[screen_y * 800 + screen_x] = 0x8410;}
+                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x1BC3;}
+                    if (pixel_type == 2) {gfx_memory[screen_y * 800 + screen_x] = 0x07E0;}
+                }
+                if (theme == 7) {
+                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0xFFFF;}
+                    if (pixel_type == 2) {gfx_memory[screen_y * 800 + screen_x] = 0x0000;}
                 }
             }
         }
@@ -1041,7 +1067,8 @@ void draw_window() {
                 if (theme == 3) { gfx_memory[y * 800 + x] = 0x7224; }
                 if (theme == 4) { gfx_memory[y * 800 + x] = 0x9CF3; }
                 if (theme == 5) { gfx_memory[y * 800 + x] = 0x1BFF; }
-                if (theme == 6) { gfx_memory[y * 800 + x] = 0x07E0; }
+                if (theme == 6) { gfx_memory[y * 800 + x] = 0x0200; }
+                if (theme == 7) { gfx_memory[y * 800 + x] = 0xE71C; }
             }
             else if (y < win_y + 15) {
                 if (theme == 1) {
@@ -1052,18 +1079,21 @@ void draw_window() {
                 if (theme == 3) { gfx_memory[y * 800 + x] = 0xD460; }
                 if (theme == 4) { gfx_memory[y * 800 + x] = 0x4A29; }
                 if (theme == 5) { gfx_memory[y * 800 + x] = 0x3DFF; }
-                if (theme == 6) { gfx_memory[y * 800 + x] = 0x4408; }
+                if (theme == 6) { gfx_memory[y * 800 + x] = 0x05E5; }
+                if (theme == 7) { gfx_memory[y * 800 + x] = 0xEF7D; }
             }
             else {
-                gfx_memory[y * 800 + x] = 0xFFFF;
+                if (theme != 7) { gfx_memory[y * 800 + x] = 0xFFFF; }
+                else { gfx_memory[y * 800 + x] = 0x4208; }
             }
        }
     }
     if (km_mode == 1) { print_string("Keyboard mouse on!", 640, 585, 0xFFFF); }
-    if (theme == 3) { print_string("maxOS 2.2 kernel Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) { print_string("maxOS 2.2 kernel Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 3) { print_string("maxOS 2.3 kernel Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 4) { print_string("maxOS 2.3 kernel Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 7) { print_string("maxOS 2.3 kernel", win_x + 10, win_y + 5, 0x0000); }
     else {
-        print_string("maxOS 2.2 kernel", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS 2.3 kernel", win_x + 10, win_y + 5, 0xFFFF); }
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
     draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
