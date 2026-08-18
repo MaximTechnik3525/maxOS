@@ -33,7 +33,7 @@ echo =======================================
 echo    SUCCESS! Running maxOS in QEMU...
 echo =======================================
 rem Современный способ подключения звука QEMU к звуковой карте Windows (sdl или dsound)
-qemu-system-i386 -vga cirrus -machine pcspk-audiodev=audio0 -audiodev sdl,id=audio0 -fda maxos.img
+qemu-system-i386 -vga cirrus -machine pcspk-audiodev=audio0 -audiodev sdl,id=audio0 -display default,full-screen=on -fda maxos.img
 goto end
 
 :error
