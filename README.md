@@ -12,3 +12,4 @@ stbusy, stfree - changes system status of input.
 If you want create own build, you can edit project files, and run compilers (build.bat for Windows, build.sh for Linux).
 
 || SPECIAL THANKS TO GEMINI FOR BUILD.BAT, BUILD.SH AND HIS VERY BIG HELP ||
+|| GEMINI SAYS HI TO GITHUB ||
