@@ -255,7 +255,7 @@ void kmain() {
                             print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Your CPU", win_x + 30, help_col, 0x0000);
                             print_string(cpu_name, win_x + 110, help_col, 0x0000);
-                            print_string("Press c to close this window.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
                         }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30) {
                             int help_col = win_y + 45;
@@ -276,7 +276,7 @@ void kmain() {
                             create_file("Unnamed.txt", ftext);
                             print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
                             print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
-                            print_string("Press c to close this window.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
                             if (fid <= 4) {
                                 fid++;
                             }
@@ -330,7 +330,7 @@ void kmain() {
                                     }
                                 }
                                 fid = 0;
-                                print_string("Virtual disk formated!", 5, 590, 0xFFFF);
+                                print_string("Disk formated!", 5, 590, 0xFFFF);
                             }
                             if (str_in(ftext, "clear")) {
                                 drag = 0;
@@ -380,7 +380,7 @@ void kmain() {
                                 drag = 1;
                             }
                             if (str_in(ftext, "stfree")) { drag = 0; }
-                            if (str_in(ftext, "printstr")) { print_string(ftext, 350, 300, 0x0000); }
+                            if (str_in(ftext, "prntstr")) { print_string(ftext, 350, 300, 0x0000); }
                         }
                     }
                 }   
@@ -480,7 +480,7 @@ void kmain() {
                         print_string("Preview", win_x + 24, win_y + 203, 0xFFFF);
                         print_string("Write mode on!", 670, 5, 0xFFFF);
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("Press F2 to exit write mode.", win_x + 24, win_y + 230, 0x0000);
+                        print_string("Press F2 to exit.", win_x + 24, win_y + 230, 0x0000);
                         play_sound(500);
                         sleep(100);
                         no_sound();
@@ -581,7 +581,7 @@ void kmain() {
                             print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Your CPU", win_x + 30, help_col, 0x0000);
                             print_string(cpu_name, win_x + 110, help_col, 0x0000);
-                            print_string("Press c to close this window.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
                         }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) {
                             int help_col = win_y + 45;
@@ -602,7 +602,7 @@ void kmain() {
                             create_file("Unnamed.txt", ftext);
                             print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
                             print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
-                            print_string("Press c to close this window.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
                             if (fid <= 4) {
                                 fid++;
                             }
@@ -656,7 +656,7 @@ void kmain() {
                                     }
                                 }
                                 fid = 0;
-                                print_string("Virtual disk formated!", 5, 590, 0xFFFF);
+                                print_string("Disk formated!", 5, 590, 0xFFFF);
                             }
                             if (str_in(ftext, "clear")) {
                                 drag = 0;
@@ -706,7 +706,7 @@ void kmain() {
                                 drag = 1;
                             }
                             if (str_in(ftext, "stfree")) { drag = 0; }
-                            if (str_in(ftext, "printstr")) { print_string(ftext, 350, 300, 0x0000); }
+                            if (str_in(ftext, "prntstr")) { print_string(ftext, 350, 300, 0x0000); }
                         }
                     }
                     if (ascii_char == 'f' && drag == 0) {
@@ -724,7 +724,7 @@ void kmain() {
                             }
                         }
                         fid = 0;
-                        print_string("Virtual disk formated!", 5, 590, 0xFFFF);
+                        print_string("Disk formated!", 5, 590, 0xFFFF);
                         play_sound(800);
                         sleep(100);
                         no_sound();
@@ -738,7 +738,7 @@ void kmain() {
                         textid++;
                         ftext[textid] = '\0';
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("Press F2 to exit write mode.", win_x + 24, win_y + 230, 0x0000);
+                        print_string("Press F2 to exit.", win_x + 24, win_y + 230, 0x0000);
                     }
                     if (ascii_char == 'S') {
                         w_mode = 0;
@@ -768,7 +768,7 @@ void kmain() {
                         print_string("Preview", win_x + 24, win_y + 203, 0xFFFF);
                         print_string("Write mode on!", 670, 5, 0xFFFF);
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("Press F2 to exit write mode.", win_x + 24, win_y + 230, 0x0000);
+                        print_string("Press F2 to exit.", win_x + 24, win_y + 230, 0x0000);
                     }
                 }
             }
