@@ -26,7 +26,7 @@ start:
     jc disk_err
 
     mov ax, 0x4F02
-    mov bx, 0x4114
+    mov bx, 0x4117
     int 0x10
     jc disk_err
 

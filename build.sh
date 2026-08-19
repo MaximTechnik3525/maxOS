@@ -1,6 +1,6 @@
 #!/bin/bash
 # ==========================================================
-#   maxOS v2.1 — Идеальная Windows-сборка на движке Mingw-w64
+#   maxOS v2.4 — Стабильный ультра-сжатый релиз (Floppy)
 # ==========================================================
 
 check_error() {
@@ -12,37 +12,39 @@ check_error() {
     fi
 }
 
-# 1. Сборка оригинального загрузчика (40 секторов)
-echo "[1/5] Compiling bootloader..."
+echo "[1/4] Compiling Bootloader..."
 nasm -f bin boot.asm -o boot.bin
 check_error $?
 
-# 2. Сборка Си-кода через оригинальный Windows GCC внутри Linux!
-echo "[2/5] Compiling C kernel (Windows-style)..."
-i686-w64-mingw32-gcc -m32 -ffreestanding -c kernel.c -o kernel.o
+# 1. Включаем оптимизацию размера -Os, но ЗАПРЕЩАЕМ компилятору разносить функции!
+echo "[2/4] Compiling C kernel (Safe Size Optimization)..."
+i686-w64-mingw32-gcc -m32 -ffreestanding -Os -fno-toplevel-reorder -c kernel.c -o kernel.o
 check_error $?
 
-# 3. ЛИНКОВКА: Твой родной Windows-линкер собирает эталонный kernel.exe!
-# Все флаги выравнивания по 32 байта и точка входа kmain взяты один в один из твоего батника.
-echo "[3/5] Linking binary (i386pe)..."
-i686-w64-mingw32-ld -m i386pe -s -X --file-alignment=32 --section-alignment=32 -Ttext 0x1000 -e _kmain -o kernel.exe kernel.o
+# 2. Линкуем с оригинальным выравниванием по 32 байта из твоего батника.
+# Флаг -e _kmain и -Ttext 0x1000 жестко привяжут старт к первому байту адреса 0x1000!
+echo "[3/4] Linking binary (i386pe)..."
+i686-w64-mingw32-ld -m i386pe -s -X \
+  --file-alignment=32 --section-alignment=32 \
+  -Ttext 0x1000 -e _kmain -o kernel.exe kernel.o
 check_error $?
 
-# 4. Создание чистого бинарника
-echo "[4/5] Extracting flat binary..."
+# 3. Чистое извлечение плоского бинарника из твоего родного батника
+echo "[4/4] Extracting flat binary..."
 objcopy -O binary kernel.exe kernel.bin
 check_error $?
 
-# 5. Создание итогового образа диска
-echo "[5/5] Creating OS image..."
+echo "[5/4] Creating Floppy Image..."
 cat boot.bin kernel.bin > maxos.img
 check_error $?
 
-# Чистим временные файлы
-rm -f kernel.o kernel.exe
+# 4. Добиваем до эталонных 1.44 МБ для строгого SeaBIOS
+truncate -s 1440k maxos.img
+check_error $?
+
+rm -f kernel.o kernel.exe boot.bin kernel.bin
 
 echo "======================================="
 echo "   SUCCESS! Running maxOS in QEMU..."
 echo "======================================="
-# Чистый запуск графики эмулятора
 qemu-system-i386 -vga cirrus -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -display default,full-screen=on -fda maxos.img

@@ -5,7 +5,7 @@ struct VirtualFile {
     int exists;
 };
 struct VirtualFile ram_disk[5];
-void print_string(char* str, int x, int y, char color);
+void print_string(char* str, int x, int y, unsigned short color);
 void draw_char(char c, int start_x, int start_y, char color);
 unsigned char inb(unsigned short port);
 void outb(unsigned short port, unsigned char data);
@@ -42,10 +42,11 @@ unsigned char mouse_arrow[12][12] = {
 // Готовый ASCII-шрифт 8x8 (содержит Пробел, знаки, ЦИФРЫ, ЗАГЛАВНЫЕ и строчные буквы)
 unsigned char font_data[256][8] = {
     [' '] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    ['!'] = {0x18, 0x18, 0x18, 0x18, 0x00, 0x00, 0x18, 0x00},
-    [':'] = {0x00, 0x12, 0x00, 0x00, 0x00, 0x12, 0x00, 0x00},
-    ['-'] = {0x00, 0x00, 0x00, 0x3F, 0x00, 0x00, 0x00, 0x00},
-    ['.'] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x60, 0x60, 0x00},
+    // Добавь эти знаки препинания внутрь font_data:
+    [':'] = {0x00, 0x18, 0x18, 0x00, 0x00, 0x18, 0x18, 0x00}, // Двоеточие
+    ['/'] = {0x02, 0x06, 0x0C, 0x18, 0x30, 0x60, 0x40, 0x00}, // Слэш (косая черта)
+    ['-'] = {0x00, 0x00, 0x00, 0x7E, 0x00, 0x00, 0x00, 0x00}, // Дефис / Минус
+    ['.'] = {0x00, 0x00, 0x00, 0x00, 0x00, 0x18, 0x18, 0x00}, // Точка
 
     // ЦИФРЫ (0-9)
     ['0'] = {0x3C, 0x66, 0x6E, 0x7E, 0x76, 0x66, 0x3C, 0x00},
@@ -227,12 +228,12 @@ void kmain() {
                                 }
                             }
                             print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Use arrows to move window.", win_x + 30, help_col, 0x0000);
-                            print_string("Use c to clear screen and close windows.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Use 1-7 to change system theme.", win_x + 30, help_col + 30, 0x0000);
-                            print_string("Use F1 and F2 to enable and disable write mode.", win_x + 30, help_col + 45, 0x0000);
-                            print_string("Use f to format virtual disk.", win_x + 30, help_col + 60, 0x0000);
-                            print_string("Use F3 and F4 to enable and disable keyboard mouse.", win_x + 25, help_col + 75, 0x0000);
+                            print_string("Arrows: move window.", win_x + 30, help_col, 0x0000);
+                            print_string("C: clear and close.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("1-7: change theme.", win_x + 30, help_col + 30, 0x0000);
+                            print_string("F1/F2: write mode.", win_x + 30, help_col + 45, 0x0000);
+                            print_string("F: format disk.", win_x + 30, help_col + 60, 0x0000);
+                            print_string("F3/F4: key-mouse.", win_x + 30, help_col + 75, 0x0000);
                         }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30) {
                             int help_col = win_y + 45;
@@ -253,9 +254,8 @@ void kmain() {
                             char cpu_name[49];
                             get_cpu(cpu_name);
                             print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Your CPU", win_x + 30, help_col, 0x0000);
-                            print_string(cpu_name, win_x + 110, help_col, 0x0000);
-                            print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
+                            print_string(cpu_name, win_x + 30, help_col, 0x0000);
+                            print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
                         }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30) {
                             int help_col = win_y + 45;
@@ -276,7 +276,7 @@ void kmain() {
                             create_file("Unnamed.txt", ftext);
                             print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
                             print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
-                            print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
                             if (fid <= 4) {
                                 fid++;
                             }
@@ -480,7 +480,7 @@ void kmain() {
                         print_string("Preview", win_x + 24, win_y + 203, 0xFFFF);
                         print_string("Write mode on!", 670, 5, 0xFFFF);
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("Press F2 to exit.", win_x + 24, win_y + 230, 0x0000);
+                        print_string("F2: exit.", win_x + 24, win_y + 230, 0x0000);
                         play_sound(500);
                         sleep(100);
                         no_sound();
@@ -553,12 +553,12 @@ void kmain() {
                                 }
                             }
                             print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Use arrows to move window.", win_x + 30, help_col, 0x0000);
-                            print_string("Use c to clear screen and close windows.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Use 1-7 to change system theme.", win_x + 30, help_col + 30, 0x0000);
-                            print_string("Use F1 and F2 to enable and disable write mode.", win_x + 30, help_col + 45, 0x0000);
-                            print_string("Use f to format virtual disk.", win_x + 30, help_col + 60, 0x0000);
-                            print_string("Use F3 and F4 to enable and disable keyboard mouse.", win_x + 25, help_col + 75, 0x0000);
+                            print_string("Arrows: move window.", win_x + 30, help_col, 0x0000);
+                            print_string("C: clear and close.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("1-7: change theme.", win_x + 30, help_col + 30, 0x0000);
+                            print_string("F1/F2: write mode.", win_x + 30, help_col + 45, 0x0000);
+                            print_string("F: format disk.", win_x + 30, help_col + 60, 0x0000);
+                            print_string("F3/F4: key-mouse.", win_x + 30, help_col + 75, 0x0000);
                         }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0) {
                             int help_col = win_y + 45;
@@ -579,9 +579,8 @@ void kmain() {
                             char cpu_name[49];
                             get_cpu(cpu_name);
                             print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Your CPU", win_x + 30, help_col, 0x0000);
                             print_string(cpu_name, win_x + 110, help_col, 0x0000);
-                            print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
                         }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) {
                             int help_col = win_y + 45;
@@ -602,7 +601,7 @@ void kmain() {
                             create_file("Unnamed.txt", ftext);
                             print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
                             print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
-                            print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
                             if (fid <= 4) {
                                 fid++;
                             }
@@ -738,7 +737,7 @@ void kmain() {
                         textid++;
                         ftext[textid] = '\0';
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("Press F2 to exit.", win_x + 24, win_y + 230, 0x0000);
+                        print_string("F2: exit.", win_x + 24, win_y + 230, 0x0000);
                     }
                     if (ascii_char == 'S') {
                         w_mode = 0;
@@ -768,7 +767,7 @@ void kmain() {
                         print_string("Preview", win_x + 24, win_y + 203, 0xFFFF);
                         print_string("Write mode on!", 670, 5, 0xFFFF);
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("Press F2 to exit.", win_x + 24, win_y + 230, 0x0000);
+                        print_string("F2: exit.", win_x + 24, win_y + 230, 0x0000);
                     }
                 }
             }
@@ -953,23 +952,23 @@ void draw_cursor(int mouse_x, int mouse_y) {
                     if (pixel_type == 2) {gfx_memory[screen_y * 800 + screen_x] = 0xFFFF;}
                 }
                 if (theme == 2) {
-                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x0000;}
+                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x4000;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 800 + screen_x] = 0xF800;}
                 }
                 if (theme == 3) {
-                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x0000;}
+                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x4080;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 800 + screen_x] = 0xB269;}
                 }
                 if (theme == 4) {
-                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x0000;}
+                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x3186;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 800 + screen_x] = 0xD69F;}
                 }
                 if (theme == 5) {
-                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x0000;}
+                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x0168;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 800 + screen_x] = 0x05FF;}
                 }
                 if (theme == 6) {
-                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x1BC3;}
+                    if (pixel_type == 1) {gfx_memory[screen_y * 800 + screen_x] = 0x0200;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 800 + screen_x] = 0x07E0;}
                 }
                 if (theme == 7) {
@@ -1054,7 +1053,15 @@ void draw_char(char c, int start_x, int start_y, char color) {
 void draw_window() {
     for (int y = 0; y < 600; y++) {
         for (int x = 0; x < 800; x++) {
-            gfx_memory[y * 800 + x] = 0x18C3;
+            if (theme == 1) {
+                gfx_memory[y * 800 + x] = 0x18C3;
+            }
+            if (theme == 2) { gfx_memory[y * 800 + x] = 0x2000; }
+            if (theme == 3) { gfx_memory[y * 800 + x] = 0x1041; }
+            if (theme == 4) { gfx_memory[y * 800 + x] = 0x10A2; }
+            if (theme == 5) { gfx_memory[y * 800 + x] = 0x0043; }
+            if (theme == 6) { gfx_memory[y * 800 + x] = 0x00A1; }
+            if (theme == 7) { gfx_memory[y * 800 + x] = 0x2104; }
         }
     }
     for (int y = win_y; y < win_y + win_h; y++) {
@@ -1089,18 +1096,18 @@ void draw_window() {
        }
     }
     if (km_mode == 1) { print_string("Keyboard mouse on!", 640, 585, 0xFFFF); }
-    if (theme == 3) { print_string("maxOS 2.3 kernel Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) { print_string("maxOS 2.3 kernel Tora", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 7) { print_string("maxOS 2.3 kernel", win_x + 10, win_y + 5, 0x0000); }
+    if (theme == 3) { print_string("maxOS 2.4 kernel Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 4) { print_string("maxOS 2.4 kernel Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 7) { print_string("maxOS 2.4 kernel", win_x + 10, win_y + 5, 0x0000); }
     else {
-        print_string("maxOS 2.3 kernel", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS 2.4 kernel", win_x + 10, win_y + 5, 0xFFFF); }
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
     draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
     draw_cursor(pos_x, pos_y);
 }
 
-void print_string(char* str, int x, int y, char color) {
+void print_string(char* str, int x, int y, unsigned short color) {
     while (*str != 0) {
         draw_char(*str, x, y, color);
         x += 9;
