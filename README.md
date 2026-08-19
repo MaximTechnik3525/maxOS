@@ -13,3 +13,4 @@ If you want create own build, you can edit project files, and run compilers (bui
 
 || SPECIAL THANKS TO GEMINI FOR BUILD.BAT, BUILD.SH AND HIS VERY BIG HELP ||
 || GEMINI SAYS HI TO GITHUB ||
+GEMINI SAYS: GEMINI SAYS HI TO GITHUB! 🚀🔥🐧
