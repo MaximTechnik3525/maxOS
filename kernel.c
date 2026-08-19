@@ -220,14 +220,30 @@ void kmain() {
                                     if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
                                         gfx_memory[y * 1024 + x] = 0x0320;
                                     }
+                                    else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
                                     else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x6408;
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
                                     }
                                     else {
                                         gfx_memory[y * 1024 + x] = 0xFFFF;
                                     }
                                 }
                             }
+                            int swin_x = win_x + 20;
+                            int swin_y = win_y + 22;
+                            int swin_w = win_w - 40;
+                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
+                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
+                            int right_edges = swin_x + swin_w - 1;
+                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
+                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
                             print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Arrows: move window.", win_x + 30, help_col, 0x0000);
                             print_string("C: clear and close.", win_x + 30, help_col + 15, 0x0000);
@@ -955,6 +971,19 @@ void draw_filebtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
     }
     print_string("File", txt_pos_x, txt_pos_y, 0x0000);
 }
+void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
+    for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
+        for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
+            gfx_memory[y * 1024 + x] = 0x7BEF;
+        }
+    }
+    for (int y = btn_y; y < btn_y + btn_h; y++) {
+        for (int x = btn_x; x < btn_x + btn_w; x++) {
+            gfx_memory[y * 1024 + x] = 0xC618;
+        }
+    }
+    print_string("Explorer", txt_pos_x, txt_pos_y, 0x0000);
+}
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
@@ -1143,7 +1172,6 @@ void draw_window() {
     if (km_mode == 1) { print_string("Keyboard mouse on!", 870, 750, 0xFFFF); }
     if (theme == 3) { print_string("maxOS 2.5 kernel Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
     if (theme == 4) { print_string("maxOS 2.5 kernel Tora", win_x + 10, win_y + 5, 0xFFFF); }
-    //if (theme == 7) { print_string("maxOS 2.4 kernel", win_x + 10, win_y + 5, 0x0000); }
     else {
         print_string("maxOS 2.5 kernel", win_x + 10, win_y + 5, 0xFFFF); }
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
