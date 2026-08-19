@@ -22,6 +22,7 @@ void init_mouse();
 void prev_cursor();
 void play_sound(unsigned int nfreq);
 void no_sound();
+unsigned short bg_col = 0x18C3;
 void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
 int create_file(char* name, char* text);
@@ -284,36 +285,43 @@ void kmain() {
                                 theme = 1;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x18C3;
                             }
                             if (str_in(ftext, "theme2")) {
                                 theme = 2;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x2000;
                             }
                             if (str_in(ftext, "theme3")) {
                                 theme = 3;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x1041;
                             }
                             if (str_in(ftext, "theme4")) {
                                 theme = 4;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x10A2;
                             }
                             if (str_in(ftext, "theme5")) {
                                 theme = 5;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x0043;
                             }
                             if (str_in(ftext, "theme6")) {
                                 theme = 6;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x00A1;
                             }
                             if (str_in(ftext, "theme7")) {
                                 theme = 7;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x2104;
                             }
                             if (str_in(ftext, "format")) {
                                 textid = 0;
@@ -609,36 +617,43 @@ void kmain() {
                                 theme = 1;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x18C3;
                             }
                             if (str_in(ftext, "theme2")) {
                                 theme = 2;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x2000;
                             }
                             if (str_in(ftext, "theme3")) {
                                 theme = 3;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x1041;
                             }
                             if (str_in(ftext, "theme4")) {
                                 theme = 4;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x10A2;
                             }
                             if (str_in(ftext, "theme5")) {
                                 theme = 5;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x0043;
                             }
                             if (str_in(ftext, "theme6")) {
                                 theme = 6;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x00A1;
                             }
                             if (str_in(ftext, "theme7")) {
                                 theme = 7;
                                 draw_window();
                                 drag = 0;
+                                bg_col = 0x2104;
                             }
                             if (str_in(ftext, "format")) {
                                 textid = 0;
@@ -1049,7 +1064,6 @@ void draw_char(char c, int start_x, int start_y, char color) {
         }
     }
 }
-
 void draw_window() {
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
@@ -1077,9 +1091,9 @@ void draw_window() {
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x0200; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0xE71C; }
             }
-            else if (y < win_y + 15) {
+            else if (y < win_y + 3) {
                 if (theme == 1) {
-                    gfx_memory[y * 1024 + x] = 0x03EF;}
+                    gfx_memory[y * 1024 + x] = 0x3D7F;}
                 if (theme == 2) {
                     gfx_memory[y * 1024 + x] = 0xB269;
                 }
@@ -1089,18 +1103,49 @@ void draw_window() {
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x05E5; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0xEF7D; }
             }
+            else if (y < win_y + 9) {
+                if (theme == 1) {
+                    gfx_memory[y * 1024 + x] = 0x2417;}
+                if (theme == 2) {
+                    gfx_memory[y * 1024 + x] = 0x81C6;
+                }
+                if (theme == 3) { gfx_memory[y * 1024 + x] = 0x92E0; }
+                if (theme == 4) { gfx_memory[y * 1024 + x] = 0x31C6; }
+                if (theme == 5) { gfx_memory[y * 1024 + x] = 0x231A; }
+                if (theme == 6) { gfx_memory[y * 1024 + x] = 0x03E3; }
+                if (theme == 7) { gfx_memory[y * 1024 + x] = 0xA514; }
+            }
+            else if (y < win_y + 15) {
+                if (theme == 1) {
+                    gfx_memory[y * 1024 + x] = 0x110F;}
+                if (theme == 2) {
+                    gfx_memory[y * 1024 + x] = 0x4924;
+                }
+                if (theme == 3) { gfx_memory[y * 1024 + x] = 0x51A0; }
+                if (theme == 4) { gfx_memory[y * 1024 + x] = 0x1923; }
+                if (theme == 5) { gfx_memory[y * 1024 + x] = 0x118F; }
+                if (theme == 6) { gfx_memory[y * 1024 + x] = 0x01E1; }
+                if (theme == 7) { gfx_memory[y * 1024 + x] = 0x52AA; }
+            }
             else {
                 if (theme != 7) { gfx_memory[y * 1024 + x] = 0xFFFF; }
                 else { gfx_memory[y * 1024 + x] = 0x4208; }
             }
        }
     }
+    gfx_memory[win_y * 1024 + win_x] = bg_col;
+    gfx_memory[win_y * 1024 + (win_x+1)] = bg_col;
+    gfx_memory[(win_y+1) * 1024 + win_x] = bg_col;
+    int right_edge = win_x + win_w - 1;
+    gfx_memory[win_y * 1024 + right_edge] = bg_col;
+    gfx_memory[win_y * 1024 + (right_edge+1)] = bg_col;
+    gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
     if (km_mode == 1) { print_string("Keyboard mouse on!", 870, 750, 0xFFFF); }
-    if (theme == 3) { print_string("maxOS 2.4 kernel Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) { print_string("maxOS 2.4 kernel Tora", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 7) { print_string("maxOS 2.4 kernel", win_x + 10, win_y + 5, 0x0000); }
+    if (theme == 3) { print_string("maxOS 2.5 kernel Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 4) { print_string("maxOS 2.5 kernel Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    //if (theme == 7) { print_string("maxOS 2.4 kernel", win_x + 10, win_y + 5, 0x0000); }
     else {
-        print_string("maxOS 2.4 kernel", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS 2.5 kernel", win_x + 10, win_y + 5, 0xFFFF); }
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
     draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
