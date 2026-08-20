@@ -387,7 +387,7 @@ void kmain() {
                                     }
                                 }
                                 fid = 0;
-                                print_string("Disk formated!", 5, 750, 0xFFFF);
+                                print_string("Disk formatted", 5, 750, 0xFFFF);
                             }
                             if (str_in(ftext, "clear")) {
                                 drag = 0;
@@ -605,7 +605,6 @@ void kmain() {
                         gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
                         gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
                         print_string("Preview", win_x + 24, win_y + 204, 0xFFFF);
-                        print_string("Write mode on!", 900, 5, 0xFFFF);
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
                         print_string("F2: exit.", win_x + 24, win_y + 230, 0x0000);
                         play_sound(500);
@@ -614,7 +613,7 @@ void kmain() {
                     }
                     if (ascii_char == 'T' && km_mode == 0 && drag == 0) {
                         km_mode = 1;
-                        print_string("Keyboard mouse on!", 860, 750, 0xFFFF);
+                        print_string("Key-mouse on", 900, 750, 0xFFFF);
                         play_sound(200);
                         sleep(100);
                         no_sound();
@@ -841,7 +840,7 @@ void kmain() {
                                     }
                                 }
                                 fid = 0;
-                                print_string("Disk formated!", 5, 750, 0xFFFF);
+                                print_string("Disk formatted", 5, 750, 0xFFFF);
                             }
                             if (str_in(ftext, "clear")) {
                                 drag = 0;
@@ -956,7 +955,7 @@ void kmain() {
                             }
                         }
                         fid = 0;
-                        print_string("Disk formated!", 5, 750, 0xFFFF);
+                        print_string("Disk formatted", 5, 750, 0xFFFF);
                         play_sound(800);
                         sleep(100);
                         no_sound();
@@ -1014,7 +1013,6 @@ void kmain() {
                         gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
                         gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
                         print_string("Preview", win_x + 24, win_y + 204, 0xFFFF);
-                        print_string("Write mode on!", 900, 5, 0xFFFF);
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
                         print_string("F2: exit.", win_x + 24, win_y + 230, 0x0000);
                     }
@@ -1098,7 +1096,7 @@ int create_file(char* name, char* text) {
             ram_disk[i].content[t] = '\0';
             ram_disk[i].size = t;
             ram_disk[i].exists = 1;
-            print_string("File created!", 5, 5, 0xFFFF);
+            print_string("File created", 5, 5, 0xFFFF);
             return i;
         }
     }
@@ -1402,7 +1400,7 @@ void draw_window() {
     gfx_memory[win_y * 1024 + right_edge] = bg_col;
     gfx_memory[win_y * 1024 + (right_edge+1)] = bg_col;
     gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
-    if (km_mode == 1) { print_string("Keyboard mouse on!", 870, 750, 0xFFFF); }
+    if (km_mode == 1) { print_string("Key-mouse on", 900, 750, 0xFFFF); }
     if (theme == 3) { print_string("maxOS 2.5 kernel Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
     if (theme == 4) { print_string("maxOS 2.5 kernel Tora", win_x + 10, win_y + 5, 0xFFFF); }
     else {
