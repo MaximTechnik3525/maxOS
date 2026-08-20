@@ -1,4 +1,4 @@
-Update 2.4: updated theme 2-7, screen resolution 1024x768, text limit 50 > 75.
+Update 2.5: updated all window interface, theme inversion changed to sakura, explorer, fixes.
 To run on qemu: if you are on Linux, start qemu with this command "qemu-system-i386 -vga cirrus -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -display default,full-screen=on -fda 'path to maxOS IMG'". if you are on Windows, start with qemu with this command "qemu-system-i386 -vga cirrus -machine pcspk-audiodev=audio0 -audiodev sdl,id=audio0 -display default,full-screen=on -fda 'path to maxOS IMG'".
 To run on real PC: recommended PS/2 mouse and BIOS. You need to write maxOS.img on device (for example on USB flash drive) and boot with it.
 You can write your own programm for maxOS right in the system. This is list of avaivable commands:
