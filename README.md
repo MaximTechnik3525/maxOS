@@ -1,4 +1,4 @@
-Update 2.6: added game pong.
+Update 2.7: updated pong, fixes.
 To run on qemu: if you are on Linux, start qemu with this command "qemu-system-i386 -vga cirrus -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -display default,full-screen=on -fda 'path to maxOS IMG'". if you are on Windows, start with qemu with this command "qemu-system-i386 -vga cirrus -machine pcspk-audiodev=audio0 -audiodev sdl,id=audio0 -display default,full-screen=on -fda 'path to maxOS IMG'".
 To run on real PC: recommended PS/2 mouse and BIOS. You need to write maxOS.img on device (for example on USB flash drive) and boot with it.
 You can write your own programm for maxOS right in the system. This is list of avaivable commands:
