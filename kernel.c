@@ -16,6 +16,7 @@ void draw_btn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn
 void draw_cpubtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_filebtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
+void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void get_cpu(char* buffer);
 void draw_window();
 void wait_mouse(unsigned char type);
@@ -128,6 +129,14 @@ int pos_y = 384;
 int theme = 1;
 int w_mode = 0;
 int km_mode = 0;
+// PONG
+int pad_x = 500, pad_y = 580;
+int pad_w = 60, pad_h = 20;
+int ball_x = 500, ball_y = 360;
+int ball_dx = 3;
+int ball_dy = 3;
+int ball_size = 8;
+int game = 0;
 void kmain() {
     win_x = 150;
     win_y = 140;
@@ -211,9 +220,151 @@ void kmain() {
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
                         draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
                         draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
+                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
                     if (click == 1) { // MOUSE CLICKS
+                        if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30) {
+                            int help_col = win_y + 45;
+                            drag = 1;
+                            game = 1;
+                            int pad_e = 0;
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 1024 + x] = 0x0320;
+                                    }
+                                   else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
+                                    }
+                                    else {
+                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                    }
+                                }
+                            }
+                            int swin_x = win_x + 20;
+                            int swin_y = win_y + 22;
+                            int swin_w = win_w - 40;
+                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
+                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
+                            int right_edges = swin_x + swin_w - 1;
+                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
+                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
+                            print_string("Pong game", win_x + 27, win_y + 27, 0xFFFF);
+                            while(1) {
+                                unsigned char scan_code = inb(0x60);
+                                if (scan_code < 0x80 && w_mode == 0) { // KEYBOARD CLICKS
+                                    char ascii_char = scan_code_to_ascii(scan_code);
+                                    if (ascii_char == 'c') { break; }
+                                    if (ascii_char == 'd' && pad_x <= win_w + 30) {
+                                        for (int x = 0; x < pad_w; x++) {
+                                            for (int y = 0; y < pad_h; y++) {
+                                                int screen_x = pad_x + x;
+                                                int screen_y = pad_y + y;
+                                                gfx_memory[screen_y * 1024 + screen_x] = 0xFFFF;
+                                            }
+                                        }
+                                        pad_x += 20;
+                                        for (int x = 0; x < pad_w; x++) {
+                                            for (int y = 0; y < pad_h; y++) {
+                                                int screen_x = pad_x + x;
+                                                int screen_y = pad_y + y;
+                                                gfx_memory[screen_y * 1024 + screen_x] = 0xB269;
+                                            }
+                                        }
+                                        sleep(50);
+                                    }
+                                    if (ascii_char == 'a' && pad_x >= win_x + 50) {
+                                        for (int x = 0; x < pad_w; x++) {
+                                            for (int y = 0; y < pad_h; y++) {
+                                                int screen_x = pad_x + x;
+                                                int screen_y = pad_y + y;
+                                                gfx_memory[screen_y * 1024 + screen_x] = 0xFFFF;
+                                            }
+                                        }
+                                        pad_x -= 20;
+                                        for (int x = 0; x < pad_w; x++) {
+                                            for (int y = 0; y < pad_h; y++) {
+                                                int screen_x = pad_x + x;
+                                                int screen_y = pad_y + y;
+                                                gfx_memory[screen_y * 1024 + screen_x] = 0xB269;
+                                            }
+                                        }
+                                        sleep(20);
+                                    }
+                                }
+                                for (int x = 0; x < ball_size; x++) {
+                                    for (int y = 0; y < ball_size; y++) {
+                                        gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0xFFFF;
+                                    }
+                                }
+                                ball_x += ball_dx;
+                                ball_y += ball_dy;
+                                if (ball_x < win_x + 30) {
+                                    ball_x = swin_x + 10;
+                                    ball_dx = -ball_dx;
+                                    play_sound(500);
+                                    sleep(100);
+                                    no_sound();
+                                }
+                                if (ball_x > win_x + 710) {
+                                    ball_x = win_x + 710;
+                                    ball_dx = -ball_dx;
+                                    play_sound(500);
+                                    sleep(100);
+                                    no_sound();
+                                }
+                                if (ball_y < swin_y + 30) {
+                                    ball_y = swin_y + 30;
+                                    ball_dy = -ball_dy;
+                                    play_sound(500);
+                                    sleep(100);
+                                    no_sound();
+                                }
+                                if (ball_y + ball_size >= pad_y && ball_y <= pad_y + pad_h) {
+                                    if (ball_x + ball_size >= pad_x && ball_x <= pad_x + pad_w) {
+                                        ball_y = pad_y - ball_size;
+                                        ball_dy = -ball_dy;
+                                        play_sound(700);
+                                        sleep(100);
+                                        no_sound();
+                                    }
+                                }
+                                if (ball_y > pad_y) {
+                                    pad_x = 500;
+                                    pad_y = 580;
+                                    pad_w = 60;
+                                    pad_h = 20;
+                                    ball_x = 500;
+                                    ball_y = 360;
+                                    game = 0;
+                                    drag = 0;
+                                    draw_window();
+                                    draw_cursor(pos_x, pos_y);
+                                    break;
+                                    play_sound(700);
+                                    sleep(100);
+                                    no_sound();
+                                    play_sound(300);
+                                    sleep(300);
+                                    no_sound();
+                                }
+                                for (int x = 0; x < ball_size; x++) {
+                                    for (int y = 0; y < ball_size; y++) {
+                                        gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0x7E1F;
+                                    }
+                                }
+                                sleep(16);
+                            }
+                        }
                         if (pos_x <= win_x + 50 && pos_y <= win_y + 30) {
                             int help_col = win_y + 45;
                             drag = 1;
@@ -439,7 +590,7 @@ void kmain() {
                             if (str_in(ftext, "stfree")) { drag = 0; }
                             if (str_in(ftext, "prntstr")) { print_string(ftext, 500, 359, 0x0000); }
                         }
-                        if (pos_x >= win_x + 190 && pos_x <= win_x + 260 && pos_y <= win_y + 30) {
+                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
                             int help_col = win_y + 45;
                             int line = win_y + 65;
                             drag = 1;
@@ -613,7 +764,6 @@ void kmain() {
                     }
                     if (ascii_char == 'T' && km_mode == 0 && drag == 0) {
                         km_mode = 1;
-                        print_string("Key-mouse on", 900, 750, 0xFFFF);
                         play_sound(200);
                         sleep(100);
                         no_sound();
@@ -626,6 +776,7 @@ void kmain() {
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
                         draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
                         draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
+                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'D' && km_mode == 1 && pos_y < win_y + 515 && drag == 0) {
@@ -636,6 +787,7 @@ void kmain() {
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
                         draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
                         draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
+                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'R' && km_mode == 1 && pos_x < win_x + 715 && drag == 0) {
@@ -646,6 +798,7 @@ void kmain() {
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
                         draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
                         draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
+                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'L' && km_mode == 1 && pos_x > win_x + 15 && drag == 0) {
@@ -656,6 +809,7 @@ void kmain() {
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
                         draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
                         draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
+                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'G' && km_mode == 1 && drag == 0) {
@@ -666,6 +820,147 @@ void kmain() {
                         draw_window();
                     }
                     if (ascii_char == 'e' && km_mode == 1 && drag == 0) {
+                        if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30) {
+                            int help_col = win_y + 45;
+                            drag = 1;
+                            game = 1;
+                            int pad_e = 0;
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 1024 + x] = 0x0320;
+                                    }
+                                   else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
+                                    }
+                                    else {
+                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                    }
+                                }
+                            }
+                            int swin_x = win_x + 20;
+                            int swin_y = win_y + 22;
+                            int swin_w = win_w - 40;
+                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
+                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
+                            int right_edges = swin_x + swin_w - 1;
+                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
+                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
+                            print_string("Pong game", win_x + 27, win_y + 27, 0xFFFF);
+                            while(1) {
+                                unsigned char scan_code = inb(0x60);
+                                if (scan_code < 0x80 && w_mode == 0) { // KEYBOARD CLICKS
+                                    char ascii_char = scan_code_to_ascii(scan_code);
+                                    if (ascii_char == 'c') { break; }
+                                    if (ascii_char == 'd' && pad_x <= win_w + 30) {
+                                        for (int x = 0; x < pad_w; x++) {
+                                            for (int y = 0; y < pad_h; y++) {
+                                                int screen_x = pad_x + x;
+                                                int screen_y = pad_y + y;
+                                                gfx_memory[screen_y * 1024 + screen_x] = 0xFFFF;
+                                            }
+                                        }
+                                        pad_x += 20;
+                                        for (int x = 0; x < pad_w; x++) {
+                                            for (int y = 0; y < pad_h; y++) {
+                                                int screen_x = pad_x + x;
+                                                int screen_y = pad_y + y;
+                                                gfx_memory[screen_y * 1024 + screen_x] = 0xB269;
+                                            }
+                                        }
+                                        sleep(50);
+                                    }
+                                    if (ascii_char == 'a' && pad_x >= win_x + 50) {
+                                        for (int x = 0; x < pad_w; x++) {
+                                            for (int y = 0; y < pad_h; y++) {
+                                                int screen_x = pad_x + x;
+                                                int screen_y = pad_y + y;
+                                                gfx_memory[screen_y * 1024 + screen_x] = 0xFFFF;
+                                            }
+                                        }
+                                        pad_x -= 20;
+                                        for (int x = 0; x < pad_w; x++) {
+                                            for (int y = 0; y < pad_h; y++) {
+                                                int screen_x = pad_x + x;
+                                                int screen_y = pad_y + y;
+                                                gfx_memory[screen_y * 1024 + screen_x] = 0xB269;
+                                            }
+                                        }
+                                        sleep(20);
+                                    }
+                                }
+                                for (int x = 0; x < ball_size; x++) {
+                                    for (int y = 0; y < ball_size; y++) {
+                                        gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0xFFFF;
+                                    }
+                                }
+                                ball_x += ball_dx;
+                                ball_y += ball_dy;
+                                if (ball_x < win_x + 30) {
+                                    ball_x = swin_x + 10;
+                                    ball_dx = -ball_dx;
+                                    play_sound(500);
+                                    sleep(100);
+                                    no_sound();
+                                }
+                                if (ball_x > win_x + 710) {
+                                    ball_x = win_x + 710;
+                                    ball_dx = -ball_dx;
+                                    play_sound(500);
+                                    sleep(100);
+                                    no_sound();
+                                }
+                                if (ball_y < swin_y + 30) {
+                                    ball_y = swin_y + 30;
+                                    ball_dy = -ball_dy;
+                                    play_sound(500);
+                                    sleep(100);
+                                    no_sound();
+                                }
+                                if (ball_y + ball_size >= pad_y && ball_y <= pad_y + pad_h) {
+                                    if (ball_x + ball_size >= pad_x && ball_x <= pad_x + pad_w) {
+                                        ball_y = pad_y - ball_size;
+                                        ball_dy = -ball_dy;
+                                        play_sound(700);
+                                        sleep(100);
+                                        no_sound();
+                                    }
+                                }
+                                if (ball_y > pad_y) {
+                                    pad_x = 500;
+                                    pad_y = 580;
+                                    pad_w = 60;
+                                    pad_h = 20;
+                                    ball_x = 500;
+                                    ball_y = 360;
+                                    game = 0;
+                                    drag = 0;
+                                    draw_window();
+                                    draw_cursor(pos_x, pos_y);
+                                    break;
+                                    play_sound(700);
+                                    sleep(100);
+                                    no_sound();
+                                    play_sound(300);
+                                    sleep(300);
+                                    no_sound();
+                                }
+                                for (int x = 0; x < ball_size; x++) {
+                                    for (int y = 0; y < ball_size; y++) {
+                                        gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0x7E1F;
+                                    }
+                                }
+                                sleep(16);
+                            }
+                        }
                         if (pos_x <= win_x + 50 && pos_y <= win_y + 30  && drag == 0) {
                             int help_col = win_y + 45;
                             drag = 1;
@@ -1096,11 +1391,9 @@ int create_file(char* name, char* text) {
             ram_disk[i].content[t] = '\0';
             ram_disk[i].size = t;
             ram_disk[i].exists = 1;
-            print_string("File created", 5, 5, 0xFFFF);
             return i;
         }
     }
-    print_string("File was not created!", 5, 5, 0xFFFF);
     return -1;
 }
 void prev_cursor() {
@@ -1214,7 +1507,20 @@ void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
             gfx_memory[y * 1024 + x] = 0xC618;
         }
     }
-    print_string("Ex-r", txt_pos_x, txt_pos_y, 0x0000);
+    print_string("Exp", txt_pos_x, txt_pos_y, 0x0000);
+}
+void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
+    for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
+        for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
+            gfx_memory[y * 1024 + x] = 0x7BEF;
+        }
+    }
+    for (int y = btn_y; y < btn_y + btn_h; y++) {
+        for (int x = btn_x; x < btn_x + btn_w; x++) {
+            gfx_memory[y * 1024 + x] = 0xC618;
+        }
+    }
+    print_string("Pong", txt_pos_x, txt_pos_y, 0x0000);
 }
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
@@ -1400,15 +1706,15 @@ void draw_window() {
     gfx_memory[win_y * 1024 + right_edge] = bg_col;
     gfx_memory[win_y * 1024 + (right_edge+1)] = bg_col;
     gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
-    if (km_mode == 1) { print_string("Key-mouse on", 900, 750, 0xFFFF); }
-    if (theme == 3) { print_string("maxOS 2.5 kernel Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) { print_string("maxOS 2.5 kernel Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 3) { print_string("maxOS 2.6 Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 4) { print_string("maxOS 2.6 Tora", win_x + 10, win_y + 5, 0xFFFF); }
     else {
-        print_string("maxOS 2.5 kernel", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS 2.6", win_x + 10, win_y + 5, 0xFFFF); }
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
     draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
     draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
+    draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
     draw_cursor(pos_x, pos_y);
 }
 
