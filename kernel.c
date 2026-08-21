@@ -349,13 +349,13 @@ void kmain() {
                                     drag = 0;
                                     draw_window();
                                     draw_cursor(pos_x, pos_y);
-                                    break;
                                     play_sound(700);
                                     sleep(100);
                                     no_sound();
                                     play_sound(300);
                                     sleep(300);
                                     no_sound();
+                                    break;
                                 }
                                 for (int x = 0; x < ball_size; x++) {
                                     for (int y = 0; y < ball_size; y++) {
@@ -945,13 +945,13 @@ void kmain() {
                                     drag = 0;
                                     draw_window();
                                     draw_cursor(pos_x, pos_y);
-                                    break;
                                     play_sound(700);
                                     sleep(100);
                                     no_sound();
                                     play_sound(300);
                                     sleep(300);
                                     no_sound();
+                                    break;
                                 }
                                 for (int x = 0; x < ball_size; x++) {
                                     for (int y = 0; y < ball_size; y++) {
@@ -1187,7 +1187,7 @@ void kmain() {
                             if (str_in(ftext, "stfree")) { drag = 0; }
                             if (str_in(ftext, "prntstr")) { print_string(ftext, 480, 359, 0x0000); }
                         }
-                        if (pos_x >= win_x + 190 && pos_x <= win_x + 260 && pos_y <= win_y + 30) {
+                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
                             int help_col = win_y + 45;
                             int line = win_y + 65;
                             drag = 1;
