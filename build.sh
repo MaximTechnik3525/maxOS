@@ -18,7 +18,7 @@ check_error $?
 
 # 1. Включаем оптимизацию размера -Os, но ЗАПРЕЩАЕМ компилятору разносить функции!
 echo "[2/4] Compiling C kernel (Safe Size Optimization)..."
-i686-w64-mingw32-gcc -m32 -ffreestanding -Os -fno-toplevel-reorder -fno-asynchronous-unwind-tables -mpreferred-stack-boundary=2 -fomit-frame-pointer -c kernel.c -o kernel.o
+i686-w64-mingw32-gcc -m32 -ffreestanding -Os -fno-toplevel-reorder -fno-asynchronous-unwind-tables -mpreferred-stack-boundary=2 -fomit-frame-pointer -c kernel.c -o kernel.o -fmerge-all-constants -fno-ident -fno-stack-protector -fno-exceptions
 check_error $?
 
 # 2. Линкуем с оригинальным выравниванием по 32 байта из твоего батника.
