@@ -28,6 +28,8 @@ void prev_cursor();
 void play_sound(unsigned int nfreq);
 void no_sound();
 void pong();
+void help();
+void cpu_win();
 unsigned short bg_col = 0x18C3;
 void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
@@ -261,84 +263,8 @@ void kmain() {
                     if (click == 1) { // MOUSE CLICKS
                         if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30)  { pong(); }
                         if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30)  { shutdown(); }
-                        if (pos_x <= win_x + 50 && pos_y <= win_y + 30) {
-                            int help_col = win_y + 45;
-                            drag = 1;
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                   else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
-                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Arrows: move win", win_x + 30, help_col, 0x0000);
-                            print_string("C: clear and close", win_x + 30, help_col + 15, 0x0000);
-                            print_string("1-7: change theme", win_x + 30, help_col + 30, 0x0000);
-                            print_string("F1/F2: write", win_x + 30, help_col + 45, 0x0000);
-                            print_string("F: format", win_x + 30, help_col + 60, 0x0000);
-                            print_string("F3/F4: key-mouse", win_x + 30, help_col + 75, 0x0000);
-                        }
-                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30) {
-                            int help_col = win_y + 45;
-                            drag = 1;
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                   else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
-                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            char cpu_name[49];
-                            get_cpu(cpu_name);
-                            print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string(cpu_name, win_x + 30, help_col, 0x0000);
-                            print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
-                        }
+                        if (pos_x <= win_x + 50 && pos_y <= win_y + 30) { help(); }
+                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30) { cpu_win(); }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30) {
                             int help_col = win_y + 45;
                             drag = 1;
@@ -762,44 +688,7 @@ void kmain() {
                             print_string("F: format", win_x + 30, help_col + 60, 0x0000);
                             print_string("F3/F4: key-mouse", win_x + 30, help_col + 75, 0x0000);
                         }
-                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0) {
-                            int help_col = win_y + 45;
-                            drag = 1;
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                   else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
-                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            char cpu_name[49];
-                            get_cpu(cpu_name);
-                            print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string(cpu_name, win_x + 30, help_col, 0x0000);
-                            print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
-                        }
+                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0) { cpu_win(); }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) {
                             int help_col = win_y + 45;
                             drag = 1;
@@ -1269,7 +1158,88 @@ void pong() {
         }
     }
 }
-
+void help() {
+                        if (pos_x <= win_x + 50 && pos_y <= win_y + 30  && drag == 0) {
+                            int help_col = win_y + 45;
+                            drag = 1;
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 1024 + x] = 0x0320;
+                                    }
+                                   else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
+                                    }
+                                    else {
+                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                    }
+                                }
+                            }
+                            int swin_x = win_x + 20;
+                            int swin_y = win_y + 22;
+                            int swin_w = win_w - 40;
+                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
+                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
+                            int right_edges = swin_x + swin_w - 1;
+                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
+                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
+                            print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
+                            print_string("Arrows: move win", win_x + 30, help_col, 0x0000);
+                            print_string("C: clear and close", win_x + 30, help_col + 15, 0x0000);
+                            print_string("1-7: change theme", win_x + 30, help_col + 30, 0x0000);
+                            print_string("F1/F2: write", win_x + 30, help_col + 45, 0x0000);
+                            print_string("F: format", win_x + 30, help_col + 60, 0x0000);
+                            print_string("F3/F4: key-mouse", win_x + 30, help_col + 75, 0x0000);
+                        }
+}
+void cpu_win() {
+                            if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0) {
+                            int help_col = win_y + 45;
+                            drag = 1;
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 1024 + x] = 0x0320;
+                                    }
+                                   else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
+                                    }
+                                    else {
+                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                    }
+                                }
+                            }
+                            int swin_x = win_x + 20;
+                            int swin_y = win_y + 22;
+                            int swin_w = win_w - 40;
+                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
+                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
+                            int right_edges = swin_x + swin_w - 1;
+                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
+                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
+                            char cpu_name[49];
+                            get_cpu(cpu_name);
+                            print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
+                            print_string(cpu_name, win_x + 30, help_col, 0x0000);
+                            print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
+                        }
+}
 void int_str(int num, char* str) {
     int i = 0;
     if (num == 0) {
@@ -1621,17 +1591,50 @@ void draw_char(char c, int start_x, int start_y, unsigned short color) {
 }
 void draw_window() {
     for (int y = 0; y < 768; y++) {
+        int row_offset = y << 10;
         for (int x = 0; x < 1024; x++) {
             if (theme == 1) {
-                gfx_memory[y * 1024 + x] = 0x18C3;
+                if (((x ^ y) & 16) == 0) {
+                    gfx_memory[row_offset + x] = 0x10A2;
+                }
+                else { gfx_memory[row_offset + x] = 0x2124; }
             }
-            if (theme == 2) { gfx_memory[y * 1024 + x] = 0x2000; }
-            if (theme == 3) { gfx_memory[y * 1024 + x] = 0x1041; }
-            if (theme == 4) { gfx_memory[y * 1024 + x] = 0x10A2; }
-            if (theme == 5) { gfx_memory[y * 1024 + x] = 0x01C8; }
-            if (theme == 6) { gfx_memory[y * 1024 + x] = 0x00A1; }
-            if (theme == 7) { gfx_memory[y * 1024 + x] = 0x4083; }
-        }
+            if (theme == 2) {
+                if (((x ^ y) & 16) == 0) {
+                    gfx_memory[row_offset + x] = 0x4002;
+                }
+                else { gfx_memory[row_offset + x] = 0x8085; }
+            }            
+            if (theme == 3) {
+                if (((x ^ y) & 16) == 0) {
+                    gfx_memory[row_offset + x] = 0x0102;
+                }
+                else { gfx_memory[row_offset + x] = 0x2A45; }
+            }            
+            if (theme == 4) {
+                if (((x ^ y) & 16) == 0) {
+                    gfx_memory[row_offset + x] = 0x1041;
+                }
+                else { gfx_memory[row_offset + x] = 0x4102; }
+            }            
+            if (theme == 5) {
+                if (((x ^ y) & 16) == 0) {
+                    gfx_memory[row_offset + x] = 0x010A;
+                }
+                else { gfx_memory[row_offset + x] = 0x03EF; }
+            }
+            if (theme == 6) {
+                if (((x ^ y) & 16) == 0) {
+                    gfx_memory[row_offset + x] = 0x0102;
+                }
+                else { gfx_memory[row_offset + x] = 0x05E0; }
+            }            
+            if (theme == 7) {
+                if (((x ^ y) & 16) == 0) {
+                    gfx_memory[row_offset + x] = 0x4004;
+                }
+                else { gfx_memory[row_offset + x] = 0xFBEF; }
+            }        }
     }
     for (int y = win_y; y < win_y + win_h; y++) {
         for (int x = win_x; x < win_x + win_w; x++) {
