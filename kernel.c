@@ -160,7 +160,7 @@ int win_w = 740;
 int win_h = 550;
 int pos_x = 512;
 int pos_y = 384;
-int theme = 1;
+int theme = 5;
 int w_mode = 0;
 int km_mode = 0;
 // PONG
@@ -1278,7 +1278,7 @@ void shutdown() {
             gfx_memory[(y << 10) + x] = 0x0000;
         }
     }
-    print_string("maxOS shutting down", 420, 384, 0xB269);
+    print_string("maxOS is shutting down...", 400, 384, 0xB269);
     play_sound(800); sleep(150); no_sound();
     play_sound(600); sleep(150); no_sound();
     play_sound(400); sleep(250); no_sound();
@@ -1697,10 +1697,10 @@ void draw_window() {
     gfx_memory[win_y * 1024 + right_edge] = bg_col;
     gfx_memory[win_y * 1024 + (right_edge+1)] = bg_col;
     gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
-    if (theme == 3) { print_string("maxOS 2.8 Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) { print_string("maxOS 2.8 Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 3) { print_string("maxOS 2.9 Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 4) { print_string("maxOS 2.9 Tora", win_x + 10, win_y + 5, 0xFFFF); }
     else {
-        print_string("maxOS 2.8", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS 2.9", win_x + 10, win_y + 5, 0xFFFF); }
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
     draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
