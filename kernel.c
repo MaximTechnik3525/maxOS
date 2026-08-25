@@ -1280,13 +1280,23 @@ void outw(unsigned short port, unsigned short val) { __asm__ volatile("outw %0, 
 void shutdown() {
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
-            gfx_memory[(y << 10) + x] = 0x0000;
+            if (y <= 387 && y >= 384) {
+                gfx_memory[y * 1024 + x] = 0xB269;
+            }
+            else if (y <= 393 && y > 387) {
+                gfx_memory[y * 1024 + x] = 0x81C6;
+            }
+            else if (y <= 400 && y > 393) {
+                gfx_memory[y * 1024 + x] = 0x4924;
+            }
+            else { gfx_memory[y * 1024 + x] = 0x0000; }
+
         }
     }
-    print_string("maxOS is shutting down...", 400, 384, 0xB269);
-    play_sound(800); sleep(150); no_sound();
-    play_sound(600); sleep(150); no_sound();
-    play_sound(400); sleep(250); no_sound();
+    print_string("maxOS is shutting down", 420, 420, 0xB269);
+    play_sound(200); sleep(150); no_sound();
+    play_sound(100); sleep(150); no_sound();
+    play_sound(50); sleep(250); no_sound();
     sleep(3000);
     outw(0xB004, 0x2000);
     outw(0x604, 0x2000);
@@ -1617,7 +1627,7 @@ void clock() {
     int_str(sec, s);
     int_str(min, m);
     int_str(hour, h);
-    print_string(h, win_x + 700, win_y + 6, 0xFFFF);
+    print_string(h, win_x + 690, win_y + 6, 0xFFFF);
     print_string(":", win_x + 710, win_y + 6, 0xFFFF);
     print_string(m, win_x + 720, win_y + 6, 0xFFFF);
 }
