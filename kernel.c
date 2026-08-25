@@ -35,24 +35,19 @@ void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
 int create_file(char* name, char* text);
 unsigned char mouse_arrow[12][12] = {
-    {1,1,0,0,0,0,0,0,0,0,0,0},
-    {1,2,1,0,0,0,0,0,0,0,0,0},
-    {1,2,2,1,0,0,0,0,0,0,0,0},
-    {1,2,2,2,1,0,0,0,0,0,0,0},
-    {1,2,2,2,2,1,0,0,0,0,0,0},
-    {1,2,2,2,2,2,1,0,0,0,0,0},
-    {1,2,2,2,2,2,2,1,0,0,0,0},
-    {1,2,2,2,2,1,1,1,1,0,0,0},
-    {1,2,1,1,2,1,0,0,0,0,0,0},
-    {1,1,0,0,1,2,1,0,0,0,0,0},
-    {0,0,0,0,0,1,1,0,0,0,0,0},
-    {0,0,0,0,0,0,0,0,0,0,0,0}
+    {1,1,3,0,0,0,0,0,0,0,0,0},
+    {1,2,1,3,0,0,0,0,0,0,0,0},
+    {1,2,2,1,3,0,0,0,0,0,0,0},
+    {1,2,2,2,1,3,0,0,0,0,0,0},
+    {1,2,2,2,2,1,3,0,0,0,0,0},
+    {1,2,2,2,2,2,1,3,0,0,0,0},
+    {1,2,2,2,2,2,2,1,3,0,0,0},
+    {1,2,2,2,2,1,1,1,1,3,0,0},
+    {1,2,1,1,2,1,3,3,3,3,0,0},
+    {1,1,3,3,1,2,1,3,0,0,0,0},
+    {0,0,3,0,0,1,1,1,3,0,0,0},
+    {0,0,0,0,0,0,3,3,3,0,0,0}
 };
-// Готовый ASCII-шрифт 8x8 (содержит Пробел, знаки, ЦИФРЫ, ЗАГЛАВНЫЕ и строчные буквы)
-// Идеально ровный, моноширинный пиксельный шрифт maxOS v2.8 (95 символов)
-// Начинается строго с Пробела (ASCII 32), весит сущие копейки!
-// Настоящий, ровный эталонный шрифт maxOS v2.8 (95 символов, ASCII 32-126)
-// Каждая буква — это строго 8 байт подряд. Влезает в память со свистом!
 const unsigned char max_font[] = {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 32 (пробел)
     0x18,0x18,0x18,0x18,0x18,0x00,0x18,0x00, // 33 !
@@ -1488,30 +1483,37 @@ void draw_cursor(int mouse_x, int mouse_y) {
                 if (theme == 1) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x0000;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xFFFF;}
+                    if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
                 if (theme == 2) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x4000;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xF800;}
+                    if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
                 if (theme == 3) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x4080;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xB269;}
+                    if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
                 if (theme == 4) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x3186;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xD69F;}
+                    if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
                 if (theme == 5) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x0168;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0x07FF;}
+                    if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
                 if (theme == 6) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x0200;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0x07E0;}
+                    if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
                 if (theme == 7) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x60A4;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xFDF3;}
+                    if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
             }
         }
@@ -1588,6 +1590,26 @@ void draw_char(char c, int start_x, int start_y, unsigned short color) {
             }
         }
     }
+}
+unsigned char bcd_to_binary(unsigned char bcd) {
+    return ((bcd & 0xF0) >> 4) * 10 + (bcd & 0x0F);
+}
+unsigned char read_rtc_register(unsigned char reg) {
+    outb(0x70, reg);
+    return inb(0x71);
+}
+void clock() {
+    unsigned char raw_sec = read_rtc_register(0x00);
+    unsigned char raw_min = read_rtc_register(0x02);
+    unsigned char raw_hour = read_rtc_register(0x04);
+    int sec = bcd_to_binary(raw_sec), min = bcd_to_binary(raw_min), hour = bcd_to_binary(raw_hour);
+    char s[4], m[4], h[4];
+    int_str(sec, s);
+    int_str(min, m);
+    int_str(hour, h);
+    print_string(h, win_x + 700, win_y + 6, 0xFFFF);
+    print_string(":", win_x + 710, win_y + 6, 0xFFFF);
+    print_string(m, win_x + 720, win_y + 6, 0xFFFF);
 }
 void draw_window() {
     for (int y = 0; y < 768; y++) {
@@ -1697,10 +1719,11 @@ void draw_window() {
     gfx_memory[win_y * 1024 + right_edge] = bg_col;
     gfx_memory[win_y * 1024 + (right_edge+1)] = bg_col;
     gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
-    if (theme == 3) { print_string("maxOS 2.9 Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) { print_string("maxOS 2.9 Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 3) { print_string("maxOS ClockWork Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 4) { print_string("maxOS ClockWork Tora", win_x + 10, win_y + 5, 0xFFFF); }
     else {
-        print_string("maxOS 2.9", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS ClockWork", win_x + 10, win_y + 5, 0xFFFF); }
+    clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
     draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
