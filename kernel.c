@@ -168,7 +168,7 @@ int ball_dy = 3;
 int ball_size = 8;
 int game = 0;
 int collisions = 0;
-int drag = 0;
+int drag = 2;
 void kmain() {
     win_x = 150;
     win_y = 140;
@@ -199,15 +199,25 @@ void kmain() {
     draw_cursor(pos_x, pos_y);
     int help_col = win_y + 35;
     init_mouse();
-    play_sound(100);
-    sleep(100);
-    no_sound();
-    play_sound(300);
-    sleep(100);
-    no_sound();
-    play_sound(500);
-    sleep(100);
-    no_sound();
+    for (int y = 0; y < 768; y++) {
+        for (int x = 0; x < 1024; x++) {
+            if (y <= 387 && y >= 384) {
+                gfx_memory[y * 1024 + x] = 0x0DE5;
+            }
+            else if (y <= 393 && y > 387) {
+                gfx_memory[y * 1024 + x] = 0x03EA;
+            }
+            else if (y <= 400 && y > 393) {
+                gfx_memory[y * 1024 + x] = 0x01A4;
+            }
+            else { gfx_memory[y * 1024 + x] = 0x0000; }
+
+        }
+    }
+    print_string("maxOS ClockWork", 440, 420, 0x0DE5);
+    print_string("by maxTech", 10, 10, 0x24EE);
+    play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
+    sleep(2000); draw_window(); drag = 0;
     unsigned char packet[3];
     for (int i = 0; i < 5; i++) {
         ram_disk[i].size = 0;
@@ -459,7 +469,7 @@ void kmain() {
             }
             else {
                 unsigned char scan_code = inb(0x60);
-                if (scan_code < 0x80 && w_mode == 0) { // KEYBOARD CLICKS
+                if (scan_code < 0x80 && w_mode == 0 && drag != 2) { // KEYBOARD CLICKS
                     char ascii_char = scan_code_to_ascii(scan_code);
                     if (ascii_char == 'R' && win_x < 300 && drag == 0 && km_mode == 0) {
                         win_x += 20;
