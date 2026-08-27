@@ -30,6 +30,7 @@ void no_sound();
 void pong();
 void help();
 void cpu_win();
+void filew();
 unsigned short bg_col = 0x18C3;
 void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
@@ -169,13 +170,12 @@ int ball_size = 8;
 int game = 0;
 int collisions = 0;
 int drag = 2;
+int textid = 0;
+char ftext[100] = {0};
+int fid = 0;
 void kmain() {
     win_x = 150;
     win_y = 140;
-    char ftext[100];
-    int textid = 0;
-    ftext[0] = '\0';
-    int fid = 0;
     unsigned char* vesa_data = (unsigned char*) 0x9000;
     unsigned int offset40 = *(unsigned int*)(vesa_data + 40);
     unsigned int offset44 = *(unsigned int*)(vesa_data + 44);
@@ -270,153 +270,7 @@ void kmain() {
                         if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30)  { shutdown(); }
                         if (pos_x <= win_x + 50 && pos_y <= win_y + 30) { help(); }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30) { cpu_win(); }
-                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30) {
-                            int help_col = win_y + 45;
-                            drag = 1;
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                   else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
-                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            create_file("Unnamed.txt", ftext);
-                            print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
-                            print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
-                            print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
-                            if (fid <= 4) {
-                                fid++;
-                            }
-                            if (str_in(ftext, "theme1")) {
-                                theme = 1;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x18C3;
-                            }
-                            if (str_in(ftext, "theme2")) {
-                                theme = 2;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x2000;
-                            }
-                            if (str_in(ftext, "theme3")) {
-                                theme = 3;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x1041;
-                            }
-                            if (str_in(ftext, "theme4")) {
-                                theme = 4;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x10A2;
-                            }
-                            if (str_in(ftext, "theme5")) {
-                                theme = 5;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x01C8;
-                            }
-                            if (str_in(ftext, "theme6")) {
-                                theme = 6;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x00A1;
-                            }
-                            if (str_in(ftext, "theme7")) {
-                                theme = 7;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x4083;
-                            }
-                            if (str_in(ftext, "format")) {
-                                textid = 0;
-                                for (int i = 0; i < 99; i++) {
-                                    ftext[i] = '\0';}
-                                for (int i = 0; i < 5; i++) {
-                                    ram_disk[i].exists = 0;
-                                    ram_disk[i].size = 0;
-                                    for (int n = 0; n < 12; n++) {
-                                        ram_disk[i].name[n] = '\0';
-                                    }
-                                    for (int t = 0; t < 100; t++) {
-                                        ram_disk[i].content[t] = '\0';
-                                    }
-                                }
-                                fid = 0;
-                            }
-                            if (str_in(ftext, "clear")) {
-                                drag = 0;
-                                help_col = 65;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "winrght")) {
-                                drag = 0;
-                                win_x += 50;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "winlft")) {
-                                drag = 0;
-                                win_x -= 50;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "winup")) {
-                                drag = 0;
-                                win_y -= 50;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "windwn")) {
-                                drag = 0;
-                                win_y += 50;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "spkr")) {
-                                play_sound(750);
-                                sleep(250);
-                                no_sound();
-                            }
-                            if (str_in(ftext, "scrblck")) {
-                                for (int y = 0; y < 768; y++) {
-                                    for (int x = 0; x < 1024; x++) {
-                                        gfx_memory[y * 1024 + x] = 0x0000;
-                                    }
-                                }
-                            }
-                            if (str_in(ftext, "scrwht")) {
-                                for (int y = 0; y < 768; y++) {
-                                    for (int x = 0; x < 1024; x++) {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            if (str_in(ftext, "stbusy")) {
-                                drag = 1;
-                            }
-                            if (str_in(ftext, "stfree")) { drag = 0; }
-                            if (str_in(ftext, "prntstr")) { print_string(ftext, 500, 359, 0x0000); }
-                        }
+                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30) { filew(); }
                         if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
                             int help_col = win_y + 45;
                             int line = win_y + 65;
@@ -694,153 +548,7 @@ void kmain() {
                             print_string("F3/F4: key-mouse", win_x + 30, help_col + 75, 0x0000);
                         }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0) { cpu_win(); }
-                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) {
-                            int help_col = win_y + 45;
-                            drag = 1;
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                   else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
-                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            create_file("Unnamed.txt", ftext);
-                            print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
-                            print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
-                            print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
-                            if (fid <= 4) {
-                                fid++;
-                            }
-                            if (str_in(ftext, "theme1")) {
-                                theme = 1;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x18C3;
-                            }
-                            if (str_in(ftext, "theme2")) {
-                                theme = 2;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x2000;
-                            }
-                            if (str_in(ftext, "theme3")) {
-                                theme = 3;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x1041;
-                            }
-                            if (str_in(ftext, "theme4")) {
-                                theme = 4;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x10A2;
-                            }
-                            if (str_in(ftext, "theme5")) {
-                                theme = 5;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x01C8;
-                            }
-                            if (str_in(ftext, "theme6")) {
-                                theme = 6;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x00A1;
-                            }
-                            if (str_in(ftext, "theme7")) {
-                                theme = 7;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x4083;
-                            }
-                            if (str_in(ftext, "format")) {
-                                textid = 0;
-                                for (int i = 0; i < 99; i++) {
-                                    ftext[i] = '\0';}
-                                for (int i = 0; i < 5; i++) {
-                                    ram_disk[i].exists = 0;
-                                    ram_disk[i].size = 0;
-                                    for (int n = 0; n < 12; n++) {
-                                        ram_disk[i].name[n] = '\0';
-                                    }
-                                    for (int t = 0; t < 100; t++) {
-                                        ram_disk[i].content[t] = '\0';
-                                    }
-                                }
-                                fid = 0;
-                            }
-                            if (str_in(ftext, "clear")) {
-                                drag = 0;
-                                help_col = 65;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "winrght")) {
-                                drag = 0;
-                                win_x += 50;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "winlft")) {
-                                drag = 0;
-                                win_x -= 50;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "winup")) {
-                                drag = 0;
-                                win_y -= 50;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "windwn")) {
-                                drag = 0;
-                                win_y += 50;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "spkr")) {
-                                play_sound(750);
-                                sleep(250);
-                                no_sound();
-                            }
-                            if (str_in(ftext, "scrblck")) {
-                                for (int y = 0; y < 768; y++) {
-                                    for (int x = 0; x < 1024; x++) {
-                                        gfx_memory[y * 1024 + x] = 0x0000;
-                                    }
-                                }
-                            }
-                            if (str_in(ftext, "scrwht")) {
-                                for (int y = 0; y < 768; y++) {
-                                    for (int x = 0; x < 1024; x++) {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            if (str_in(ftext, "stbusy")) {
-                                drag = 1;
-                            }
-                            if (str_in(ftext, "stfree")) { drag = 0; }
-                            if (str_in(ftext, "prntstr")) { print_string(ftext, 480, 359, 0x0000); }
-                        }
+                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) { filew(); }
                         if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
                             int help_col = win_y + 45;
                             int line = win_y + 65;
@@ -1162,6 +870,189 @@ void pong() {
             sleep(16);
         }
     }
+}
+void filew() {
+                            if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0) { cpu_win(); }
+                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) {
+                            int help_col = win_y + 45;
+                            drag = 1;
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 1024 + x] = 0x0320;
+                                    }
+                                   else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
+                                    }
+                                    else {
+                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                    }
+                                }
+                            }
+                            int swin_x = win_x + 20;
+                            int swin_y = win_y + 22;
+                            int swin_w = win_w - 40;
+                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
+                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
+                            int right_edges = swin_x + swin_w - 1;
+                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
+                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
+                            create_file("Unnamed.txt", ftext);
+                            print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
+                            print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
+                            print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
+                            if (fid <= 4) {
+                                fid++;
+                            }
+                            if (str_in(ftext, "theme1")) {
+                                theme = 1;
+                                draw_window();
+                                drag = 0;
+                                bg_col = 0x18C3;
+                            }
+                            if (str_in(ftext, "theme2")) {
+                                theme = 2;
+                                draw_window();
+                                drag = 0;
+                                bg_col = 0x2000;
+                            }
+                            if (str_in(ftext, "theme3")) {
+                                theme = 3;
+                                draw_window();
+                                drag = 0;
+                                bg_col = 0x1041;
+                            }
+                            if (str_in(ftext, "theme4")) {
+                                theme = 4;
+                                draw_window();
+                                drag = 0;
+                                bg_col = 0x10A2;
+                            }
+                            if (str_in(ftext, "theme5")) {
+                                theme = 5;
+                                draw_window();
+                                drag = 0;
+                                bg_col = 0x01C8;
+                            }
+                            if (str_in(ftext, "theme6")) {
+                                theme = 6;
+                                draw_window();
+                                drag = 0;
+                                bg_col = 0x00A1;
+                            }
+                            if (str_in(ftext, "theme7")) {
+                                theme = 7;
+                                draw_window();
+                                drag = 0;
+                                bg_col = 0x4083;
+                            }
+                            if (str_in(ftext, "clear")) {
+                                drag = 0;
+                                help_col = 65;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "winrght")) {
+                                drag = 0;
+                                win_x += 50;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "winlft")) {
+                                drag = 0;
+                                win_x -= 50;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "winup")) {
+                                drag = 0;
+                                win_y -= 50;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "windwn")) {
+                                drag = 0;
+                                win_y += 50;
+                                draw_window();
+                            }
+                            if (str_in(ftext, "speaker")) {
+                                play_sound(750);
+                                sleep(250);
+                                no_sound();
+                            }
+                            if (str_in(ftext, "scrblack")) {
+                                for (int y = 0; y < 768; y++) {
+                                    for (int x = 0; x < 1024; x++) {
+                                        gfx_memory[y * 1024 + x] = 0x0000;
+                                    }
+                                }
+                            }
+                            if (str_in(ftext, "scrwhite")) {
+                                for (int y = 0; y < 768; y++) {
+                                    for (int x = 0; x < 1024; x++) {
+                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                    }
+                                }
+                            }
+                            if (str_in(ftext, "stbusy")) {
+                                drag = 1;
+                            }
+                            if (str_in(ftext, "stfree")) { drag = 0; }
+                            if (str_in(ftext, "stcrit")) { drag = 2; }
+                            if (str_in(ftext, "drawwin")) {
+                                for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 1024 + x] = 0x0320;
+                                    }
+                                   else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
+                                    }
+                                    else {
+                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                    }
+                                }
+                            int swin_x = win_x + 20;
+                            int swin_y = win_y + 22;
+                            int swin_w = win_w - 40;
+                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
+                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
+                            int right_edges = swin_x + swin_w - 1;
+                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
+                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
+                            print_string("App", win_x + 27, win_y + 27, 0xFFFF);
+                            }
+                            }
+                            if (str_in(ftext, "printtext")) { print_string(ftext, 300, 359, 0x0000); }
+                            if (str_in(ftext, "format")) {
+                                textid = 0;
+                                for (int i = 0; i < 99; i++) {
+                                    ftext[i] = '\0';}
+                                for (int i = 0; i < 5; i++) {
+                                    ram_disk[i].exists = 0;
+                                    ram_disk[i].size = 0;
+                                    for (int n = 0; n < 12; n++) {
+                                        ram_disk[i].name[n] = '\0';
+                                    }
+                                    for (int t = 0; t < 100; t++) {
+                                        ram_disk[i].content[t] = '\0';
+                                    }
+                                }
+                                fid = 0;
+                            }
+                        }
 }
 void help() {
                         if (pos_x <= win_x + 50 && pos_y <= win_y + 30  && drag == 0) {
