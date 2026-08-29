@@ -215,7 +215,7 @@ void kmain() {
 
         }
     }
-    print_string("maxOS ClockWork", 440, 420, 0x0DE5);
+    print_string("maxOS CommandLine", 440, 420, 0x0DE5);
     print_string("by maxTech", 10, 10, 0x24EE);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
@@ -230,7 +230,6 @@ void kmain() {
             ram_disk[i].content[t] = '\0';
         }
     }
-    error("This is test error screen. Code -0x00");
     while(1) {
         unsigned char status = inb(0x64);
         if (status & 0x01) {
@@ -1038,6 +1037,9 @@ void filew() {
                             }
                             }
                             if (str_in(ftext, "printtext")) { print_string(ftext, 300, 359, 0x0000); }
+                            if (str_in(ftext, "sleep"))  { sleep(2000); }
+                            if (str_in(ftext, "errscr")) { error("Caused by user programm. Code: 0x00"); }
+                            if (str_in(ftext, "shtdwn")) { shutdown(); }
                             if (str_in(ftext, "format")) {
                                 textid = 0;
                                 for (int i = 0; i < 99; i++) {
