@@ -31,6 +31,7 @@ void pong();
 void help();
 void cpu_win();
 void filew();
+void error(char* err);
 unsigned short bg_col = 0x18C3;
 void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
@@ -229,6 +230,7 @@ void kmain() {
             ram_disk[i].content[t] = '\0';
         }
     }
+    error("This is test error screen. Code -0x00");
     while(1) {
         unsigned char status = inb(0x64);
         if (status & 0x01) {
@@ -1195,7 +1197,20 @@ void shutdown() {
     outw(0x0B004, 0x2000);
     play_sound(800); sleep(300); no_sound();
     asm volatile("cli; hlt");
-} 
+    error("Cannot use power off ports! Code: 0x01");
+}
+void error(char* err) {
+    drag = 2;
+    for (int y = 0; y < 768; y++) {
+        for (int x = 0; x < 1024; x++) {
+            gfx_memory[y * 1024 + x] = 0xB269;
+        }
+    }
+    print_string("maxOS error!", 470, 10, 0xFFFF);
+    print_string(err, 10, 30, 0xFFFF);
+    print_string("Restart or off your PC :(", 10, 50, 0xFFFF);
+    play_sound(100); sleep(250); play_sound(75); sleep(250); play_sound(50); sleep(250); no_sound();
+}
 int str_in(char* main_string, char* substring) {
     int i = 0;
     if (substring[0] == '\0') return 1;
