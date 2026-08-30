@@ -1,51 +1,47 @@
 #!/bin/bash
-# ==========================================================
-#   maxOS v2.4 — Стабильный ультра-сжатый релиз (Floppy)
-# ==========================================================
 
-check_error() {
-    if [ $1 -ne 0 ]; then
-        echo "---------------------------------------"
-        echo " [ERROR] Build failed! Check code."
-        echo "---------------------------------------"
-        exit 1
-    fi
+# Останавливать скрипт при любой ошибке
+set -e
+
+echo "=== [1/4] Компиляция исходного кода MaxOS ==="
+nasm -f elf32 entry.asm -o entry.o
+gcc -m32 -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+
+echo "=== [2/4] Линковка бинарного файла ядра ==="
+# Флаг --no-warn-rwx-segments убирает предупреждение линкера
+ld -m elf_i386 --no-warn-rwx-segments -T linker.ld -o mykernel.bin entry.o kernel.o
+
+echo "=== [3/4] Подготовка структуры ISO ==="
+# Создаем строго стандартные папки для GRUB
+mkdir -p iso/boot/grub
+
+# Генерируем конфигурационный файл GRUB
+# Генерируем конфигурационный файл GRUB с принудительной графикой
+cat << 'EOF' > iso/boot/grub/grub.cfg
+insmod vbe
+insmod vga
+insmod video_bochs
+insmod video_cirrus
+
+# Принудительно ставим разрешение графики для самого GRUB
+set gfxmode=1024x768x16
+# Указываем GRUB передать этот графический режим ядру "как есть" (НЕ переключать в текст)
+set gfxpayload=keep
+
+menuentry "maxOS GoldWork" {
+    multiboot /boot/mykernel.bin
+    boot
 }
+EOF
 
-echo "[1/4] Compiling Bootloader..."
-nasm -f bin boot.asm -o boot.bin
-check_error $?
+# Копируем ядро в папку boot внутри будущего диска
+cp mykernel.bin iso/boot/
 
-# 1. Включаем оптимизацию размера -Os, но ЗАПРЕЩАЕМ компилятору разносить функции!
-echo "[2/4] Compiling C kernel (Safe Size Optimization)..."
-i686-w64-mingw32-gcc -m32 -ffreestanding -Os -fno-toplevel-reorder -fno-asynchronous-unwind-tables -mpreferred-stack-boundary=2 -fomit-frame-pointer -fmerge-all-constants -fno-ident -fno-stack-protector -fno-exceptions -fno-plt -fno-common -mno-accumulate-outgoing-args -fno-builtin -fno-stack-check -c kernel.c -o kernel.o
+echo "=== [4/4] Создание загрузочного диска maxos.iso ==="
+grub-mkrescue -o maxos.iso iso
 
-check_error $?
-
-# 2. Линкуем с оригинальным выравниванием по 32 байта из твоего батника.
-# Флаг -e _kmain и -Ttext 0x1000 жестко привяжут старт к первому байту адреса 0x1000!
-echo "[3/4] Linking binary (i386pe)..."
-i686-w64-mingw32-ld -m i386pe -s -X \
-  --file-alignment=32 --section-alignment=32 \
-  -Ttext 0x1000 -e _kmain -o kernel.exe kernel.o
-check_error $?
-
-# 3. Чистое извлечение плоского бинарника из твоего родного батника
-echo "[4/4] Extracting flat binary..."
-objcopy -O binary kernel.exe kernel.bin
-check_error $?
-
-echo "[5/4] Creating Floppy Image..."
-cat boot.bin kernel.bin > maxos.img
-check_error $?
-
-# 4. Добиваем до эталонных 1.44 МБ для строгого SeaBIOS
-truncate -s 1440k maxos.img
-check_error $?
-
-rm -f kernel.o kernel.exe boot.bin kernel.bin
-
-echo "======================================="
-echo "   SUCCESS! Running maxOS in QEMU..."
-echo "======================================="
-qemu-system-i386 -vga cirrus -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -display default,full-screen=on -fda maxos.img
+echo "============================================="
+echo " Сборка завершена успешно! Файл ОС: maxos.iso"
+echo " Запуск в QEMU: qemu-system-i386 -cdrom maxos.iso"
+echo "============================================="
+qemu-system-i386 -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -cdrom maxos.iso

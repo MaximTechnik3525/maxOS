@@ -1,3 +1,39 @@
+// Упакованная структура, чтобы компилятор не добавлял лишних скрытых байт (alignment padding)
+#pragma pack(push, 1)
+struct multiboot_info {
+    unsigned int flags;
+    unsigned int mem_lower;
+    unsigned int mem_upper;
+    unsigned int boot_device;
+    unsigned int cmdline;
+    unsigned int mods_count;
+    unsigned int mods_addr;
+    unsigned int syms[4];       // Поля для ELF секций
+    unsigned int mmap_length;
+    unsigned int mmap_addr;
+    unsigned int drives_length;
+    unsigned int drives_addr;
+    unsigned int config_table;
+    unsigned int boot_loader_name;
+    unsigned int apm_table;
+    unsigned int vbe_control_info;
+    unsigned int vbe_mode_info;
+    unsigned short vbe_mode;
+    unsigned short vbe_interface_seg;
+    unsigned short vbe_interface_off;
+    unsigned short vbe_interface_len;
+
+    // Графический фреймбуфер (начиная с 88-го байта структуры)
+    unsigned long long framebuffer_addr; 
+    unsigned int framebuffer_pitch;     // Длина строки в БАЙТАХ
+    unsigned int framebuffer_width;     // Ширина экрана в пикселях
+    unsigned int framebuffer_height;    // Высота экрана в пикселях
+    unsigned char framebuffer_bpp;       // Количество бит на пиксель (16, 24 или 32)
+    unsigned char framebuffer_type;
+    unsigned char framebuffer_color_info[6];
+};
+#pragma pack(pop)
+
 struct VirtualFile {
     char name[12];
     int size;
@@ -8,11 +44,15 @@ struct VirtualFile ram_disk[5];
 void print_string(char* str, int x, int y, unsigned short color);
 void draw_char(char c, int start_x, int start_y, unsigned short color);
 unsigned char inb(unsigned short port);
+void int_str(int num, char* str);
 void outb(unsigned short port, unsigned char data);
 void outw(unsigned short port, unsigned short val);
 void shutdown();
 char scan_code_to_ascii(unsigned char scan_code);
-unsigned short* gfx_memory;
+unsigned short* _gfx_memory_backend;
+unsigned int REAL_PITCH = 1024;
+#define gfx_memory_safe(y, x) _gfx_memory_backend[(y) * REAL_PITCH + (x)]
+#define gfx_memory _gfx_memory_backend
 void draw_cursor(int mouse_x, int mouse_y);
 void draw_btn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_cpubtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
@@ -148,10 +188,7 @@ const unsigned char max_font[] = {
     0x70,0x18,0x18,0x0C,0x18,0x18,0x70,0x00, // 125 }
     0x76,0xDC,0x00,0x00,0x00,0x00,0x00,0x00  // 126 ~
 };
-
-
-
-int win_x = 512;
+int win_x = 150;
 int win_y = 140;
 int win_w = 740;
 int win_h = 550;
@@ -174,26 +211,12 @@ int drag = 2;
 int textid = 0;
 char ftext[100] = {0};
 int fid = 0;
-void kmain() {
-    win_x = 150;
-    win_y = 140;
-    unsigned char* vesa_data = (unsigned char*) 0x9000;
-    unsigned int offset40 = *(unsigned int*)(vesa_data + 40);
-    unsigned int offset44 = *(unsigned int*)(vesa_data + 44);
-    unsigned int final_address = 0;
-    if (offset40 >= 0x00100000) {final_address = offset40;}
-    else if (offset44 >= 0x00100000) {final_address = offset44;}
-    else {
-        for (int i = 32; i < 64; i += 4) {
-            unsigned int check_addr = *(unsigned int*)(vesa_data + i);
-            if (check_addr >= 0x10000000 && (check_addr & 0x00FFFFFF) == 0) {
-                final_address = check_addr;
-                break;
-            }
-        }
-    }
-    if (final_address == 0) {final_address = 0xFD000000;}
-    gfx_memory = (unsigned short*) final_address;
+void kmain(unsigned long multiboot_info_address, unsigned long magic) {
+    struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
+    _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
+    if (mbi->framebuffer_pitch > 0) { REAL_PITCH = mbi->framebuffer_pitch / 2; }
+    unsigned short width = mbi->framebuffer_width;
+    unsigned short height = mbi->framebuffer_height;
     draw_window();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
@@ -215,7 +238,7 @@ void kmain() {
 
         }
     }
-    print_string("maxOS CommandLine", 440, 420, 0x0DE5);
+    print_string("maxOS GoldWork", 440, 420, 0x0DE5);
     print_string("by maxTech", 10, 10, 0x24EE);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
@@ -1094,7 +1117,7 @@ void help() {
                             print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Arrows: move win", win_x + 30, help_col, 0x0000);
                             print_string("C: clear and close", win_x + 30, help_col + 15, 0x0000);
-                            print_string("1-7: change theme", win_x + 30, help_col + 30, 0x0000);
+                            print_string("1-8: theme", win_x + 30, help_col + 30, 0x0000);
                             print_string("F1/F2: write", win_x + 30, help_col + 45, 0x0000);
                             print_string("F: format", win_x + 30, help_col + 60, 0x0000);
                             print_string("F3/F4: key-mouse", win_x + 30, help_col + 75, 0x0000);
@@ -1443,6 +1466,11 @@ void draw_cursor(int mouse_x, int mouse_y) {
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xFDF3;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
+                if (theme == 8) {
+                    if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x4962;}
+                    if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xF621;}
+                    if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
+                }
             }
         }
     }
@@ -1584,7 +1612,14 @@ void draw_window() {
                     gfx_memory[row_offset + x] = 0x4004;
                 }
                 else { gfx_memory[row_offset + x] = 0xFBEF; }
-            }        }
+            }
+            if (theme == 8) {
+                if (((x ^ y) & 16) == 0) {
+                    gfx_memory[row_offset + x] = 0x24A2;
+                }
+                else { gfx_memory[row_offset + x] = 0x1881; }
+            }
+        }
     }
     for (int y = win_y; y < win_y + win_h; y++) {
         for (int x = win_x; x < win_x + win_w; x++) {
@@ -1598,6 +1633,7 @@ void draw_window() {
                 if (theme == 5) { gfx_memory[y * 1024 + x] = 0x0124; }
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x0200; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0x50C3; }
+                if (theme == 8) { gfx_memory[y * 1024 + x] = 0x5A21; }
             }
             else if (y < win_y + 3) {
                 if (theme == 1) {
@@ -1610,6 +1646,7 @@ void draw_window() {
                 if (theme == 5) { gfx_memory[y * 1024 + x] = 0x0DE5; }
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x05E5; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0xFCEF; }
+                if (theme == 8) { gfx_memory[y * 1024 + x] = 0xFED3; }
             }
             else if (y < win_y + 9) {
                 if (theme == 1) {
@@ -1651,7 +1688,7 @@ void draw_window() {
     if (theme == 4) { print_string("maxOS CommandLine Tora", win_x + 10, win_y + 5, 0xFFFF); }
     else {
         print_string("maxOS CommandLine", win_x + 10, win_y + 5, 0xFFFF); }
-    clock();
+    //clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
     draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
