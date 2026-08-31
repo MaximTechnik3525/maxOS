@@ -1,4 +1,4 @@
-CommandLine (v3.1): added error screen, updated commands and syntaxis, added new commands.
+GoldWork (v3.2): Default system loader is now GNU Grub. OS now in .iso format, and working as cdrom. Added theme 8 "Gold". Fixes.
 To run on qemu: if you are on Linux, start qemu with this command "qemu-system-i386 -vga cirrus -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -display default,full-screen=on -fda 'path to maxOS IMG'". if you are on Windows, start with qemu with this command "qemu-system-i386 -vga cirrus -machine pcspk-audiodev=audio0 -audiodev sdl,id=audio0 -display default,full-screen=on -fda 'path to maxOS IMG'".
 To run on real PC: recommended PS/2 mouse, PC speaker and BIOS. You need to write maxOS.img on device (for example on USB flash drive) and boot with it.
 You can write your own programm for maxOS right in the system. This is list of avaivable commands:
