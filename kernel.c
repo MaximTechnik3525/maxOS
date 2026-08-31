@@ -565,7 +565,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                                     if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
                                         gfx_memory[y * 1024 + x] = 0x0320;
                                     }
-                                   else if (y < win_y + 25) {
+                                    else if (y < win_y + 25) {
                                         gfx_memory[y * 1024 + x] = 0x3DEF;
                                     }
                                     else if (y < win_y + 31) {
@@ -914,7 +914,7 @@ void filew() {
                             create_file("Unnamed.txt", ftext);
                             print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
                             print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
-                            print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
                             if (fid < 4) {
                                 fid++;
                             }
@@ -1051,6 +1051,8 @@ void filew() {
                             if (str_in(ftext, "sleep"))  { sleep(2000); }
                             if (str_in(ftext, "errscr")) { error("Caused by user programm. Code: 0x00"); }
                             if (str_in(ftext, "shtdwn")) { shutdown(); }
+                            if (str_in(ftext, "trailon")) { tail = 1; }
+                            if (str_in(ftext, "trailoff")) { tail = 0; }
                             if (str_in(ftext, "format")) {
                                 textid = 0;
                                 for (int i = 0; i < 99; i++) {
@@ -1103,12 +1105,13 @@ void help() {
                             gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
                             gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
                             print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Arrows to move win", win_x + 30, help_col, 0x0000);
-                            print_string("C t clear and close", win_x + 30, help_col + 15, 0x0000);
-                            print_string("1-8 to change theme", win_x + 30, help_col + 30, 0x0000);
-                            print_string("F1/F2 to write", win_x + 30, help_col + 45, 0x0000);
-                            print_string("F to format", win_x + 30, help_col + 60, 0x0000);
-                            print_string("F3/F4 to key-mouse", win_x + 30, help_col + 75, 0x0000);
+                            print_string("Arrows to move window.", win_x + 30, help_col, 0x0000);
+                            print_string("C to clear screen and close windows.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("1-8 to change system theme.", win_x + 30, help_col + 30, 0x0000);
+                            print_string("F1/F2 to enable and disable write mode.", win_x + 30, help_col + 45, 0x0000);
+                            print_string("F to format virtual disk.", win_x + 30, help_col + 60, 0x0000);
+                            print_string("F3/F4 to enable and disable key-mouse mode.", win_x + 30, help_col + 75, 0x0000);
+                            print_string("F5/F6 to enable and disable mouse trail.", win_x + 30, help_col + 90, 0x0000);
                         }
 }
 void cpu_win() {
@@ -1148,7 +1151,7 @@ void cpu_win() {
                             get_cpu(cpu_name);
                             print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
                             print_string(cpu_name, win_x + 30, help_col, 0x0000);
-                            print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
                         }
 }
 void int_str(int num, char* str) {
