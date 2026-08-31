@@ -429,6 +429,14 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         sleep(100);
                         no_sound();
                     }
+                    if (ascii_char == '8' && drag == 0) {
+                        bg_col = 0x4083;
+                        theme = 8;
+                        draw_window();
+                        play_sound(700);
+                        sleep(100);
+                        no_sound();
+                    }
                     if (ascii_char == 'F' && drag == 0) {
                         w_mode = 1;
                         for (int y = win_y + 200; y < win_y + 500; y++) {
@@ -531,46 +539,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (ascii_char == 'e' && km_mode == 1 && drag == 0) {
                         if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30)  { pong(); }
                         if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30)  { shutdown(); }
-                        if (pos_x <= win_x + 50 && pos_y <= win_y + 30  && drag == 0) {
-                            int help_col = win_y + 45;
-                            drag = 1;
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                   else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
-                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Arrows: move win", win_x + 30, help_col, 0x0000);
-                            print_string("C: clear and close", win_x + 30, help_col + 15, 0x0000);
-                            print_string("1-7: change theme", win_x + 30, help_col + 30, 0x0000);
-                            print_string("F1/F2: write", win_x + 30, help_col + 45, 0x0000);
-                            print_string("F: format", win_x + 30, help_col + 60, 0x0000);
-                            print_string("F3/F4: key-mouse", win_x + 30, help_col + 75, 0x0000);
-                        }
+                        if (pos_x <= win_x + 50 && pos_y <= win_y + 30  && drag == 0) { help(); }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0) { cpu_win(); }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) { filew(); }
                         if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
@@ -978,6 +947,12 @@ void filew() {
                                 drag = 0;
                                 bg_col = 0x4083;
                             }
+                            if (str_in(ftext, "theme8")) {
+                                theme = 8;
+                                draw_window();
+                                drag = 0;
+                                bg_col = 0x4083;
+                            }
                             if (str_in(ftext, "clear")) {
                                 drag = 0;
                                 help_col = 65;
@@ -1115,12 +1090,12 @@ void help() {
                             gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
                             gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
                             print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Arrows: move win", win_x + 30, help_col, 0x0000);
-                            print_string("C: clear and close", win_x + 30, help_col + 15, 0x0000);
-                            print_string("1-8: theme", win_x + 30, help_col + 30, 0x0000);
-                            print_string("F1/F2: write", win_x + 30, help_col + 45, 0x0000);
-                            print_string("F: format", win_x + 30, help_col + 60, 0x0000);
-                            print_string("F3/F4: key-mouse", win_x + 30, help_col + 75, 0x0000);
+                            print_string("Arrows to move win", win_x + 30, help_col, 0x0000);
+                            print_string("C t clear and close", win_x + 30, help_col + 15, 0x0000);
+                            print_string("1-8 to change theme", win_x + 30, help_col + 30, 0x0000);
+                            print_string("F1/F2 to write", win_x + 30, help_col + 45, 0x0000);
+                            print_string("F to format", win_x + 30, help_col + 60, 0x0000);
+                            print_string("F3/F4 to key-mouse", win_x + 30, help_col + 75, 0x0000);
                         }
 }
 void cpu_win() {
@@ -1562,9 +1537,16 @@ void clock() {
     int_str(sec, s);
     int_str(min, m);
     int_str(hour, h);
-    print_string(h, win_x + 690, win_y + 6, 0xFFFF);
-    print_string(":", win_x + 710, win_y + 6, 0xFFFF);
-    print_string(m, win_x + 720, win_y + 6, 0xFFFF);
+    if (theme != 8) {
+        print_string(h, win_x + 690, win_y + 6, 0xFFFF);
+        print_string(":", win_x + 710, win_y + 6, 0xFFFF);
+        print_string(m, win_x + 720, win_y + 6, 0xFFFF);
+    }
+    if (theme == 8) {
+        print_string(h, win_x + 690, win_y + 6, 0x0000);
+        print_string(":", win_x + 710, win_y + 6, 0x0000);
+        print_string(m, win_x + 720, win_y + 6, 0x0000);
+    }
 }
 void draw_window() {
     for (int y = 0; y < 768; y++) {
@@ -1614,9 +1596,9 @@ void draw_window() {
             }
             if (theme == 8) {
                 if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x24A2;
+                    gfx_memory[row_offset + x] = 0x7BE0;
                 }
-                else { gfx_memory[row_offset + x] = 0x1881; }
+                else { gfx_memory[row_offset + x] = 0x9C40; }
             }
         }
     }
@@ -1687,6 +1669,7 @@ void draw_window() {
     gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
     if (theme == 3) { print_string("maxOS Goldwork Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
     if (theme == 4) { print_string("maxOS GoldWork Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 8) { print_string("maxOS GoldWork", win_x + 10, win_y + 5, 0x0000); }
     else {
         print_string("maxOS GoldWork", win_x + 10, win_y + 5, 0xFFFF); }
     clock();
