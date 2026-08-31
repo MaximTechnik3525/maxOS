@@ -1561,9 +1561,9 @@ void clock() {
         print_string(m, win_x + 720, win_y + 6, 0xFFFF);
     }
     if (theme == 8) {
-        print_string(h, win_x + 690, win_y + 6, 0x0000);
-        print_string(":", win_x + 710, win_y + 6, 0x0000);
-        print_string(m, win_x + 720, win_y + 6, 0x0000);
+        print_string(h, win_x + 690, win_y + 6, 0x20C0);
+        print_string(":", win_x + 710, win_y + 6, 0x20C0);
+        print_string(m, win_x + 720, win_y + 6, 0x20C0);
     }
 }
 void draw_window() {
@@ -1614,9 +1614,9 @@ void draw_window() {
             }
             if (theme == 8) {
                 if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x7BE0;
+                    gfx_memory[row_offset + x] = 0xE62F;
                 }
-                else { gfx_memory[row_offset + x] = 0x9C40; }
+                else { gfx_memory[row_offset + x] = 0x8B04; }
             }
         }
     }
@@ -1687,7 +1687,7 @@ void draw_window() {
     gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
     if (theme == 3) { print_string("maxOS Goldwork Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
     if (theme == 4) { print_string("maxOS GoldWork Tora", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 8) { print_string("maxOS GoldWork", win_x + 10, win_y + 5, 0x0000); }
+    if (theme == 8) { print_string("maxOS GoldWork", win_x + 10, win_y + 5, 0x20C0); }
     else {
         print_string("maxOS GoldWork", win_x + 10, win_y + 5, 0xFFFF); }
     clock();
