@@ -430,7 +430,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         no_sound();
                     }
                     if (ascii_char == '8' && drag == 0) {
-                        bg_col = 0x4083;
+                        bg_col = 0x7BE0;
                         theme = 8;
                         draw_window();
                         play_sound(700);
@@ -613,7 +613,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 }   
                 if (scan_code < 0x80 && w_mode == 1) {
                     char ascii_char = scan_code_to_ascii(scan_code);
-                    if (ascii_char != 'F' && ascii_char != 'S' && ascii_char != 'B' && textid < 74) {
+                    if (ascii_char != 'F' && ascii_char != 'S' && ascii_char != 'B' && textid < 76) {
                         ftext[textid] = ascii_char;
                         textid++;
                         ftext[textid] = '\0';
@@ -902,7 +902,7 @@ void filew() {
                             print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
                             print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
                             print_string("C: close.", win_x + 30, help_col + 15, 0x0000);
-                            if (fid <= 4) {
+                            if (fid < 4) {
                                 fid++;
                             }
                             if (str_in(ftext, "theme1")) {
@@ -951,7 +951,7 @@ void filew() {
                                 theme = 8;
                                 draw_window();
                                 drag = 0;
-                                bg_col = 0x4083;
+                                bg_col = 0x7BE0;
                             }
                             if (str_in(ftext, "clear")) {
                                 drag = 0;
@@ -1627,7 +1627,7 @@ void draw_window() {
                 if (theme == 5) { gfx_memory[y * 1024 + x] = 0x0DE5; }
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x05E5; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0xFCEF; }
-                if (theme == 8) { gfx_memory[y * 1024 + x] = 0xFED3; }
+                if (theme == 8) { gfx_memory[y * 1024 + x] = 0xFFFA; }
             }
             else if (y < win_y + 9) {
                 if (theme == 1) {
@@ -1640,7 +1640,7 @@ void draw_window() {
                 if (theme == 5) { gfx_memory[y * 1024 + x] = 0x03EA; }
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x03E3; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0xB9CD; }
-                if (theme == 8) { gfx_memory[y * 1024 + x] = 0xDE60; }
+                if (theme == 8) { gfx_memory[y * 1024 + x] = 0xE60B; }
             }
             else if (y < win_y + 15) {
                 if (theme == 1) {
@@ -1653,7 +1653,7 @@ void draw_window() {
                 if (theme == 5) { gfx_memory[y * 1024 + x] = 0x01A4; }
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x01E1; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0x7186; }
-                if (theme == 8) { gfx_memory[y * 1024 + x] = 0xBE00; }
+                if (theme == 8) { gfx_memory[y * 1024 + x] = 0x9BC5; }
             }
             else {
                 gfx_memory[y * 1024 + x] = 0xFFFF;
