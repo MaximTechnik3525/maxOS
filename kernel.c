@@ -1211,7 +1211,7 @@ void shutdown() {
 
         }
     }
-    print_string("maxOS is shutting down", 420, 420, 0xB269);
+    print_string("maxOS is shutting down...", 420, 420, 0xB269);
     play_sound(200); sleep(150); no_sound();
     play_sound(100); sleep(150); no_sound();
     play_sound(50); sleep(250); no_sound();
@@ -1220,9 +1220,8 @@ void shutdown() {
     outw(0x604, 0x2000);
     outw(0x4004, 0x3400);
     outw(0x0B004, 0x2000);
-    play_sound(800); sleep(300); no_sound();
-    asm volatile("cli; hlt");
     error("Cannot use power off ports! Code: 0x01");
+    asm volatile("cli; hlt");
 }
 void error(char* err) {
     drag = 2;
@@ -1659,6 +1658,7 @@ void draw_window() {
                 if (theme == 5) { gfx_memory[y * 1024 + x] = 0x03EA; }
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x03E3; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0xB9CD; }
+                if (theme == 8) { gfx_memory[y * 1024 + x] = 0xDE60; }
             }
             else if (y < win_y + 15) {
                 if (theme == 1) {
@@ -1671,6 +1671,7 @@ void draw_window() {
                 if (theme == 5) { gfx_memory[y * 1024 + x] = 0x01A4; }
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x01E1; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0x7186; }
+                if (theme == 8) { gfx_memory[y * 1024 + x] = 0xBE00; }
             }
             else {
                 gfx_memory[y * 1024 + x] = 0xFFFF;
@@ -1684,11 +1685,11 @@ void draw_window() {
     gfx_memory[win_y * 1024 + right_edge] = bg_col;
     gfx_memory[win_y * 1024 + (right_edge+1)] = bg_col;
     gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
-    if (theme == 3) { print_string("maxOS CommandLine Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) { print_string("maxOS CommandLine Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 3) { print_string("maxOS Goldwork Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 4) { print_string("maxOS GoldWork Tora", win_x + 10, win_y + 5, 0xFFFF); }
     else {
-        print_string("maxOS CommandLine", win_x + 10, win_y + 5, 0xFFFF); }
-    //clock();
+        print_string("maxOS GoldWork", win_x + 10, win_y + 5, 0xFFFF); }
+    clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
     draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
