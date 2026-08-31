@@ -211,6 +211,7 @@ int drag = 2;
 int textid = 0;
 char ftext[100] = {0};
 int fid = 0;
+int tail = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
@@ -274,7 +275,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 if (sign_y) delta_y |= 0xFFFFFF00;
                 if ((delta_x > -100 && delta_x < 100) && (delta_y > -100 && delta_y < 100)) {
                     if (delta_x != 0 || delta_y != 0) {
-                        prev_cursor();
+                        if (tail == 0) { prev_cursor(); }
                         pos_x += delta_x / 3;
                         pos_y -= delta_y / 3;
                         if (pos_x > win_x + 710) {pos_x = win_x + 710;}
@@ -349,6 +350,19 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 unsigned char scan_code = inb(0x60);
                 if (scan_code < 0x80 && w_mode == 0 && drag != 2) { // KEYBOARD CLICKS
                     char ascii_char = scan_code_to_ascii(scan_code);
+                    if (ascii_char == 'C' && drag == 0 && tail == 0) {
+                        tail = 1;
+                        play_sound(900);
+                        sleep(100);
+                        no_sound();
+                    }
+                    if (ascii_char == 'O' && drag == 0 && tail == 1) {
+                        tail = 0;
+                        draw_window();
+                        play_sound(800);
+                        sleep(100);
+                        no_sound();
+                    }
                     if (ascii_char == 'R' && win_x < 300 && drag == 0 && km_mode == 0) {
                         win_x += 20;
                         draw_window();
@@ -482,7 +496,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         no_sound();
                     }
                     if (ascii_char == 'U' && km_mode == 1 && pos_y > win_y + 30 && drag == 0) {
-                        prev_cursor();
+                        if (tail == 0) { prev_cursor(); }
                         pos_y -= 15;
                         draw_cursor(pos_x, pos_y);
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
@@ -494,7 +508,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'D' && km_mode == 1 && pos_y < win_y + 515 && drag == 0) {
-                        prev_cursor();
+                        if (tail == 0) { prev_cursor(); }
                         pos_y += 15;
                         draw_cursor(pos_x, pos_y);
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
@@ -506,7 +520,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'R' && km_mode == 1 && pos_x < win_x + 715 && drag == 0) {
-                        prev_cursor();
+                        if (tail == 0) { prev_cursor(); }
                         pos_x += 15;
                         draw_cursor(pos_x, pos_y);
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
@@ -518,7 +532,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'L' && km_mode == 1 && pos_x > win_x + 15 && drag == 0) {
-                        prev_cursor();
+                        if (tail == 0) { prev_cursor(); }
                         pos_x -= 15;
                         draw_cursor(pos_x, pos_y);
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
@@ -609,7 +623,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         sleep(100);
                         no_sound();
                     }
-                
                 }   
                 if (scan_code < 0x80 && w_mode == 1) {
                     char ascii_char = scan_code_to_ascii(scan_code);
@@ -1462,6 +1475,8 @@ char scan_code_to_ascii(unsigned char scan_code) {
         case 0x3C: return 'S';
         case 0x3D: return 'T';
         case 0x3E: return 'G';
+        case 0x3F: return 'C';
+        case 0x40: return 'O';
         case 0x39: return ' ';
         case 0x2E: return 'c';
         case 0x48: return 'U';
