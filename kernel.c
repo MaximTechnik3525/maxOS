@@ -239,7 +239,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 
         }
     }
-    print_string("maxOS GoldWork", 440, 420, 0x0DE5);
+    print_string("maxOS TrailFix", 440, 420, 0x0DE5);
     print_string("by maxTech", 10, 10, 0x24EE);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
