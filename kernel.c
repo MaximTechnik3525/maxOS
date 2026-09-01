@@ -1685,11 +1685,11 @@ void draw_window() {
     gfx_memory[win_y * 1024 + right_edge] = bg_col;
     gfx_memory[win_y * 1024 + (right_edge+1)] = bg_col;
     gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
-    if (theme == 3) { print_string("maxOS Goldwork Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) { print_string("maxOS GoldWork Tora", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 8) { print_string("maxOS GoldWork", win_x + 10, win_y + 5, 0x20C0); }
+    if (theme == 3) { print_string("maxOS TrailFix Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 4) { print_string("maxOS TrailFix Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 8) { print_string("maxOS TrailFix", win_x + 10, win_y + 5, 0x20C0); }
     else {
-        print_string("maxOS GoldWork", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS TrailFix", win_x + 10, win_y + 5, 0xFFFF); }
     clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
