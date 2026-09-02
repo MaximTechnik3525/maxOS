@@ -212,6 +212,7 @@ int textid = 0;
 char ftext[100] = {0};
 int fid = 0;
 int tail = 0;
+int repeats = 1;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
@@ -918,6 +919,22 @@ void filew() {
                             if (fid < 4) {
                                 fid++;
                             }
+                            repeats = 1;
+                            if (str_in(ftext, "repeat1")) { repeats = 1; }
+                            if (str_in(ftext, "repeat5")) { repeats = 5; }
+                            if (str_in(ftext, "repeat10")) { repeats = 10; }
+                            if (str_in(ftext, "repeat50")) { repeats = 50; }
+                            if (str_in(ftext, "repeat100")) { repeats = 100; }
+                            for (int range = 0; range < repeats; range++) {
+                                if (str_in(ftext, "waitkey")) {
+                                    while(1) {
+                                    unsigned char scan_code = inb(0x60);
+                                    if (scan_code < 0x80) {
+                                        char ascii_char = scan_code_to_ascii(scan_code);
+                                        if (ascii_char != 'e') { break; }
+                                    }
+                                }
+                                }
                             if (str_in(ftext, "theme1")) {
                                 theme = 1;
                                 draw_window();
@@ -1069,6 +1086,7 @@ void filew() {
                                 }
                                 fid = 0;
                             }
+                        }
                         }
 }
 void help() {
@@ -1474,6 +1492,9 @@ unsigned char inb(unsigned short port) {
 
 char scan_code_to_ascii(unsigned char scan_code) {
     switch (scan_code) {
+        case 0x33: return ',';
+        case 0x34: return '.';
+        case 0x35: return '/';
         case 0x3B: return 'F';
         case 0x3C: return 'S';
         case 0x3D: return 'T';
