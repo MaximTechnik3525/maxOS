@@ -28,7 +28,7 @@ set gfxmode=1024x768x16
 # Указываем GRUB передать этот графический режим ядру "как есть" (НЕ переключать в текст)
 set gfxpayload=keep
 
-menuentry "maxOS TrailFix" {
+menuentry "maxOS NeonCycle" {
     multiboot /boot/mykernel.bin
     boot
 }
@@ -42,6 +42,6 @@ grub-mkrescue -o maxos.iso iso
 
 echo "============================================="
 echo " Сборка завершена успешно! Файл ОС: maxos.iso"
-echo " Запуск в QEMU: qemu-system-i386 -cdrom maxos.iso"
+echo " Запуск в QEMU начинается!"
 echo "============================================="
 qemu-system-i386 -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -cdrom maxos.iso
