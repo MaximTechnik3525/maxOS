@@ -452,6 +452,14 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         sleep(100);
                         no_sound();
                     }
+                    if (ascii_char == '9' && drag == 0) {
+                        bg_col = 0x0110;
+                        theme = 9;
+                        draw_window();
+                        play_sound(700);
+                        sleep(100);
+                        no_sound();
+                    }
                     if (ascii_char == 'F' && drag == 0) {
                         w_mode = 1;
                         for (int y = win_y + 200; y < win_y + 500; y++) {
@@ -983,6 +991,12 @@ void filew() {
                                 drag = 0;
                                 bg_col = 0x7BE0;
                             }
+                            if (str_in(ftext, "theme9")) {
+                                theme = 9;
+                                draw_window();
+                                drag = 0;
+                                bg_col = 0x0110;
+                            }
                             if (str_in(ftext, "clear")) {
                                 drag = 0;
                                 help_col = 65;
@@ -1125,11 +1139,12 @@ void help() {
                             print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Arrows to move window.", win_x + 30, help_col, 0x0000);
                             print_string("C to clear screen and close windows.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("1-8 to change system theme.", win_x + 30, help_col + 30, 0x0000);
+                            print_string("1-9 to change system theme.", win_x + 30, help_col + 30, 0x0000);
                             print_string("F1/F2 to enable and disable write mode.", win_x + 30, help_col + 45, 0x0000);
                             print_string("F to format virtual disk.", win_x + 30, help_col + 60, 0x0000);
                             print_string("F3/F4 to enable and disable key-mouse mode.", win_x + 30, help_col + 75, 0x0000);
                             print_string("F5/F6 to enable and disable mouse trail.", win_x + 30, help_col + 90, 0x0000);
+                            print_string("F7/F8 to enable and disable main window corner.", win_x + 30, help_col + 105, 0x0000);
                         }
 }
 void cpu_win() {
@@ -1479,6 +1494,11 @@ void draw_cursor(int mouse_x, int mouse_y) {
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xF621;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
+                if (theme == 9) {
+                    if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x5000;} //0x07FF
+                    if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xFBE0;} //0x0126
+                    if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
+                }
             }
         }
     }
@@ -1587,6 +1607,15 @@ void clock() {
         print_string(m, win_x + 720, win_y + 6, 0x20C0);
     }
 }
+void win_corners() {
+    gfx_memory[win_y * 1024 + win_x] = bg_col;
+    gfx_memory[win_y * 1024 + (win_x+1)] = bg_col;
+    gfx_memory[(win_y+1) * 1024 + win_x] = bg_col;
+    int right_edge = win_x + win_w - 1;
+    gfx_memory[win_y * 1024 + right_edge] = bg_col;
+    gfx_memory[win_y * 1024 + (right_edge+1)] = bg_col;
+    gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
+}
 void draw_window() {
     for (int y = 0; y < 768; y++) {
         int row_offset = y << 10;
@@ -1605,15 +1634,15 @@ void draw_window() {
             }            
             if (theme == 3) {
                 if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x0102;
+                    gfx_memory[row_offset + x] = 0x2080;
                 }
-                else { gfx_memory[row_offset + x] = 0x2A45; }
+                else { gfx_memory[row_offset + x] = 0x4100; }
             }            
             if (theme == 4) {
                 if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x1041;
+                    gfx_memory[row_offset + x] = 0x10A2;
                 }
-                else { gfx_memory[row_offset + x] = 0x4102; }
+                else { gfx_memory[row_offset + x] = 0x2945; }
             }            
             if (theme == 5) {
                 if (((x ^ y) & 16) == 0) {
@@ -1639,6 +1668,12 @@ void draw_window() {
                 }
                 else { gfx_memory[row_offset + x] = 0x8B04; }
             }
+            if (theme == 9) {
+                if (((x ^ y) & 16) == 0) {
+                    gfx_memory[row_offset + x] = 0x0801;
+                }
+                else { gfx_memory[row_offset + x] = 0x2000; }
+            }
         }
     }
     for (int y = win_y; y < win_y + win_h; y++) {
@@ -1654,6 +1689,7 @@ void draw_window() {
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x0200; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0x50C3; }
                 if (theme == 8) { gfx_memory[y * 1024 + x] = 0x5A21; }
+                if (theme == 9) { gfx_memory[y * 1024 + x] = 0xFC00; }
             }
             else if (y < win_y + 3) {
                 if (theme == 1) {
@@ -1667,6 +1703,7 @@ void draw_window() {
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x05E5; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0xFCEF; }
                 if (theme == 8) { gfx_memory[y * 1024 + x] = 0xFFFA; }
+                if (theme == 9) { gfx_memory[y * 1024 + x] = 0xFBEF; }
             }
             else if (y < win_y + 9) {
                 if (theme == 1) {
@@ -1680,6 +1717,7 @@ void draw_window() {
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x03E3; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0xB9CD; }
                 if (theme == 8) { gfx_memory[y * 1024 + x] = 0xE60B; }
+                if (theme == 9) { gfx_memory[y * 1024 + x] = 0xF800; }
             }
             else if (y < win_y + 15) {
                 if (theme == 1) {
@@ -1693,24 +1731,19 @@ void draw_window() {
                 if (theme == 6) { gfx_memory[y * 1024 + x] = 0x01E1; }
                 if (theme == 7) { gfx_memory[y * 1024 + x] = 0x7186; }
                 if (theme == 8) { gfx_memory[y * 1024 + x] = 0x9BC5; }
+                if (theme == 9) { gfx_memory[y * 1024 + x] = 0x5000; }
             }
             else {
                 gfx_memory[y * 1024 + x] = 0xFFFF;
             }
        }
     }
-    gfx_memory[win_y * 1024 + win_x] = bg_col;
-    gfx_memory[win_y * 1024 + (win_x+1)] = bg_col;
-    gfx_memory[(win_y+1) * 1024 + win_x] = bg_col;
-    int right_edge = win_x + win_w - 1;
-    gfx_memory[win_y * 1024 + right_edge] = bg_col;
-    gfx_memory[win_y * 1024 + (right_edge+1)] = bg_col;
-    gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
-    if (theme == 3) { print_string("maxOS TrailFix Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) { print_string("maxOS TrailFix Tora", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 8) { print_string("maxOS TrailFix", win_x + 10, win_y + 5, 0x20C0); }
+
+    if (theme == 3) { print_string("maxOS NeonCycle Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 4) { print_string("maxOS NeonCycle Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 8) { print_string("maxOS NeonCycle", win_x + 10, win_y + 5, 0x20C0); }
     else {
-        print_string("maxOS TrailFix", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS NeonCycle", win_x + 10, win_y + 5, 0xFFFF); }
     clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
