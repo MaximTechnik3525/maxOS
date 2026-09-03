@@ -1,4 +1,4 @@
-TrailFix (v3.3): Added cursor trail. Fixes.
+RedCycle (v3.4): Added new command, theme 9 - neon red trail. Fixes.
 To run on real PC: recommended PS/2 mouse, PC speaker and BIOS. You need to write maxOS.img on device (for example on USB flash drive) and boot with it.
 You can write your own programm for maxOS right in the system. This is list of avaivable commands:
 theme1, theme2, theme3, theme4, theme5, theme6 - changes system theme.
