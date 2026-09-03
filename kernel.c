@@ -213,6 +213,7 @@ char ftext[100] = {0};
 int fid = 0;
 int tail = 0;
 int repeats = 1;
+int corners = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
@@ -240,7 +241,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 
         }
     }
-    print_string("maxOS TrailFix", 440, 420, 0x0DE5);
+    print_string("maxOS RedCycle", 440, 420, 0x0DE5);
     print_string("by maxTech", 10, 10, 0x24EE);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
@@ -281,7 +282,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         pos_y -= delta_y / 3;
                         if (pos_x > win_x + 710) {pos_x = win_x + 710;}
                         if (pos_x < win_x + 12) {pos_x = win_x + 12;}
-                        if (pos_y > win_y + 538) {pos_y = win_y + 538;}
+                        if (pos_y > win_y + 518) {pos_y = win_y + 518;}
                         if (pos_y < win_y + 22) {pos_y = win_y + 22;}
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
@@ -351,6 +352,16 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 unsigned char scan_code = inb(0x60);
                 if (scan_code < 0x80 && w_mode == 0 && drag != 2) { // KEYBOARD CLICKS
                     char ascii_char = scan_code_to_ascii(scan_code);
+                    if (ascii_char == 'M' && drag == 0 && corners == 0) {
+                        corners = 1;
+                        draw_window();
+                        play_sound(700); sleep(100); no_sound();
+                    }
+                    if (ascii_char == 'N' && drag == 0 && corners == 1) {
+                        corners = 0;
+                        draw_window();
+                        play_sound(500); sleep(100); no_sound();
+                    }
                     if (ascii_char == 'C' && drag == 0 && tail == 0) {
                         tail = 1;
                         play_sound(900);
@@ -493,7 +504,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
                         print_string("Preview", win_x + 24, win_y + 204, 0xFFFF);
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("F2: exit.", win_x + 24, win_y + 230, 0x0000);
+                        print_string("F2 to exit.", win_x + 24, win_y + 230, 0x0000);
                         play_sound(500);
                         sleep(100);
                         no_sound();
@@ -640,7 +651,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         textid++;
                         ftext[textid] = '\0';
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("F2: exit.", win_x + 24, win_y + 230, 0x0000);
+                        print_string("F2 to exit.", win_x + 24, win_y + 230, 0x0000);
                     }
                     if (ascii_char == 'S') {
                         w_mode = 0;
@@ -685,7 +696,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
                         print_string("Preview", win_x + 24, win_y + 204, 0xFFFF);
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("F2: exit.", win_x + 24, win_y + 230, 0x0000);
+                        print_string("F2 to exit.", win_x + 24, win_y + 230, 0x0000);
                     }
                 }
             }
@@ -928,7 +939,7 @@ void filew() {
                                 fid++;
                             }
                             repeats = 1;
-                            if (str_in(ftext, "repeat1")) { repeats = 1; }
+                            if (str_in(ftext, "repeat0")) { repeats = 0; }
                             if (str_in(ftext, "repeat5")) { repeats = 5; }
                             if (str_in(ftext, "repeat10")) { repeats = 10; }
                             if (str_in(ftext, "repeat50")) { repeats = 50; }
@@ -1521,6 +1532,8 @@ char scan_code_to_ascii(unsigned char scan_code) {
         case 0x3E: return 'G';
         case 0x3F: return 'C';
         case 0x40: return 'O';
+        case 0x41: return 'M';
+        case 0x42: return 'N';
         case 0x39: return ' ';
         case 0x2E: return 'c';
         case 0x48: return 'U';
@@ -1738,12 +1751,12 @@ void draw_window() {
             }
        }
     }
-
-    if (theme == 3) { print_string("maxOS NeonCycle Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) { print_string("maxOS NeonCycle Tora", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 8) { print_string("maxOS NeonCycle", win_x + 10, win_y + 5, 0x20C0); }
+    if (corners == 1) { win_corners(); }
+    if (theme == 3) { print_string("maxOS RedCycle Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 4) { print_string("maxOS RedCycle Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 8) { print_string("maxOS RedCycle", win_x + 10, win_y + 5, 0x20C0); }
     else {
-        print_string("maxOS NeonCycle", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS RedCycle", win_x + 10, win_y + 5, 0xFFFF); }
     clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
