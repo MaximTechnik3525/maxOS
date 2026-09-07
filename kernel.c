@@ -898,7 +898,6 @@ void pong() {
     }
 }
 void filew() {
-                            if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0) { cpu_win(); }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) {
                             int help_col = win_y + 45;
                             drag = 1;
@@ -931,7 +930,8 @@ void filew() {
                             gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
                             gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
                             gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            create_file("Unnamed.txt", ftext);
+                            if (str_in(ftext, ".mapp")) { create_file("App.mapp", ftext); }
+                            else { create_file("Unnamed.txt", ftext); }
                             print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
                             print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
                             print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
@@ -939,6 +939,7 @@ void filew() {
                                 fid++;
                             }
                             repeats = 1;
+                            if (str_in(ftext, ".mapp")) {
                             if (str_in(ftext, "repeat0")) { repeats = 0; }
                             if (str_in(ftext, "repeat5")) { repeats = 5; }
                             if (str_in(ftext, "repeat10")) { repeats = 10; }
@@ -1111,6 +1112,7 @@ void filew() {
                                 }
                                 fid = 0;
                             }
+                        }
                         }
                         }
 }
