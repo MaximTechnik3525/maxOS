@@ -240,7 +240,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 
         }
     }
-    print_string("maxOS RedCycle", 440, 420, 0x0DE5);
+    print_string("maxOS RedCycle x86_64", 400, 420, 0x0DE5);
     print_string("by maxTech", 10, 10, 0x24EE);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
@@ -1103,7 +1103,8 @@ void cpu_win() {
                             get_cpu(cpu_name);
                             print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
                             print_string(cpu_name, win_x + 30, help_col, 0x0000);
-                            print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Arch: x86_64 Long Mode (64-bit)", win_x + 30, help_col + 15, 0x0200);
+                            print_string("Press c to close.", win_x + 30, help_col + 30, 0x0000);
                         }
 }
 void int_str(int num, char* str) {
@@ -1678,11 +1679,11 @@ void draw_window() {
        }
     }
     if (corners == 1) { win_corners(); }
-    if (theme == 3) { print_string("maxOS RedCycle Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) { print_string("maxOS RedCycle Tora", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 8) { print_string("maxOS RedCycle", win_x + 10, win_y + 5, 0x20C0); }
+    if (theme == 3) { print_string("maxOS x86_64 Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+    else if (theme == 4) { print_string("maxOS x86_64 Tora", win_x + 10, win_y + 5, 0xFFFF); }
+    else if (theme == 8) { print_string("maxOS x86_64", win_x + 10, win_y + 5, 0x20C0); }
     else {
-        print_string("maxOS RedCycle", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS x86_64", win_x + 10, win_y + 5, 0xFFFF); }
     clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);

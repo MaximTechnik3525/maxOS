@@ -184,7 +184,7 @@ static void installer_run_install(void) {
     installer_set_step(60, "3/5: Installing OS Kernel to LBA 32...");
     play_sound(800); sleep(100); no_sound();
     const unsigned char* kernel_mem = (const unsigned char*)0x100000;
-    for (unsigned int s = 0; s < 160; s++) {
+    for (unsigned int s = 0; s < 200; s++) {
         ata_write_sector(32 + s, kernel_mem + (s * 512));
     }
     maxfs_write_file("kernel.bin", (const char*)kernel_mem, 1024);

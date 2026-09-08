@@ -1,3 +1,5 @@
+OUTPUT_FORMAT("elf64-x86-64")
+OUTPUT_ARCH(i386:x86-64)
 ENTRY(_start)
 SECTIONS
 {
@@ -6,21 +8,21 @@ SECTIONS
     {
         KEEP(*(.multiboot_header))
     }
-    .text : ALIGN(4)
+    .text : ALIGN(4096)
     {
-        *(.text)
+        *(.text*)
     }
-    .rodata : ALIGN(4)
+    .rodata : ALIGN(4096)
     {
-        *(.rodata)
+        *(.rodata*)
     }
-    .data : ALIGN(4)
+    .data : ALIGN(4096)
     {
-        *(.data)
+        *(.data*)
     }
-    .bss : ALIGN(16)
+    .bss : ALIGN(4096)
     {
         *(COMMON)
-        *(.bss)
+        *(.bss*)
     }
 }

@@ -99,27 +99,27 @@ pm_start:
     jmp .enter_kernel
 
 .load_elf:
-    mov edx, [0x10000 + 24]         ; e_entry (e.g. 0x100040)
+    mov edx, [0x10000 + 24]         ; e_entry (lower 32-bits)
     mov [k_entry], edx
     mov esi, 0x10000
-    add esi, [0x10000 + 28]         ; e_phoff
-    movzx ecx, word [0x10000 + 44]  ; e_phnum
+    add esi, [0x10000 + 32]         ; e_phoff (ELF64 offset 32)
+    movzx ecx, word [0x10000 + 56]  ; e_phnum (ELF64 offset 56)
 
 .ph_loop:
     cmp dword [esi], 1              ; PT_LOAD
     jne .ph_next
     push esi
     push ecx
-    mov ebx, [esi + 4]              ; p_offset
+    mov ebx, [esi + 8]              ; p_offset (ELF64 offset 8)
     add ebx, 0x10000
-    mov edi, [esi + 8]              ; p_paddr
-    mov ecx, [esi + 16]             ; p_filesz
+    mov edi, [esi + 24]             ; p_paddr (ELF64 offset 24)
+    mov ecx, [esi + 32]             ; p_filesz (ELF64 offset 32)
     mov esi, ebx
     rep movsb
     pop ecx
     pop esi
-    mov eax, [esi + 20]             ; p_memsz
-    sub eax, [esi + 16]
+    mov eax, [esi + 40]             ; p_memsz (ELF64 offset 40)
+    sub eax, [esi + 32]
     jbe .ph_next
     push ecx
     mov ecx, eax
@@ -128,7 +128,7 @@ pm_start:
     pop ecx
 
 .ph_next:
-    add esi, 32
+    add esi, 56                     ; ELF64 program header entry size = 56 bytes
     loop .ph_loop
 
 .enter_kernel:
