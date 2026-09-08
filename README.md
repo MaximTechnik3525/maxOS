@@ -27,7 +27,7 @@ To test **maxOS** on a real PC, make sure your hardware meets the following requ
 You can write and execute your own programs directly inside the operating system. To do this, simply list your commands inside the `.mapp` file. 
 
 ### Available Commands:
-* **Themes:** `theme1`, `theme2`, `theme3`, `theme4`, `theme5`, `theme6` — Switch between 6 different system color palettes.
+* **Themes:** `theme1`, `theme2`, `theme3`, `theme4`, `theme5`, `theme6`, `theme7`, `theme8`, `theme9` — Switch between 9 different system color palettes.
 * **Disk Utility:** `format` — Formats the virtual `maxFS` file system disk.
 * **Window Controls:** 
   * `clear` — Redraws the desktop environment and closes all active windows.
