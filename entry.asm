@@ -20,6 +20,8 @@ align 4
     dd 16
 section .text
 global _start
+_start:
+    push eax
     push ebx
     extern kmain
     call kmain

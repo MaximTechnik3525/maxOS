@@ -3,13 +3,22 @@
 # Останавливать скрипт при любой ошибке
 set -e
 
+# Автоопределение компилятора и линкера (поддержка x86 и ARM64 кросс-компиляции)
+if command -v i686-linux-gnu-gcc >/dev/null 2>&1; then
+    CC="i686-linux-gnu-gcc"
+    LD="i686-linux-gnu-ld"
+else
+    CC="gcc -m32"
+    LD="ld -m elf_i386"
+fi
+
 echo "=== [1/4] Компиляция исходного кода MaxOS ==="
 nasm -f elf32 entry.asm -o entry.o
-gcc -m32 -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+$CC -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 echo "=== [2/4] Линковка бинарного файла ядра ==="
 # Флаг --no-warn-rwx-segments убирает предупреждение линкера
-ld -m elf_i386 --no-warn-rwx-segments -T linker.ld -o mykernel.bin entry.o kernel.o
+$LD --no-warn-rwx-segments -T linker.ld -o mykernel.bin entry.o kernel.o
 
 echo "=== [3/4] Подготовка структуры ISO ==="
 # Создаем строго стандартные папки для GRUB
@@ -42,6 +51,9 @@ grub-mkrescue -o maxos.iso iso
 
 echo "============================================="
 echo " Сборка завершена успешно! Файл ОС: maxos.iso"
-echo " Запуск в QEMU начинается!"
 echo "============================================="
-qemu-system-i386 -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -cdrom maxos.iso
+
+if [ "$1" != "--no-run" ]; then
+    echo " Запуск в QEMU начинается!"
+    qemu-system-i386 -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -cdrom maxos.iso
+fi

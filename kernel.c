@@ -194,6 +194,10 @@ int win_w = 740;
 int win_h = 550;
 int pos_x = 512;
 int pos_y = 384;
+unsigned short cursor_bg[12][12];
+int cursor_bg_saved = 0;
+int cursor_saved_x = -1;
+int cursor_saved_y = -1;
 int theme = 5;
 int w_mode = 0;
 int km_mode = 0;
@@ -280,10 +284,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x += delta_x / 3;
                         pos_y -= delta_y / 3;
-                        if (pos_x > win_x + 710) {pos_x = win_x + 710;}
-                        if (pos_x < win_x + 12) {pos_x = win_x + 12;}
-                        if (pos_y > win_y + 518) {pos_y = win_y + 518;}
-                        if (pos_y < win_y + 22) {pos_y = win_y + 22;}
+                        if (pos_x > 1024 - 12) {pos_x = 1024 - 12;}
+                        if (pos_x < 0) {pos_x = 0;}
+                        if (pos_y > 768 - 12) {pos_y = 768 - 12;}
+                        if (pos_y < 0) {pos_y = 0;}
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
                         draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
@@ -293,12 +297,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_cursor(pos_x, pos_y);
                     }
                     if (click == 1) { // MOUSE CLICKS
-                        if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30)  { pong(); }
-                        if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30)  { shutdown(); }
-                        if (pos_x <= win_x + 50 && pos_y <= win_y + 30) { help(); }
-                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30) { cpu_win(); }
-                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30) { filew(); }
-                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
+                        if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { pong(); }
+                        if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { shutdown(); }
+                        if (pos_x >= win_x + 10 && pos_x <= win_x + 50 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { help(); }
+                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { cpu_win(); }
+                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { filew(); }
+                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y >= win_y + 20 && pos_y <= win_y + 32) {
                             int help_col = win_y + 45;
                             int line = win_y + 65;
                             drag = 1;
@@ -515,10 +519,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         sleep(100);
                         no_sound();
                     }
-                    if (ascii_char == 'U' && km_mode == 1 && pos_y > win_y + 30 && drag == 0) {
+                    if (ascii_char == 'U' && km_mode == 1 && pos_y >= 15 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
                         pos_y -= 15;
-                        draw_cursor(pos_x, pos_y);
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
                         draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
@@ -527,10 +530,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'D' && km_mode == 1 && pos_y < win_y + 515 && drag == 0) {
+                    if (ascii_char == 'D' && km_mode == 1 && pos_y <= 768 - 27 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
                         pos_y += 15;
-                        draw_cursor(pos_x, pos_y);
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
                         draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
@@ -539,10 +541,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'R' && km_mode == 1 && pos_x < win_x + 715 && drag == 0) {
+                    if (ascii_char == 'R' && km_mode == 1 && pos_x <= 1024 - 27 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x += 15;
-                        draw_cursor(pos_x, pos_y);
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
                         draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
@@ -551,10 +552,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'L' && km_mode == 1 && pos_x > win_x + 15 && drag == 0) {
+                    if (ascii_char == 'L' && km_mode == 1 && pos_x >= 15 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x -= 15;
-                        draw_cursor(pos_x, pos_y);
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
                         draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
@@ -571,12 +571,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_window();
                     }
                     if (ascii_char == 'e' && km_mode == 1 && drag == 0) {
-                        if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30)  { pong(); }
-                        if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30)  { shutdown(); }
-                        if (pos_x <= win_x + 50 && pos_y <= win_y + 30  && drag == 0) { help(); }
-                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0) { cpu_win(); }
-                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) { filew(); }
-                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
+                        if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { pong(); }
+                        if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { shutdown(); }
+                        if (pos_x >= win_x + 10 && pos_x <= win_x + 50 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) { help(); }
+                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) { cpu_win(); }
+                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) { filew(); }
+                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y >= win_y + 20 && pos_y <= win_y + 32) {
                             int help_col = win_y + 45;
                             int line = win_y + 65;
                             drag = 1;
@@ -705,7 +705,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 }
 int score = 0;
 void pong() {
-    if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30) {
+    if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y >= win_y + 20 && pos_y <= win_y + 32) {
         drag = 1;
         pad_x = win_x + (win_w / 2) - (pad_w / 2);
         pad_y = win_y + win_h - 40;
@@ -898,7 +898,7 @@ void pong() {
     }
 }
 void filew() {
-                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) {
+                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) {
                             int help_col = win_y + 45;
                             drag = 1;
                             for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
@@ -1117,7 +1117,7 @@ void filew() {
                         }
 }
 void help() {
-                        if (pos_x <= win_x + 50 && pos_y <= win_y + 30  && drag == 0) {
+                        if (pos_x >= win_x + 10 && pos_x <= win_x + 50 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) {
                             int help_col = win_y + 45;
                             drag = 1;
                             for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
@@ -1161,7 +1161,7 @@ void help() {
                         }
 }
 void cpu_win() {
-                            if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0) {
+                            if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) {
                             int help_col = win_y + 45;
                             drag = 1;
                             for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
@@ -1322,15 +1322,19 @@ int create_file(char* name, char* text) {
     return -1;
 }
 void prev_cursor() {
-    int prev_x = pos_x;
-    int prev_y = pos_y;
+    if (!cursor_bg_saved) return;
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
-            int erase_x = prev_x + x;
-            int erase_y = prev_y + y;
-            gfx_memory[erase_y * 1024 + erase_x] = 0xFFFF;
+            if (mouse_arrow[y][x] != 0) {
+                int cur_x = cursor_saved_x + x;
+                int cur_y = cursor_saved_y + y;
+                if (cur_x >= 0 && cur_x < 1024 && cur_y >= 0 && cur_y < 768) {
+                    gfx_memory[cur_y * 1024 + cur_x] = cursor_bg[y][x];
+                }
+            }
         }
     }
+    cursor_bg_saved = 0;
 }
 void outb(unsigned short port, unsigned char data) {__asm__ __volatile__("outb %0, %1" : : "a"(data), "Nd"(port));}
 void wait_mouse(unsigned char type) {
@@ -1463,53 +1467,69 @@ void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
-            unsigned char pixel_type = mouse_arrow[y][x];
             int screen_x = mouse_x + x;
             int screen_y = mouse_y + y;
-            if (screen_x < 1024 && screen_y < 768) {
+            if (screen_x >= 0 && screen_x < 1024 && screen_y >= 0 && screen_y < 768) {
+                cursor_bg[y][x] = gfx_memory[screen_y * 1024 + screen_x];
+            } else {
+                cursor_bg[y][x] = 0x0000;
+            }
+        }
+    }
+    cursor_saved_x = mouse_x;
+    cursor_saved_y = mouse_y;
+    cursor_bg_saved = 1;
+
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            unsigned char pixel_type = mouse_arrow[y][x];
+            if (pixel_type == 0) continue;
+            int screen_x = mouse_x + x;
+            int screen_y = mouse_y + y;
+            if (screen_x >= 0 && screen_x < 1024 && screen_y >= 0 && screen_y < 768) {
                 if (theme == 1) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x0000;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xFFFF;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
-                if (theme == 2) {
+                else if (theme == 2) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x4000;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xF800;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
-                if (theme == 3) {
+                else if (theme == 3) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x4080;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xB269;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
-                if (theme == 4) {
+                else if (theme == 4) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x3186;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xD69F;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
-                if (theme == 5) {
+                else if (theme == 5) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x0168;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0x07FF;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
-                if (theme == 6) {
+                else if (theme == 6) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x0200;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0x07E0;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
-                if (theme == 7) {
+                else if (theme == 7) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x60A4;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xFDF3;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
-                if (theme == 8) {
+                else if (theme == 8) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x4962;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xF621;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
-                if (theme == 9) {
-                    if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x5000;} //0x07FF
-                    if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xFBE0;} //0x0126
+                else if (theme == 9) {
+                    if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x5000;}
+                    if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xFBE0;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
             }
@@ -1632,6 +1652,7 @@ void win_corners() {
     gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
 }
 void draw_window() {
+    cursor_bg_saved = 0;
     for (int y = 0; y < 768; y++) {
         int row_offset = y << 10;
         for (int x = 0; x < 1024; x++) {
