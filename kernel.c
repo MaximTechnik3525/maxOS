@@ -36,6 +36,8 @@ struct multiboot_info {
 
 #include "maxfs.h"
 #include "notepad.h"
+#include "installer.h"
+#include "ata.h"
 void print_string(char* str, int x, int y, unsigned short color);
 void draw_char(char c, int start_x, int start_y, unsigned short color);
 unsigned char inb(unsigned short port);
@@ -55,6 +57,7 @@ void draw_filebtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
 void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
+void draw_instbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void get_cpu(char* buffer);
 void draw_window();
 void wait_mouse(unsigned char type);
@@ -243,10 +246,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     sleep(2000); draw_window(); drag = 0;
     unsigned char packet[3];
     maxfs_init();
+    installer_init();
     while(1) {
         unsigned char status = inb(0x64);
         if (status & 0x01) {
-            if (status & 0x20 && (drag == 0 || notepad_open == 1) && w_mode == 0) {
+            if (status & 0x20 && (drag == 0 || notepad_open == 1 || installer_open == 1) && w_mode == 0) {
                 packet[0] = inb(0x60);
                 if ((packet[0] & 0x08) == 0) {continue;}
                 int timeout = 100000;
@@ -277,6 +281,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
                         draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
                         draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
+                        draw_instbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
                     if (click == 1) { // MOUSE CLICKS
@@ -285,12 +290,19 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                                 continue;
                             }
                         }
-                        if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { pong(); }
-                        if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { shutdown(); }
-                        if (pos_x >= win_x + 10 && pos_x <= win_x + 50 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { help(); }
-                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { cpu_win(); }
-                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { notepad_open_window(); }
-                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y >= win_y + 20 && pos_y <= win_y + 32) {
+                        if (installer_open) {
+                            if (installer_handle_click(pos_x, pos_y)) {
+                                continue;
+                            }
+                        }
+                        if (drag == 0) {
+                            if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { pong(); }
+                            if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { shutdown(); }
+                            if (pos_x >= win_x + 10 && pos_x <= win_x + 50 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { help(); }
+                            if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { cpu_win(); }
+                            if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { notepad_open_window(); }
+                            if (pos_x >= win_x + 370 && pos_x <= win_x + 410 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { installer_open_window(); }
+                            if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y >= win_y + 20 && pos_y <= win_y + 32) {
                             int help_col = win_y + 45;
                             int line = win_y + 65;
                             drag = 1;
@@ -329,14 +341,17 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             print_string("Explorer", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Name:", win_x + 35, win_y + 45, 0x0000);
                             print_string("Size:", win_w - 35, win_y + 45, 0x0000);
-                            for (int i = 0; i < 5; i++) {
-                                print_string(ram_disk[i].name, win_x + 30, line, 0x0000);
-                                char size_str[16];
-                                int_str(ram_disk[i].size, size_str);
-                                print_string(size_str, win_w - 30, line, 0x0000);
-                                line += 15;
+                            for (int i = 0; i < MAXFS_MAX_FILES && i < 10; i++) {
+                                if (ram_disk[i].exists) {
+                                    print_string(ram_disk[i].name, win_x + 30, line, 0x0000);
+                                    char size_str[16];
+                                    int_str(ram_disk[i].size, size_str);
+                                    print_string(size_str, win_w - 30, line, 0x0000);
+                                    line += 15;
+                                }
                             }
                         }
+                    }
                     }
                 }   
             }
@@ -348,6 +363,14 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (notepad_handle_key(ascii_char, scan_code)) {
                             continue;
                         }
+                    }
+                    if (installer_open) {
+                        if (installer_handle_key(ascii_char, scan_code)) {
+                            continue;
+                        }
+                    }
+                    if ((ascii_char == 'I' || scan_code == 0x43) && drag == 0) {
+                        installer_open_window();
                     }
                     if (ascii_char == 'M' && drag == 0 && corners == 0) {
                         corners = 1;
@@ -471,13 +494,13 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (ascii_char == 'F' && drag == 0) {
                         notepad_open_window();
                     }
-                    if (ascii_char == 'T' && km_mode == 0 && (drag == 0 || notepad_open == 1)) {
+                    if (ascii_char == 'T' && km_mode == 0 && (drag == 0 || notepad_open == 1 || installer_open == 1)) {
                         km_mode = 1;
                         play_sound(200);
                         sleep(100);
                         no_sound();
                     }
-                    if (ascii_char == 'U' && km_mode == 1 && pos_y >= 15 && (drag == 0 || notepad_open == 1)) {
+                    if (ascii_char == 'U' && km_mode == 1 && pos_y >= 15 && (drag == 0 || notepad_open == 1 || installer_open == 1)) {
                         if (tail == 0) { prev_cursor(); }
                         pos_y -= 15;
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
@@ -486,9 +509,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
                         draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
                         draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
+                        draw_instbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'D' && km_mode == 1 && pos_y <= 768 - 27 && (drag == 0 || notepad_open == 1)) {
+                    if (ascii_char == 'D' && km_mode == 1 && pos_y <= 768 - 27 && (drag == 0 || notepad_open == 1 || installer_open == 1)) {
                         if (tail == 0) { prev_cursor(); }
                         pos_y += 15;
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
@@ -497,9 +521,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
                         draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
                         draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
+                        draw_instbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'R' && km_mode == 1 && pos_x <= 1024 - 27 && (drag == 0 || notepad_open == 1)) {
+                    if (ascii_char == 'R' && km_mode == 1 && pos_x <= 1024 - 27 && (drag == 0 || notepad_open == 1 || installer_open == 1)) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x += 15;
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
@@ -508,9 +533,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
                         draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
                         draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
+                        draw_instbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'L' && km_mode == 1 && pos_x >= 15 && (drag == 0 || notepad_open == 1)) {
+                    if (ascii_char == 'L' && km_mode == 1 && pos_x >= 15 && (drag == 0 || notepad_open == 1 || installer_open == 1)) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x -= 15;
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
@@ -519,9 +545,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
                         draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
                         draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
+                        draw_instbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'G' && km_mode == 1 && (drag == 0 || notepad_open == 1)) {
+                    if (ascii_char == 'G' && km_mode == 1 && (drag == 0 || notepad_open == 1 || installer_open == 1)) {
                         km_mode = 0;
                         play_sound(1000);
                         sleep(100);
@@ -534,12 +561,19 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                                 continue;
                             }
                         }
-                        if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { pong(); }
-                        if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { shutdown(); }
-                        if (pos_x >= win_x + 10 && pos_x <= win_x + 50 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) { help(); }
-                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) { cpu_win(); }
-                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) { notepad_open_window(); }
-                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y >= win_y + 20 && pos_y <= win_y + 32) {
+                        if (installer_open) {
+                            if (installer_handle_click(pos_x, pos_y)) {
+                                continue;
+                            }
+                        }
+                        if (drag == 0) {
+                            if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { pong(); }
+                            if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { shutdown(); }
+                            if (pos_x >= win_x + 10 && pos_x <= win_x + 50 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { help(); }
+                            if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { cpu_win(); }
+                            if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { notepad_open_window(); }
+                            if (pos_x >= win_x + 370 && pos_x <= win_x + 410 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { installer_open_window(); }
+                            if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y >= win_y + 20 && pos_y <= win_y + 32) {
                             int help_col = win_y + 45;
                             int line = win_y + 65;
                             drag = 1;
@@ -587,11 +621,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             }
                         }
                     }
+                    }
                     if (ascii_char == 'f' && drag == 0) {
                         textid = 0;
                         for (int i = 0; i < 99; i++) {
                             ftext[i] = '\0';}
-                        maxfs_format();
+                        maxfs_format("maxOS Disk");
                         fid = 0;
                         play_sound(800);
                         sleep(100);
@@ -1054,7 +1089,7 @@ void filew() {
                                 textid = 0;
                                 for (int i = 0; i < 99; i++) {
                                     ftext[i] = '\0';}
-                                maxfs_format();
+                                maxfs_format("maxOS Disk");
                                 fid = 0;
                             }
                         }
@@ -1387,6 +1422,19 @@ void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
     }
     print_string("Off", txt_pos_x, txt_pos_y, 0x0000);
 }
+void draw_instbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
+    for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
+        for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
+            gfx_memory[y * 1024 + x] = 0x7BEF;
+        }
+    }
+    for (int y = btn_y; y < btn_y + btn_h; y++) {
+        for (int x = btn_x; x < btn_x + btn_w; x++) {
+            gfx_memory[y * 1024 + x] = 0xC618;
+        }
+    }
+    print_string("Inst", txt_pos_x, txt_pos_y, 0x0000);
+}
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
@@ -1710,6 +1758,7 @@ void draw_window() {
     draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
     draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
     draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
+    draw_instbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
     draw_cursor(pos_x, pos_y);
 }
 

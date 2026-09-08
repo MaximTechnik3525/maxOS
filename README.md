@@ -16,7 +16,17 @@ shtdwn - shutting down the work of system.
 sleep - makes delay for 2s.
 errscr - running the error screen.
 trailon, trailoff - enables and disables cursor trail.
+
+### maxOS 2.0 New Features:
+- **ATA Hard Disk Driver (`ata.c` / `ata.h`)**: Direct low-level sector reading & writing via ATA PIO (LBA28).
+- **maxFS 2.0 Persistent Filesystem (`maxfs.c` / `maxfs.h`)**: Superblock, Inodes, Sector Allocation Bitmap, persistent storage for files.
+- **GUI System Setup & Installer v2.0 (`installer.c` / `installer.h`)**: Click `Inst` button on desktop or press `F9` to install maxOS directly to hard disk with MBR bootloader.
+- **Custom MBR Bootloader (`boot_mbr.asm`)**: Boots maxOS directly from HDD (`./build.sh --boot-hdd`).
+
 If you want create own build, you can edit project files, and run compilers (build.bat for Windows, build.sh for Linux).
+- `./build.sh` — build and run in QEMU with ISO and HDD.
+- `./build.sh --boot-hdd` — run maxOS directly from hard disk.
+- `./build.sh --no-run` — build without launching QEMU.
 
 || SPECIAL THANKS TO GEMINI FOR BUILD.BAT, BUILD.SH AND HIS VERY BIG HELP ||
 || GEMINI SAYS HI TO GITHUB ||
