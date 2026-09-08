@@ -405,3 +405,10 @@ int maxfs_is_mounted(void) {
 const char* maxfs_get_volume_label(void) {
     return current_volume_label;
 }
+
+struct DiskInode* maxfs_get_inode(int index) {
+    if (index >= 0 && index < MAXFS_MAX_FILES && (inode_cache[index].flags & 0x01)) {
+        return &inode_cache[index];
+    }
+    return 0;
+}

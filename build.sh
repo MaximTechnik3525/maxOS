@@ -22,11 +22,12 @@ $CC -c ata.c -o ata.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 $CC -c maxfs.c -o maxfs.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 $CC -c notepad.c -o notepad.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 $CC -c installer.c -o installer.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+$CC -c explorer.c -o explorer.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 $CC -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 echo "=== [3/5] Линковка бинарного файла ядра ==="
 # Флаг --no-warn-rwx-segments убирает предупреждение линкера
-$LD --no-warn-rwx-segments -T linker.ld -o mykernel.bin entry.o mbr_data.o kernel.o ata.o maxfs.o notepad.o installer.o
+$LD --no-warn-rwx-segments -T linker.ld -o mykernel.bin entry.o mbr_data.o kernel.o ata.o maxfs.o notepad.o installer.o explorer.o
 
 echo "=== [4/5] Подготовка структуры ISO и сборка maxos.iso ==="
 mkdir -p iso/boot/grub

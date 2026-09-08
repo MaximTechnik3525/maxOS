@@ -65,6 +65,7 @@ int maxfs_read_file(const char* name, char* buffer, unsigned int max_len);
 int maxfs_delete_file(const char* name);
 int maxfs_is_mounted(void);
 const char* maxfs_get_volume_label(void);
+struct DiskInode* maxfs_get_inode(int index);
 
 // Legacy API wrappers
 int create_file(char* name, char* text);

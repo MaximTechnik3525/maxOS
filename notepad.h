@@ -4,11 +4,14 @@
 #include "maxfs.h"
 
 extern int notepad_open;
-extern char ftext[100];
+extern char ftext[1024];
 extern int textid;
+extern char fname_input[32];
+extern int fname_len;
 
 void notepad_init(void);
 void notepad_open_window(void);
+void notepad_open_file_by_name(const char* name);
 void notepad_close_window(void);
 void notepad_draw(void);
 void notepad_draw_text(void);
