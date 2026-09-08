@@ -34,13 +34,8 @@ struct multiboot_info {
 };
 #pragma pack(pop)
 
-struct VirtualFile {
-    char name[12];
-    int size;
-    char content[100];
-    int exists;
-};
-struct VirtualFile ram_disk[5];
+#include "maxfs.h"
+#include "notepad.h"
 void print_string(char* str, int x, int y, unsigned short color);
 void draw_char(char c, int start_x, int start_y, unsigned short color);
 unsigned char inb(unsigned short port);
@@ -75,7 +70,6 @@ void error(char* err);
 unsigned short bg_col = 0x18C3;
 void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
-int create_file(char* name, char* text);
 unsigned char mouse_arrow[12][12] = {
     {1,1,3,0,0,0,0,0,0,0,0,0},
     {1,2,1,3,0,0,0,0,0,0,0,0},
@@ -212,8 +206,6 @@ int ball_size = 8;
 int game = 0;
 int collisions = 0;
 int drag = 2;
-int textid = 0;
-char ftext[100] = {0};
 int fid = 0;
 int tail = 0;
 int repeats = 1;
@@ -250,20 +242,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
     unsigned char packet[3];
-    for (int i = 0; i < 5; i++) {
-        ram_disk[i].size = 0;
-        ram_disk[i].exists = 0;
-        for (int n = 0; n < 12; n++) {
-            ram_disk[i].name[n] = '\0';
-        }
-        for (int t = 0; t < 100; t++) {
-            ram_disk[i].content[t] = '\0';
-        }
-    }
+    maxfs_init();
     while(1) {
         unsigned char status = inb(0x64);
         if (status & 0x01) {
-            if (status & 0x20 && drag == 0 && w_mode == 0) {
+            if (status & 0x20 && (drag == 0 || notepad_open == 1) && w_mode == 0) {
                 packet[0] = inb(0x60);
                 if ((packet[0] & 0x08) == 0) {continue;}
                 int timeout = 100000;
@@ -297,11 +280,16 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_cursor(pos_x, pos_y);
                     }
                     if (click == 1) { // MOUSE CLICKS
+                        if (notepad_open) {
+                            if (notepad_handle_click(pos_x, pos_y)) {
+                                continue;
+                            }
+                        }
                         if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { pong(); }
                         if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { shutdown(); }
                         if (pos_x >= win_x + 10 && pos_x <= win_x + 50 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { help(); }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { cpu_win(); }
-                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { filew(); }
+                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { notepad_open_window(); }
                         if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y >= win_y + 20 && pos_y <= win_y + 32) {
                             int help_col = win_y + 45;
                             int line = win_y + 65;
@@ -354,8 +342,13 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             }
             else {
                 unsigned char scan_code = inb(0x60);
-                if (scan_code < 0x80 && w_mode == 0 && drag != 2) { // KEYBOARD CLICKS
+                if (scan_code < 0x80 && drag != 2) { // KEYBOARD CLICKS
                     char ascii_char = scan_code_to_ascii(scan_code);
+                    if (notepad_open) {
+                        if (notepad_handle_key(ascii_char, scan_code)) {
+                            continue;
+                        }
+                    }
                     if (ascii_char == 'M' && drag == 0 && corners == 0) {
                         corners = 1;
                         draw_window();
@@ -476,50 +469,15 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         no_sound();
                     }
                     if (ascii_char == 'F' && drag == 0) {
-                        w_mode = 1;
-                        for (int y = win_y + 200; y < win_y + 500; y++) {
-                            for (int x = win_x + 20; x < win_x + 720; x++) {
-                                if (y == win_y + 200 || y == win_y + 499 || x == win_x + 20|| x == win_x + 719) {
-                                    gfx_memory[y * 1024 + x] = 0x0320;
-                                }
-                                else if (y < win_y + 203) {
-                                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                                }
-                                else if (y < win_y + 209) {
-                                    gfx_memory[y * 1024 + x] = 0x24EE;
-                                }
-                                else if (y < win_y + 215) {
-                                    gfx_memory[y * 1024 + x] = 0x11EB;
-                                }
-                                else {
-                                    gfx_memory[y * 1024 + x] = 0xFFFF;
-                                }
-                            }
-                        }
-                        int swin_x = win_x + 20;
-                        int swin_y = win_y + 200;
-                        int swin_w = win_w - 40;
-                        gfx_memory[swin_y * 1024 + swin_x] = 0xFFFF;
-                        gfx_memory[swin_y * 1024 + (swin_x+1)] = 0xFFFF;
-                        gfx_memory[(swin_y+1) * 1024 + swin_x] = 0xFFFF;
-                        int right_edges = swin_x + swin_w - 1;
-                        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                        gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                        gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                        print_string("Preview", win_x + 24, win_y + 204, 0xFFFF);
-                        print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("F2 to exit.", win_x + 24, win_y + 230, 0x0000);
-                        play_sound(500);
-                        sleep(100);
-                        no_sound();
+                        notepad_open_window();
                     }
-                    if (ascii_char == 'T' && km_mode == 0 && drag == 0) {
+                    if (ascii_char == 'T' && km_mode == 0 && (drag == 0 || notepad_open == 1)) {
                         km_mode = 1;
                         play_sound(200);
                         sleep(100);
                         no_sound();
                     }
-                    if (ascii_char == 'U' && km_mode == 1 && pos_y >= 15 && drag == 0) {
+                    if (ascii_char == 'U' && km_mode == 1 && pos_y >= 15 && (drag == 0 || notepad_open == 1)) {
                         if (tail == 0) { prev_cursor(); }
                         pos_y -= 15;
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
@@ -530,7 +488,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'D' && km_mode == 1 && pos_y <= 768 - 27 && drag == 0) {
+                    if (ascii_char == 'D' && km_mode == 1 && pos_y <= 768 - 27 && (drag == 0 || notepad_open == 1)) {
                         if (tail == 0) { prev_cursor(); }
                         pos_y += 15;
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
@@ -541,7 +499,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'R' && km_mode == 1 && pos_x <= 1024 - 27 && drag == 0) {
+                    if (ascii_char == 'R' && km_mode == 1 && pos_x <= 1024 - 27 && (drag == 0 || notepad_open == 1)) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x += 15;
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
@@ -552,7 +510,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'L' && km_mode == 1 && pos_x >= 15 && drag == 0) {
+                    if (ascii_char == 'L' && km_mode == 1 && pos_x >= 15 && (drag == 0 || notepad_open == 1)) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x -= 15;
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
@@ -563,19 +521,24 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'G' && km_mode == 1 && drag == 0) {
+                    if (ascii_char == 'G' && km_mode == 1 && (drag == 0 || notepad_open == 1)) {
                         km_mode = 0;
                         play_sound(1000);
                         sleep(100);
                         no_sound();
                         draw_window();
                     }
-                    if (ascii_char == 'e' && km_mode == 1 && drag == 0) {
+                    if (ascii_char == 'e' && km_mode == 1) {
+                        if (notepad_open) {
+                            if (notepad_handle_click(pos_x, pos_y)) {
+                                continue;
+                            }
+                        }
                         if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { pong(); }
                         if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { shutdown(); }
                         if (pos_x >= win_x + 10 && pos_x <= win_x + 50 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) { help(); }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) { cpu_win(); }
-                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) { filew(); }
+                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) { notepad_open_window(); }
                         if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y >= win_y + 20 && pos_y <= win_y + 32) {
                             int help_col = win_y + 45;
                             int line = win_y + 65;
@@ -628,16 +591,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         textid = 0;
                         for (int i = 0; i < 99; i++) {
                             ftext[i] = '\0';}
-                        for (int i = 0; i < 5; i++) {
-                            ram_disk[i].exists = 0;
-                            ram_disk[i].size = 0;
-                            for (int n = 0; n < 12; n++) {
-                                ram_disk[i].name[n] = '\0';
-                            }
-                            for (int t = 0; t < 100; t++) {
-                                ram_disk[i].content[t] = '\0';
-                            }
-                        }
+                        maxfs_format();
                         fid = 0;
                         play_sound(800);
                         sleep(100);
@@ -1100,16 +1054,7 @@ void filew() {
                                 textid = 0;
                                 for (int i = 0; i < 99; i++) {
                                     ftext[i] = '\0';}
-                                for (int i = 0; i < 5; i++) {
-                                    ram_disk[i].exists = 0;
-                                    ram_disk[i].size = 0;
-                                    for (int n = 0; n < 12; n++) {
-                                        ram_disk[i].name[n] = '\0';
-                                    }
-                                    for (int t = 0; t < 100; t++) {
-                                        ram_disk[i].content[t] = '\0';
-                                    }
-                                }
+                                maxfs_format();
                                 fid = 0;
                             }
                         }
@@ -1299,28 +1244,6 @@ void no_sound() {
     unsigned char tmp = inb(0x61) & 0xFC;
     outb(0x61, tmp);
 }
-int create_file(char* name, char* text) {
-    for (int i = 0; i < 5; i++) {
-        if (ram_disk[i].exists == 0) {
-            int n = 0;
-            while (name[n] != '\0' && n < 11) {
-                ram_disk[i].name[n] = name[n];
-                n++;
-            }
-            ram_disk[i].name[n] = '\0';
-            int t = 0;
-            while (text[t] != '\0' && t < 99) {
-                ram_disk[i].content[t] = text[t];
-                t++;
-            }
-            ram_disk[i].content[t] = '\0';
-            ram_disk[i].size = t;
-            ram_disk[i].exists = 1;
-            return i;
-        }
-    }
-    return -1;
-}
 void prev_cursor() {
     if (!cursor_bg_saved) return;
     for (int y = 0; y < 12; y++) {
@@ -1423,7 +1346,7 @@ void draw_filebtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
             gfx_memory[y * 1024 + x] = 0xC618;
         }
     }
-    print_string("File", txt_pos_x, txt_pos_y, 0x0000);
+    print_string("Note", txt_pos_x, txt_pos_y, 0x0000);
 }
 void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = btn2_y; y < btn2_y + btn2_h; y++) {

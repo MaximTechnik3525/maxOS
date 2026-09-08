@@ -15,10 +15,12 @@ fi
 echo "=== [1/4] Компиляция исходного кода MaxOS ==="
 nasm -f elf32 entry.asm -o entry.o
 $CC -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+$CC -c maxfs.c -o maxfs.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+$CC -c notepad.c -o notepad.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 echo "=== [2/4] Линковка бинарного файла ядра ==="
 # Флаг --no-warn-rwx-segments убирает предупреждение линкера
-$LD --no-warn-rwx-segments -T linker.ld -o mykernel.bin entry.o kernel.o
+$LD --no-warn-rwx-segments -T linker.ld -o mykernel.bin entry.o kernel.o maxfs.o notepad.o
 
 echo "=== [3/4] Подготовка структуры ISO ==="
 # Создаем строго стандартные папки для GRUB
