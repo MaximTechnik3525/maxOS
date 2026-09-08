@@ -137,7 +137,7 @@ const unsigned char max_font[] = {
     0x66,0x6C,0x78,0x70,0x78,0x6C,0x66,0x00, // 75 K
     0x60,0x60,0x60,0x60,0x60,0x60,0x7F,0x00, // 76 L
     0x63,0x77,0x7F,0x6B,0x63,0x63,0x63,0x00, // 77 M
-    0x63,0x67,0x6F,0x7B,0x73,0x63,0x63,0x00, // 78 N
+    0x63,0x73,0x7B,0x6F,0x67,0x63,0x63,0x00, // 78 N
     0x3E,0x63,0x63,0x63,0x63,0x63,0x3E,0x00, // 79 O
     0x7E,0x63,0x63,0x7E,0x60,0x60,0x60,0x00, // 80 P
     0x3E,0x63,0x63,0x63,0x6B,0x66,0x3D,0x00, // 81 Q
@@ -214,6 +214,7 @@ int fid = 0;
 int tail = 0;
 int repeats = 1;
 int corners = 0;
+int help_pressed = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
@@ -241,8 +242,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 
         }
     }
-    print_string("maxOS RedCycle", 440, 420, 0x0DE5);
-    print_string("by maxTech", 10, 10, 0x24EE);
+    print_string("maxOS DoubleFixes", 440, 420, 0x0DE5);
+    print_string("by maximTechnik3525", 10, 10, 0x24EE);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
     unsigned char packet[3];
@@ -278,8 +279,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 if ((delta_x > -100 && delta_x < 100) && (delta_y > -100 && delta_y < 100)) {
                     if (delta_x != 0 || delta_y != 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_x += delta_x / 3;
-                        pos_y -= delta_y / 3;
+                        pos_x += delta_x / 2;
+                        pos_y -= delta_y / 2;
                         if (pos_x > win_x + 710) {pos_x = win_x + 710;}
                         if (pos_x < win_x + 12) {pos_x = win_x + 12;}
                         if (pos_y > win_y + 518) {pos_y = win_y + 518;}
@@ -334,6 +335,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
                             gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
                             gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
+                            print_string("Explorer", win_x + 28, win_y + 28, 0x0000);
                             print_string("Explorer", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Name:", win_x + 35, win_y + 45, 0x0000);
                             print_string("Size:", win_w - 35, win_y + 45, 0x0000);
@@ -502,9 +504,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
                         gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
                         gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                        print_string("Preview", win_x + 24, win_y + 204, 0xFFFF);
+                        print_string("Text editor", win_x + 24, win_y + 204, 0xFFFF);
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("F2 to exit.", win_x + 24, win_y + 230, 0x0000);
+                        print_string("You can write own programs. Press F2 to exit.", win_x + 24, win_y + 230, 0x0000);
                         play_sound(500);
                         sleep(100);
                         no_sound();
@@ -612,6 +614,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
                             gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
                             gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
+                            print_string("Explorer", win_x + 28, win_y + 28, 0x0000);
                             print_string("Explorer", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Name:", win_x + 35, win_y + 45, 0x0000);
                             print_string("Size:", win_w - 35, win_y + 45, 0x0000);
@@ -651,7 +654,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         textid++;
                         ftext[textid] = '\0';
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("F2 to exit.", win_x + 24, win_y + 230, 0x0000);
+                        print_string("You can write own programs. Press F2 to exit.", win_x + 24, win_y + 230, 0x0000);
                     }
                     if (ascii_char == 'S') {
                         w_mode = 0;
@@ -694,9 +697,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
                         gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
                         gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                        print_string("Preview", win_x + 24, win_y + 204, 0xFFFF);
+                        print_string("Text editor", win_x + 24, win_y + 204, 0xFFFF);
                         print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("F2 to exit.", win_x + 24, win_y + 230, 0x0000);
+                        print_string("You can write own programs. Press F2 to exit.", win_x + 24, win_y + 230, 0x0000);
                     }
                 }
             }
@@ -744,6 +747,7 @@ void pong() {
         gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
         gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
         gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+        print_string("Pong score:", win_x + 28, win_y + 28, 0x0000);
         print_string("Pong score:", win_x + 27, win_y + 27, 0xFFFF);
         while (1) {
             unsigned char scan_code = inb(0x60);
@@ -857,7 +861,9 @@ void pong() {
                     gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
                     gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
                     gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+                    print_string("Pong score:", win_x + 28, win_y + 28, 0x0000);
                     print_string("Pong score:", win_x + 27, win_y + 27, 0xFFFF);
+                    print_string(str_score, win_x + 148, win_y + 28, 0x0000);
                     print_string(str_score, win_x + 147, win_y + 27, 0xFFFF);
                     if (collisions == 5) {
                         collisions = 0;
@@ -932,6 +938,7 @@ void filew() {
                             gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
                             if (str_in(ftext, ".mapp")) { create_file("App.mapp", ftext); }
                             else { create_file("Unnamed.txt", ftext); }
+                            print_string(ram_disk[fid].name, win_x + 28, win_y + 28, 0x0000);
                             print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
                             print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
                             print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
@@ -1119,6 +1126,7 @@ void filew() {
 void help() {
                         if (pos_x <= win_x + 50 && pos_y <= win_y + 30  && drag == 0) {
                             int help_col = win_y + 45;
+                            help_pressed = 1;
                             drag = 1;
                             for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
                                 for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
@@ -1149,6 +1157,7 @@ void help() {
                             gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
                             gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
                             gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
+                            print_string("Help", win_x + 28, win_y + 28, 0x0000);
                             print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Arrows to move window.", win_x + 30, help_col, 0x0000);
                             print_string("C to clear screen and close windows.", win_x + 30, help_col + 15, 0x0000);
@@ -1195,8 +1204,10 @@ void cpu_win() {
                             gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
                             char cpu_name[49];
                             get_cpu(cpu_name);
+                            print_string("CPU", win_x + 28, win_y + 28, 0x0000);
                             print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string(cpu_name, win_x + 30, help_col, 0x0000);
+                            print_string("Your CPU:", win_x + 30, help_col, 0x0000);
+                            print_string(cpu_name, win_x + 120, help_col, 0x0000);
                             print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
                         }
 }
@@ -1267,9 +1278,16 @@ void error(char* err) {
             gfx_memory[y * 1024 + x] = 0xB269;
         }
     }
+    print_string("maxOS error!", 471, 11, 0x0000);
     print_string("maxOS error!", 470, 10, 0xFFFF);
+    print_string(err, 11, 31, 0x0000);
     print_string(err, 10, 30, 0xFFFF);
+    print_string("Restart or off your PC :(", 11, 51, 0x0000);
     print_string("Restart or off your PC :(", 10, 50, 0xFFFF);
+    print_string("If this keep happening, try to fix the issues or avoid repeating this actions.", 11, 71, 0x0000);
+    print_string("If this keep happening, try to fix the issues or avoid repeating this actions.", 10, 70, 0xFFFF);
+    print_string("You can check error description and code, to get more information.", 11, 91, 0x0000);
+    print_string("You can check error description and code, to get more information.", 10, 90, 0xFFFF);
     play_sound(100); sleep(250); play_sound(75); sleep(250); play_sound(50); sleep(250); no_sound();
 }
 int str_in(char* main_string, char* substring) {
@@ -1319,7 +1337,8 @@ int create_file(char* name, char* text) {
             return i;
         }
     }
-    return -1;
+    error("No more space for file creation. Code: 0x02");
+    while(1);
 }
 void prev_cursor() {
     int prev_x = pos_x;
@@ -1382,6 +1401,7 @@ void get_cpu(char* buffer) {
 }
 
 void draw_btn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
+    if (help_pressed == 1) {
     for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
         for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
             gfx_memory[y * 1024 + x] = 0x7BEF;
@@ -1391,6 +1411,19 @@ void draw_btn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn
         for (int x = btn_x; x < btn_x + btn_w; x++) {
             gfx_memory[y * 1024 + x] = 0xC618;
         }
+    }
+    }
+    else {
+        for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
+        for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
+            gfx_memory[y * 1024 + x] = 0x03E0;
+        }
+    }
+    for (int y = btn_y; y < btn_y + btn_h; y++) {
+        for (int x = btn_x; x < btn_x + btn_w; x++) {
+            gfx_memory[y * 1024 + x] = 0x07E0;
+        }
+    }
     }
     print_string("Help", txt_pos_x, txt_pos_y, 0x0000);
 }
@@ -1611,16 +1644,12 @@ void clock() {
     int_str(sec, s);
     int_str(min, m);
     int_str(hour, h);
-    if (theme != 8) {
-        print_string(h, win_x + 690, win_y + 6, 0xFFFF);
-        print_string(":", win_x + 710, win_y + 6, 0xFFFF);
-        print_string(m, win_x + 720, win_y + 6, 0xFFFF);
-    }
-    if (theme == 8) {
-        print_string(h, win_x + 690, win_y + 6, 0x20C0);
-        print_string(":", win_x + 710, win_y + 6, 0x20C0);
-        print_string(m, win_x + 720, win_y + 6, 0x20C0);
-    }
+    print_string(h, win_x + 691, win_y + 7, 0x0000);
+    print_string(":", win_x + 711, win_y + 7, 0x0000);
+    print_string(m, win_x + 721, win_y + 7, 0x0000);
+    print_string(h, win_x + 690, win_y + 6, 0xFFFF);
+    print_string(":", win_x + 710, win_y + 6, 0xFFFF);
+    print_string(m, win_x + 720, win_y + 6, 0xFFFF);
 }
 void win_corners() {
     gfx_memory[win_y * 1024 + win_x] = bg_col;
@@ -1685,9 +1714,9 @@ void draw_window() {
             }
             if (theme == 9) {
                 if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x0801;
+                    gfx_memory[row_offset + x] = 0x3800;
                 }
-                else { gfx_memory[row_offset + x] = 0x2000; }
+                else { gfx_memory[row_offset + x] = 0x1000; }
             }
         }
     }
@@ -1754,11 +1783,15 @@ void draw_window() {
        }
     }
     if (corners == 1) { win_corners(); }
-    if (theme == 3) { print_string("maxOS RedCycle Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) { print_string("maxOS RedCycle Tora", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 8) { print_string("maxOS RedCycle", win_x + 10, win_y + 5, 0x20C0); }
+    if (theme == 3) {
+        print_string("maxOS DoubleFixes Abrikos", win_x + 11, win_y + 6, 0x0000);
+        print_string("maxOS DoubleFixes Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+    if (theme == 4) {
+        print_string("maxOS DoubleFixes Tora", win_x + 11, win_y + 6, 0x0000);
+        print_string("maxOS DoubleFixes Tora", win_x + 10, win_y + 5, 0xFFFF); }
     else {
-        print_string("maxOS RedCycle", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS DoubleFixes", win_x + 11, win_y + 6, 0x0000); 
+        print_string("maxOS DoubleFixes", win_x + 10, win_y + 5, 0xFFFF); }
     clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);

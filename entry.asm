@@ -20,9 +20,15 @@ align 4
     dd 16
 section .text
 global _start
+    mov esp, stack_space
     push ebx
     extern kmain
     call kmain
 .halt:
     hlt
     jmp .halt
+section .bss
+align 16
+stack_bottom:
+    resb 16384
+stack_space:
