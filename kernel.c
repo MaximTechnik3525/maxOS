@@ -71,6 +71,7 @@ void pong();
 void help();
 void cpu_win();
 void filew();
+void open_explorer();
 void error(char* err);
 unsigned short bg_col = 0x18C3;
 void sleep(unsigned int ms);
@@ -216,6 +217,7 @@ int repeats = 1;
 int corners = 0;
 int help_pressed = 0;
 int help_col;
+int explorer_opened = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
@@ -300,54 +302,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (pos_x <= win_x + 50 && pos_y <= win_y + 30) { help(); }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30) { cpu_win(); }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30) { filew(); }
-                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
-                            int help_col = win_y + 45;
-                            int line = win_y + 65;
-                            drag = 1;
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                   else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else if (y < win_y + 60) {
-                                        gfx_memory[y * 1024 + x] = 0xC618;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
-                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            print_string("Explorer", win_x + 28, win_y + 28, 0x0000);
-                            print_string("Explorer", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Name:", win_x + 35, win_y + 45, 0x0000);
-                            print_string("Size:", win_w - 35, win_y + 45, 0x0000);
-                            for (int i = 0; i < 5; i++) {
-                                print_string(ram_disk[i].name, win_x + 30, line, 0x0000);
-                                char size_str[16];
-                                int_str(ram_disk[i].size, size_str);
-                                print_string(size_str, win_w - 30, line, 0x0000);
-                                line += 15;
-                            }
-                        }
+                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) { open_explorer(); }
                     }
                 }   
             }
@@ -396,6 +351,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (ascii_char == 'c') {
                         drag = 0;
+                        explorer_opened = 0;
                         help_col = 65;
                         draw_window();
                         play_sound(900);
@@ -541,56 +497,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (pos_x <= win_x + 50 && pos_y <= win_y + 30  && drag == 0) { help(); }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0) { cpu_win(); }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) { filew(); }
-                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
-                            int help_col = win_y + 45;
-                            int line = win_y + 65;
-                            drag = 1;
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                    else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else if (y < win_y + 60) {
-                                        gfx_memory[y * 1024 + x] = 0xC618;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
-                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            print_string("Explorer", win_x + 28, win_y + 28, 0x0000);
-                            print_string("Explorer", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Name:", win_x + 35, win_y + 45, 0x0000);
-                            print_string("Size:", win_w - 35, win_y + 45, 0x0000);
-                            for (int i = 0; i < 5; i++) {
-                                print_string(ram_disk[i].name, win_x + 30, line, 0x0000);
-                                char size_str[16];
-                                int_str(ram_disk[i].size, size_str);
-                                print_string(size_str, win_w - 30, line, 0x0000);
-                                line += 15;
-                            }
-                        }
+                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) { open_explorer(); }
                     }
-                    if (ascii_char == 'f' && drag == 0) {
+                    if (ascii_char == 'f' && explorer_opened == 1) {
                         textid = 0;
                         for (int i = 0; i < 99; i++) {
                             ftext[i] = '\0';}
@@ -848,8 +757,8 @@ void save_open() {
                 gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
                 print_string(ram_disk[fid].name, win_x + 28, win_y + 28, 0x0000);
                 print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
-                print_string(ram_disk[fid].content, win_x + 30, help_col + 6, 0x0000);
-                print_string("Press c to close this window.", win_x + 30, help_col + 20, 0x0000);
+                print_string(ram_disk[fid].content, win_x + 30, win_y + 45, 0x0000);
+                print_string("Press c to close this window.", win_x + 30, win_y + 60, 0x0000);
     }
     if (fid < 4) {
         fid ++;
@@ -927,6 +836,7 @@ void save_open() {
                 bg_col = 0x0110;
             }
             if (str_in(ftext, "clear")) {
+                explorer_opened = 0;
                 drag = 0;
                 help_col = 65;
                 draw_window();
@@ -1145,7 +1055,6 @@ void filew() {
     }
 }
 
-
 void help() {
     if (pos_x <= win_x + 50 && pos_y <= win_y + 30 && drag == 0) {
         int help_col = win_y + 45;
@@ -1233,6 +1142,65 @@ void cpu_win() {
         print_string("Your CPU:", win_x + 30, help_col, 0x0000);
         print_string(cpu_name, win_x + 120, help_col, 0x0000);
         print_string("Press c to close this window.", win_x + 30, help_col + 15, 0x0000);
+    }
+}
+void open_explorer() {
+    if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
+        int help_col = win_y + 45;
+        int line = win_y + 65;
+        drag = 1;
+        explorer_opened = 1;
+        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+                    gfx_memory[y * 1024 + x] = 0x0320;
+                }
+                else if (y < win_y + 25) {
+                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                }
+                else if (y < win_y + 31) {
+                    gfx_memory[y * 1024 + x] = 0x24EE;
+                }
+                else if (y < win_y + 37) {
+                    gfx_memory[y * 1024 + x] = 0x11EB;
+                }
+                else if (y < win_y + 60) {
+                    gfx_memory[y * 1024 + x] = 0xC618;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xFFFF;
+                }
+            }
+        }
+
+        int swin_x = win_x + 20;
+        int swin_y = win_y + 22;
+        int swin_w = win_w - 40;
+
+        gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+        gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
+        gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
+
+        int right_edges = swin_x + swin_w - 1;
+
+        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+        gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
+        gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+
+        print_string("Explorer", win_x + 28, win_y + 28, 0x0000);
+        print_string("Explorer", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("Name:", win_x + 35, win_y + 45, 0x0000);
+        print_string("Size:", (win_x + win_h) - 14, win_y + 45, 0x0000);
+        print_string("Press f to format virtual disk. Press c to close this window.", win_x + 30, win_y + 510, 0x0000);
+
+        for (int i = 0; i < 5; i++) {
+            print_string(ram_disk[i].name, win_x + 30, line, 0x0000);
+            char size_str[16];
+            int_str(ram_disk[i].size, size_str);
+            print_string(size_str, (win_x + win_h) - 8, line, 0x0000);
+            print_string("b", (win_x + win_h) + 12, line, 0x0000);
+            line += 15;
+        }
     }
 }
 
