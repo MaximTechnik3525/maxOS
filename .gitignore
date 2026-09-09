@@ -1,2 +1,12 @@
-scratch/
+# Build artifacts
+build/
+*.o
+*.bin
+
+# Disk and ISO images
 *.img
+*.iso
+
+# Sockets and scratch
+*.sock
+scratch/

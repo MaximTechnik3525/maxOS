@@ -12,28 +12,42 @@ else
     LD="ld -m elf_x86_64"
 fi
 
-CFLAGS="-std=gnu99 -ffreestanding -O2 -Wall -Wextra -mno-red-zone -mcmodel=small -mgeneral-regs-only"
+# Поддержка очистки
+if [ "$1" == "--clean" ]; then
+    echo "Очистка директории сборки..."
+    rm -rf build iso/boot/mykernel.bin maxos.iso
+    echo "Очистка завершена."
+    exit 0
+fi
+
+# Создаем папку для объектных и бинарных файлов сборки
+mkdir -p build
+
+CFLAGS="-std=gnu99 -ffreestanding -O2 -Wall -Wextra -mno-red-zone -mcmodel=small -mgeneral-regs-only -Isrc -Isrc/kernel -Isrc/drivers -Isrc/fs -Isrc/apps -Isrc/boot"
 
 echo "=== [1/5] Сборка MBR загрузчика ==="
-nasm -f bin boot_mbr.asm -o boot_mbr.bin
-nasm -f elf64 mbr_data.asm -o mbr_data.o
+nasm -f bin src/boot/boot_mbr.asm -o build/boot_mbr.bin
+nasm -Ibuild/ -f elf64 src/boot/mbr_data.asm -o build/mbr_data.o
 
 echo "=== [2/5] Компиляция исходного кода MaxOS (x86_64) ==="
-nasm -f elf64 entry.asm -o entry.o
-$CC -c ata.c -o ata.o $CFLAGS
-$CC -c maxfs.c -o maxfs.o $CFLAGS
-$CC -c maxp.c -o maxp.o $CFLAGS
-$CC -c taskbar.c -o taskbar.o $CFLAGS
-$CC -c notepad.c -o notepad.o $CFLAGS
-$CC -c installer.c -o installer.o $CFLAGS
-$CC -c explorer.c -o explorer.o $CFLAGS
-$CC -c calc.c -o calc.o $CFLAGS
-$CC -c sysinfo.c -o sysinfo.o $CFLAGS
-$CC -c pong.c -o pong.o $CFLAGS
-$CC -c kernel.c -o kernel.o $CFLAGS
+nasm -f elf64 src/boot/entry.asm -o build/entry.o
+$CC -c src/drivers/ata.c -o build/ata.o $CFLAGS
+$CC -c src/fs/maxfs.c -o build/maxfs.o $CFLAGS
+$CC -c src/apps/maxp.c -o build/maxp.o $CFLAGS
+$CC -c src/kernel/taskbar.c -o build/taskbar.o $CFLAGS
+$CC -c src/apps/notepad.c -o build/notepad.o $CFLAGS
+$CC -c src/apps/installer.c -o build/installer.o $CFLAGS
+$CC -c src/apps/explorer.c -o build/explorer.o $CFLAGS
+$CC -c src/apps/calc.c -o build/calc.o $CFLAGS
+$CC -c src/apps/sysinfo.c -o build/sysinfo.o $CFLAGS
+$CC -c src/apps/pong.c -o build/pong.o $CFLAGS
+$CC -c src/kernel/kernel.c -o build/kernel.o $CFLAGS
 
 echo "=== [3/5] Линковка 64-битного ядра (ELF64) ==="
-$LD --no-warn-rwx-segments -T linker.ld -o mykernel.bin entry.o mbr_data.o kernel.o ata.o maxfs.o maxp.o taskbar.o notepad.o installer.o explorer.o calc.o sysinfo.o pong.o
+$LD --no-warn-rwx-segments -T src/linker.ld -o build/mykernel.bin \
+    build/entry.o build/mbr_data.o build/kernel.o build/ata.o build/maxfs.o \
+    build/maxp.o build/taskbar.o build/notepad.o build/installer.o \
+    build/explorer.o build/calc.o build/sysinfo.o build/pong.o
 
 echo "=== [4/5] Подготовка структуры ISO и сборка maxos.iso ==="
 mkdir -p iso/boot/grub
@@ -59,7 +73,7 @@ menuentry "maxOS RedCycle (x86_64 Long Mode)" {
 EOF
 
 # Копируем ядро в папку boot внутри будущего диска
-cp mykernel.bin iso/boot/
+cp build/mykernel.bin iso/boot/
 
 # Сборка ISO
 grub-mkrescue -o maxos.iso iso
