@@ -39,6 +39,11 @@ struct multiboot_info {
 #include "installer.h"
 #include "explorer.h"
 #include "ata.h"
+#include "maxp.h"
+#include "taskbar.h"
+#include "calc.h"
+#include "sysinfo.h"
+#include "pong.h"
 void print_string(char* str, int x, int y, unsigned short color);
 void draw_char(char c, int start_x, int start_y, unsigned short color);
 unsigned char inb(unsigned short port);
@@ -214,53 +219,63 @@ int tail = 0;
 int repeats = 1;
 int corners = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
-    struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
+    (void)magic;
+    struct multiboot_info* mbi = (struct multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
     if (mbi->framebuffer_pitch > 0) { REAL_PITCH = mbi->framebuffer_pitch / 2; }
-    unsigned short width = mbi->framebuffer_width;
-    unsigned short height = mbi->framebuffer_height;
-    draw_window();
-    draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-    draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-    draw_cursor(pos_x, pos_y);
-    int help_col = win_y + 35;
+
     init_mouse();
+
+    // Splash screen
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
             if (y <= 387 && y >= 384) {
                 gfx_memory[y * 1024 + x] = 0x0DE5;
-            }
-            else if (y <= 393 && y > 387) {
+            } else if (y <= 393 && y > 387) {
                 gfx_memory[y * 1024 + x] = 0x03EA;
-            }
-            else if (y <= 400 && y > 393) {
+            } else if (y <= 400 && y > 393) {
                 gfx_memory[y * 1024 + x] = 0x01A4;
+            } else {
+                gfx_memory[y * 1024 + x] = 0x0000;
             }
-            else { gfx_memory[y * 1024 + x] = 0x0000; }
-
         }
     }
     print_string("maxOS RedCycle x86_64", 400, 420, 0x0DE5);
     print_string("by maxTech", 10, 10, 0x24EE);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
-    sleep(2000); draw_window(); drag = 0;
-    unsigned char packet[3];
+    sleep(1500);
+
+    // Initialize all filesystem, application, and GUI subsystems
     maxfs_init();
+    maxp_init();
+    taskbar_init();
     notepad_init();
     installer_init();
     explorer_init();
-    while(1) {
+    calc_init();
+    sysinfo_init();
+    pong_init();
+
+    drag = 0;
+    draw_window();
+
+    unsigned char packet[3];
+    int clock_timer = 0;
+
+    while (1) {
         unsigned char status = inb(0x64);
         if (status & 0x01) {
-            if (status & 0x20 && (drag == 0 || notepad_open == 1 || installer_open == 1 || explorer_open == 1) && w_mode == 0) {
+            if ((status & 0x20) && w_mode == 0 && drag != 2) {
+                // PS/2 Mouse packet
                 packet[0] = inb(0x60);
-                if ((packet[0] & 0x08) == 0) {continue;}
+                if ((packet[0] & 0x08) == 0) { continue; }
                 int timeout = 100000;
-                while (!(inb(0x64) & 0x01) &&  timeout--);
+                while (!(inb(0x64) & 0x01) && timeout--);
                 packet[1] = inb(0x60);
                 timeout = 100000;
-                while (!(inb(0x64) & 0x01) &&  timeout--);
+                while (!(inb(0x64) & 0x01) && timeout--);
                 packet[2] = inb(0x60);
+
                 int sign_x = packet[0] & 0x10;
                 int sign_y = packet[0] & 0x20;
                 int click = packet[0] & 0x01;
@@ -268,845 +283,177 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 int delta_y = packet[2];
                 if (sign_x) delta_x |= 0xFFFFFF00;
                 if (sign_y) delta_y |= 0xFFFFFF00;
+
                 if ((delta_x > -100 && delta_x < 100) && (delta_y > -100 && delta_y < 100)) {
                     if (delta_x != 0 || delta_y != 0) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x += delta_x / 3;
                         pos_y -= delta_y / 3;
-                        if (pos_x > 1024 - 12) {pos_x = 1024 - 12;}
-                        if (pos_x < 0) {pos_x = 0;}
-                        if (pos_y > 768 - 12) {pos_y = 768 - 12;}
-                        if (pos_y < 0) {pos_y = 0;}
-                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
-                        draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
-                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
-                        draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
-                        draw_instbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
+                        if (pos_x > 1024 - 12) pos_x = 1024 - 12;
+                        if (pos_x < 0) pos_x = 0;
+                        if (pos_y > 768 - 12) pos_y = 768 - 12;
+                        if (pos_y < 0) pos_y = 0;
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (click == 1) { // MOUSE CLICKS
-                        if (notepad_open) {
-                            if (notepad_handle_click(pos_x, pos_y)) {
-                                continue;
-                            }
+
+                    if (click == 1) {
+                        if (taskbar_handle_click(pos_x, pos_y)) {
+                            continue;
                         }
-                        if (installer_open) {
-                            if (installer_handle_click(pos_x, pos_y)) {
-                                continue;
-                            }
+                        if (notepad_open) {
+                            if (notepad_handle_click(pos_x, pos_y)) continue;
                         }
                         if (explorer_open) {
-                            if (explorer_handle_click(pos_x, pos_y)) {
-                                continue;
-                            }
+                            if (explorer_handle_click(pos_x, pos_y)) continue;
                         }
-                        if (drag == 0) {
-                            if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { pong(); }
-                            if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { shutdown(); }
-                            if (pos_x >= win_x + 10 && pos_x <= win_x + 50 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { help(); }
-                            if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { cpu_win(); }
-                            if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { notepad_open_window(); }
-                            if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { explorer_open_window(); }
-                            if (pos_x >= win_x + 370 && pos_x <= win_x + 410 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { installer_open_window(); }
+                        if (calc_open) {
+                            if (calc_handle_click(pos_x, pos_y)) continue;
+                        }
+                        if (sysinfo_open) {
+                            if (sysinfo_handle_click(pos_x, pos_y)) continue;
+                        }
+                        if (pong_open) {
+                            if (pong_handle_click(pos_x, pos_y)) continue;
+                        }
+                        if (installer_open) {
+                            if (installer_handle_click(pos_x, pos_y)) continue;
                         }
                     }
-                }   
-            }
-            else {
+                }
+            } else {
+                // PS/2 Keyboard scancode
                 unsigned char scan_code = inb(0x60);
-                if (scan_code < 0x80 && drag != 2) { // KEYBOARD CLICKS
+                if (scan_code < 0x80 && drag != 2) {
                     char ascii_char = scan_code_to_ascii(scan_code);
-                    if (notepad_open) {
-                        if (notepad_handle_key(ascii_char, scan_code)) {
-                            continue;
-                        }
+
+                    if (taskbar_handle_key(ascii_char, scan_code)) {
+                        continue;
                     }
-                    if (installer_open) {
-                        if (installer_handle_key(ascii_char, scan_code)) {
-                            continue;
-                        }
+                    if (notepad_open) {
+                        if (notepad_handle_key(ascii_char, scan_code)) continue;
                     }
                     if (explorer_open) {
-                        if (explorer_handle_key(ascii_char, scan_code)) {
-                            continue;
+                        if (explorer_handle_key(ascii_char, scan_code)) continue;
+                    }
+                    if (calc_open) {
+                        if (calc_handle_key(ascii_char, scan_code)) continue;
+                    }
+                    if (sysinfo_open) {
+                        if (sysinfo_handle_key(ascii_char, scan_code)) continue;
+                    }
+                    if (pong_open) {
+                        if (pong_handle_key(ascii_char, scan_code)) continue;
+                    }
+                    if (installer_open) {
+                        if (installer_handle_key(ascii_char, scan_code)) continue;
+                    }
+
+                    // Start Menu shortcut (Win key / M)
+                    if (ascii_char == 'm' || ascii_char == 'M' || scan_code == 0x5B || scan_code == 0x5C) {
+                        taskbar_toggle_start_menu();
+                        continue;
+                    }
+
+                    // Close active window
+                    if (ascii_char == 'c' || ascii_char == 'C' || scan_code == 0x01) {
+                        maxp_close_all_windows();
+                        draw_window();
+                        continue;
+                    }
+
+                    // Quick app launchers
+                    if (ascii_char == 'F' || ascii_char == 'f') { maxp_launch_app(MAXP_APP_NOTEPAD); continue; }
+                    if (ascii_char == 'E' || ascii_char == 'e') { maxp_launch_app(MAXP_APP_EXPLORER); continue; }
+                    if (ascii_char == 'K' || ascii_char == 'k') { maxp_launch_app(MAXP_APP_CALC); continue; }
+                    if (ascii_char == 'S' || ascii_char == 's') { maxp_launch_app(MAXP_APP_SYSINFO); continue; }
+                    if (ascii_char == 'P' || ascii_char == 'p') { maxp_launch_app(MAXP_APP_PONG); continue; }
+                    if (ascii_char == 'I' || ascii_char == 'i') { maxp_launch_app(MAXP_APP_INSTALLER); continue; }
+
+                    // Themes 1-9
+                    if (ascii_char >= '1' && ascii_char <= '9') {
+                        theme = ascii_char - '0';
+                        if (theme == 1) bg_col = 0x18C3;
+                        else if (theme == 2) bg_col = 0x2000;
+                        else if (theme == 3) bg_col = 0x1041;
+                        else if (theme == 4) bg_col = 0x10A2;
+                        else if (theme == 5) bg_col = 0x01C8;
+                        else if (theme == 6) bg_col = 0x00A1;
+                        else if (theme == 7) bg_col = 0x4083;
+                        else if (theme == 8) bg_col = 0x7BE0;
+                        else if (theme == 9) bg_col = 0x0110;
+                        draw_window();
+                        play_sound(700); sleep(30); no_sound();
+                        continue;
+                    }
+
+                    // Rounded corners toggle
+                    if (ascii_char == 'M') { corners = 1; draw_window(); play_sound(700); sleep(50); no_sound(); continue; }
+                    if (ascii_char == 'N') { corners = 0; draw_window(); play_sound(500); sleep(50); no_sound(); continue; }
+
+                    // Mouse trail toggle
+                    if (ascii_char == 'C' && tail == 0) { tail = 1; play_sound(900); sleep(50); no_sound(); continue; }
+                    if (ascii_char == 'O' && tail == 1) { tail = 0; draw_window(); play_sound(800); sleep(50); no_sound(); continue; }
+
+                    // Key-mouse mode
+                    if (ascii_char == 'T') { km_mode = 1; play_sound(200); sleep(50); no_sound(); continue; }
+                    if (ascii_char == 'G') { km_mode = 0; play_sound(1000); sleep(50); no_sound(); draw_window(); continue; }
+
+                    if (km_mode == 1) {
+                        if (ascii_char == 'U' && pos_y >= 15) { if (tail == 0) prev_cursor(); pos_y -= 15; draw_cursor(pos_x, pos_y); }
+                        if (ascii_char == 'D' && pos_y <= 768 - 27) { if (tail == 0) prev_cursor(); pos_y += 15; draw_cursor(pos_x, pos_y); }
+                        if (ascii_char == 'R' && pos_x <= 1024 - 27) { if (tail == 0) prev_cursor(); pos_x += 15; draw_cursor(pos_x, pos_y); }
+                        if (ascii_char == 'L' && pos_x >= 15) { if (tail == 0) prev_cursor(); pos_x -= 15; draw_cursor(pos_x, pos_y); }
+                        if (ascii_char == 'e') {
+                            if (taskbar_handle_click(pos_x, pos_y)) continue;
+                            if (notepad_open && notepad_handle_click(pos_x, pos_y)) continue;
+                            if (explorer_open && explorer_handle_click(pos_x, pos_y)) continue;
+                            if (calc_open && calc_handle_click(pos_x, pos_y)) continue;
+                            if (sysinfo_open && sysinfo_handle_click(pos_x, pos_y)) continue;
+                            if (pong_open && pong_handle_click(pos_x, pos_y)) continue;
+                            if (installer_open && installer_handle_click(pos_x, pos_y)) continue;
                         }
                     }
-                    if ((ascii_char == 'I' || scan_code == 0x43) && drag == 0) {
-                        installer_open_window();
-                    }
-                    if ((ascii_char == 'E' || scan_code == 0x40) && drag == 0) {
-                        explorer_open_window();
-                    }
-                    if (ascii_char == 'M' && drag == 0 && corners == 0) {
-                        corners = 1;
-                        draw_window();
-                        play_sound(700); sleep(100); no_sound();
-                    }
-                    if (ascii_char == 'N' && drag == 0 && corners == 1) {
-                        corners = 0;
-                        draw_window();
-                        play_sound(500); sleep(100); no_sound();
-                    }
-                    if (ascii_char == 'C' && drag == 0 && tail == 0) {
-                        tail = 1;
-                        play_sound(900);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == 'O' && drag == 0 && tail == 1) {
-                        tail = 0;
-                        draw_window();
-                        play_sound(800);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == 'R' && win_x < 300 && drag == 0 && km_mode == 0) {
-                        win_x += 20;
-                        draw_window();
-                    }
-                    if (ascii_char == 'L' && win_x > 0 && drag == 0 && km_mode == 0) {
-                        win_x-= 20;
-                        draw_window();
-                    }
-                    if (ascii_char == 'D' && win_y < 250 && drag == 0 && km_mode == 0) {
-                        win_y += 20;
-                        draw_window();
-                    }
-                    if (ascii_char == 'U' && win_y > 0 && drag == 0 && km_mode == 0) {
-                        win_y -= 20;
-                        draw_window();
-                    }
-                    if (ascii_char == 'c') {
-                        drag = 0;
-                        help_col = 65;
-                        draw_window();
-                        play_sound(900);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == '1' && drag == 0) {
-                        bg_col = 0x18C3;
-                        theme = 1;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == '2' && drag == 0) {
-                        theme = 2;
-                        bg_col = 0x2000;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }                        
-                    if (ascii_char == '3' && drag == 0) {
-                        bg_col = 0x1041;
-                        theme = 3;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == '4' && drag == 0) {
-                        theme = 4;
-                        bg_col = 0x10A2;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == '5' && drag == 0) {
-                        bg_col = 0x01C8;
-                        theme = 5;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == '6' && drag == 0) {
-                        bg_col = 0x00A1;
-                        theme = 6;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == '7' && drag == 0) {
-                        bg_col = 0x4083;
-                        theme = 7;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == '8' && drag == 0) {
-                        bg_col = 0x7BE0;
-                        theme = 8;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == '9' && drag == 0) {
-                        bg_col = 0x0110;
-                        theme = 9;
-                        draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == 'F' && drag == 0) {
-                        notepad_open_window();
-                    }
-                    if (ascii_char == 'T' && km_mode == 0 && (drag == 0 || notepad_open == 1 || installer_open == 1 || explorer_open == 1)) {
-                        km_mode = 1;
-                        play_sound(200);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == 'U' && km_mode == 1 && pos_y >= 15 && (drag == 0 || notepad_open == 1 || installer_open == 1 || explorer_open == 1)) {
-                        if (tail == 0) { prev_cursor(); }
-                        pos_y -= 15;
-                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
-                        draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
-                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
-                        draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
-                        draw_instbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
-                        draw_cursor(pos_x, pos_y);
-                    }
-                    if (ascii_char == 'D' && km_mode == 1 && pos_y <= 768 - 27 && (drag == 0 || notepad_open == 1 || installer_open == 1 || explorer_open == 1)) {
-                        if (tail == 0) { prev_cursor(); }
-                        pos_y += 15;
-                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
-                        draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
-                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
-                        draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
-                        draw_instbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
-                        draw_cursor(pos_x, pos_y);
-                    }
-                    if (ascii_char == 'R' && km_mode == 1 && pos_x <= 1024 - 27 && (drag == 0 || notepad_open == 1 || installer_open == 1 || explorer_open == 1)) {
-                        if (tail == 0) { prev_cursor(); }
-                        pos_x += 15;
-                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
-                        draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
-                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
-                        draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
-                        draw_instbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
-                        draw_cursor(pos_x, pos_y);
-                    }
-                    if (ascii_char == 'L' && km_mode == 1 && pos_x >= 15 && (drag == 0 || notepad_open == 1 || installer_open == 1 || explorer_open == 1)) {
-                        if (tail == 0) { prev_cursor(); }
-                        pos_x -= 15;
-                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
-                        draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
-                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
-                        draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
-                        draw_instbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
-                        draw_cursor(pos_x, pos_y);
-                    }
-                    if (ascii_char == 'G' && km_mode == 1 && (drag == 0 || notepad_open == 1 || installer_open == 1 || explorer_open == 1)) {
-                        km_mode = 0;
-                        play_sound(1000);
-                        sleep(100);
-                        no_sound();
-                        draw_window();
-                    }
-                    if (ascii_char == 'e' && km_mode == 1) {
-                        if (notepad_open) {
-                            if (notepad_handle_click(pos_x, pos_y)) {
-                                continue;
-                            }
-                        }
-                        if (installer_open) {
-                            if (installer_handle_click(pos_x, pos_y)) {
-                                continue;
-                            }
-                        }
-                        if (explorer_open) {
-                            if (explorer_handle_click(pos_x, pos_y)) {
-                                continue;
-                            }
-                        }
-                        if (drag == 0) {
-                            if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { pong(); }
-                            if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y >= win_y + 20 && pos_y <= win_y + 32)  { shutdown(); }
-                            if (pos_x >= win_x + 10 && pos_x <= win_x + 50 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { help(); }
-                            if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { cpu_win(); }
-                            if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { notepad_open_window(); }
-                            if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { explorer_open_window(); }
-                            if (pos_x >= win_x + 370 && pos_x <= win_x + 410 && pos_y >= win_y + 20 && pos_y <= win_y + 32) { installer_open_window(); }
-                        }
-                    }
+
+                    // Format disk
                     if (ascii_char == 'f' && drag == 0) {
-                        textid = 0;
-                        for (int i = 0; i < 99; i++) {
-                            ftext[i] = '\0';}
                         maxfs_format("maxOS Disk");
-                        fid = 0;
-                        play_sound(800);
-                        sleep(100);
-                        no_sound();
+                        play_sound(800); sleep(100); no_sound();
                     }
-                }   
-                if (scan_code < 0x80 && w_mode == 1) {
-                    char ascii_char = scan_code_to_ascii(scan_code);
-                    if (ascii_char != 'F' && ascii_char != 'S' && ascii_char != 'B' && textid < 76) {
-                        ftext[textid] = ascii_char;
-                        textid++;
-                        ftext[textid] = '\0';
-                        print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("F2 to exit.", win_x + 24, win_y + 230, 0x0000);
-                    }
-                    if (ascii_char == 'S') {
-                        w_mode = 0;
-                        draw_window();
-                        play_sound(300);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == 'B') {
-                        if (textid > 0) {
-                            textid--;
-                            ftext[textid] = '\0';
-                        }
-                        for (int y = win_y + 200; y < win_y + 500; y++) {
-                            for (int x = win_x + 20; x < win_x + 720; x++) {
-                                if (y == win_y + 200 || y == win_y + 499 || x == win_x + 20|| x == win_x + 719) {
-                                    gfx_memory[y * 1024 + x] = 0x0320;
-                                }
-                                else if (y < win_y + 203) {
-                                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                                }
-                                else if (y < win_y + 209) {
-                                    gfx_memory[y * 1024 + x] = 0x24EE;
-                                }
-                                else if (y < win_y + 215) {
-                                    gfx_memory[y * 1024 + x] = 0x11EB;
-                                }
-                                else {
-                                    gfx_memory[y * 1024 + x] = 0xFFFF;
-                                }
-                            }
-                        }
-                        int swin_x = win_x + 20;
-                        int swin_y = win_y + 200;
-                        int swin_w = win_w - 40;
-                        gfx_memory[swin_y * 1024 + swin_x] = 0xFFFF;
-                        gfx_memory[swin_y * 1024 + (swin_x+1)] = 0xFFFF;
-                        gfx_memory[(swin_y+1) * 1024 + swin_x] = 0xFFFF;
-                        int right_edges = swin_x + swin_w - 1;
-                        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                        gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                        gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                        print_string("Preview", win_x + 24, win_y + 204, 0xFFFF);
-                        print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("F2 to exit.", win_x + 24, win_y + 230, 0x0000);
-                    }
+                }
+            }
+        } else {
+            if (pong_open) {
+                pong_tick();
+                sleep(16);
+            } else {
+                clock_timer++;
+                if (clock_timer >= 100000) {
+                    clock_timer = 0;
+                    taskbar_draw_clock();
                 }
             }
         }
     }
 }
+
 int score = 0;
-void pong() {
-    if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y >= win_y + 20 && pos_y <= win_y + 32) {
-        drag = 1;
-        pad_x = win_x + (win_w / 2) - (pad_w / 2);
-        pad_y = win_y + win_h - 40;
-        ball_x = win_x + (win_w / 2);
-        ball_y = win_y + 100;
-        collisions = 0;
-        ball_dx = 3;
-        ball_dy = 3;
-        score = 0;
-        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < win_y + 25) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < win_y + 31) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < win_y + 37) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xEF59;
-                }
-            }
-        }
-        int swin_x = win_x + 20;
-        int swin_y = win_y + 22;
-        int swin_w = win_w - 40;
-        gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-        gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-        gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-        int right_edges = swin_x + swin_w - 1;
-        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-        gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-        gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
-        print_string("Pong score:", win_x + 27, win_y + 27, 0xFFFF);
-        while (1) {
-            unsigned char scan_code = inb(0x60);
-            if (scan_code < 0x80 && w_mode == 0) { // KEYBOARD CLICKS
-                char ascii_char = scan_code_to_ascii(scan_code);
-                if (ascii_char == 'c') {
-                    drag = 0;
-                    draw_window();
-                    draw_cursor(pos_x, pos_y);
-                    break;
-                }
-                if (ascii_char == 'd' && pad_x <= win_x + 630) {
-                    for (int x = 0; x < pad_w; x++) {
-                        for (int y = 0; y < pad_h; y++) {
-                            int screen_x = pad_x + x;
-                            int screen_y = pad_y + y;
-                            gfx_memory[screen_y * 1024 + screen_x] = 0xEF59;
-                        }
-                    }
-                    pad_x += 20;
-                    for (int x = 0; x < pad_w; x++) {
-                        for (int y = 0; y < pad_h; y++) {
-                            int screen_x = pad_x + x;
-                            int screen_y = pad_y + y;
-                            gfx_memory[screen_y * 1024 + screen_x] = 0xB269;
-                        }
-                    }
-                    sleep(20);
-                }
-                if (ascii_char == 'a' && pad_x >= win_x + 50) {
-                    for (int x = 0; x < pad_w; x++) {
-                        for (int y = 0; y < pad_h; y++) {
-                            int screen_x = pad_x + x;
-                            int screen_y = pad_y + y;
-                            gfx_memory[screen_y * 1024 + screen_x] = 0xEF59;
-                        }
-                    }
-                    pad_x -= 20;
-                    for (int x = 0; x < pad_w; x++) {
-                        for (int y = 0; y < pad_h; y++) {
-                            int screen_x = pad_x + x;
-                            int screen_y = pad_y + y;
-                            gfx_memory[screen_y * 1024 + screen_x] = 0xB269;
-                        }
-                    }
-                    sleep(20);
-                }
-            }
-            for (int x = 0; x < ball_size; x++) {
-                for (int y = 0; y < ball_size; y++) {
-                    gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0xEF59;
-                }
-            }
-            ball_x += ball_dx;
-            ball_y += ball_dy;
-            if (ball_x < win_x + 30) {
-                ball_x = swin_x + 10;
-                ball_dx = -ball_dx;
-                play_sound(500);
-                sleep(100);
-                no_sound();
-            }
-            if (ball_x > win_x + 710) {
-                ball_x = win_x + 710;
-                ball_dx = -ball_dx;
-                play_sound(500);
-                sleep(100);
-                no_sound();
-            }
-            if (ball_y < swin_y + 30) {
-                ball_y = swin_y + 30;
-                ball_dy = -ball_dy;
-                play_sound(500);
-                sleep(100);
-                no_sound();
-            }
-            if (ball_y + ball_size >= pad_y && ball_y <= pad_y + pad_h) {
-                if (ball_x + ball_size >= pad_x && ball_x <= pad_x + pad_w) {
-                    ball_y = pad_y - ball_size;
-                    ball_dy = -ball_dy;
-                    play_sound(700);
-                    sleep(100);
-                    no_sound();
-                    collisions++;
-                    score++;
-                    char str_score[10];
-                    int_str(score, str_score);
-                    for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                        for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                            if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                                gfx_memory[y * 1024 + x] = 0x0320;
-                            }
-                            else if (y < win_y + 25) {
-                                gfx_memory[y * 1024 + x] = 0x3DEF;
-                            }
-                            else if (y < win_y + 31) {
-                                gfx_memory[y * 1024 + x] = 0x24EE;
-                            }
-                            else if (y < win_y + 37) {
-                                gfx_memory[y * 1024 + x] = 0x11EB;
-                            }
-                        }
-                    }
-                    int swin_x = win_x + 20;
-                    int swin_y = win_y + 22;
-                    int swin_w = win_w - 40;
-                    gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                    gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-                    gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-                    int right_edges = swin_x + swin_w - 1;
-                    gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                    gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-                    gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
-                    print_string("Pong score:", win_x + 27, win_y + 27, 0xFFFF);
-                    print_string(str_score, win_x + 147, win_y + 27, 0xFFFF);
-                    if (collisions == 5) {
-                        collisions = 0;
-                        ball_dx -= 1;
-                        ball_dy -= 1;
-                    }
-                }
-            }
-            if (ball_y > pad_y) {
-                pad_x = 500;
-                pad_y = 580;
-                pad_w = 60;
-                pad_h = 20;
-                ball_x = 500;
-                ball_y = 360;
-                drag = 0;
-                collisions = 0;
-                score = 0;
-                ball_dx = 3;
-                ball_dy = 3;
-                draw_window();
-                draw_cursor(pos_x, pos_y);
-                play_sound(700);
-                sleep(100);
-                no_sound();
-                play_sound(300);
-                sleep(300);
-                no_sound();
-                break;
-            }
-            for (int x = 0; x < ball_size; x++) {
-                for (int y = 0; y < ball_size; y++) {
-                    gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0x7E1F;
-                }
-            }
-            sleep(16);
-        }
-    }
+void pong(void) {
+    maxp_launch_app(MAXP_APP_PONG);
 }
-void filew() {
-                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) {
-                            int help_col = win_y + 45;
-                            drag = 1;
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                   else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
-                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            if (str_in(ftext, ".mapp")) { create_file("App.mapp", ftext); }
-                            else { create_file("Unnamed.txt", ftext); }
-                            print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
-                            print_string(ram_disk[fid].content, win_x + 30, help_col, 0x0000);
-                            print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
-                            if (fid < 4) {
-                                fid++;
-                            }
-                            repeats = 1;
-                            if (str_in(ftext, ".mapp")) {
-                            if (str_in(ftext, "repeat0")) { repeats = 0; }
-                            if (str_in(ftext, "repeat5")) { repeats = 5; }
-                            if (str_in(ftext, "repeat10")) { repeats = 10; }
-                            if (str_in(ftext, "repeat50")) { repeats = 50; }
-                            if (str_in(ftext, "repeat100")) { repeats = 100; }
-                            for (int range = 0; range < repeats; range++) {
-                                if (str_in(ftext, "waitkey")) {
-                                    while(1) {
-                                    unsigned char scan_code = inb(0x60);
-                                    if (scan_code < 0x80) {
-                                        char ascii_char = scan_code_to_ascii(scan_code);
-                                        if (ascii_char != 'e') { break; }
-                                    }
-                                }
-                                }
-                            if (str_in(ftext, "theme1")) {
-                                theme = 1;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x18C3;
-                            }
-                            if (str_in(ftext, "theme2")) {
-                                theme = 2;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x2000;
-                            }
-                            if (str_in(ftext, "theme3")) {
-                                theme = 3;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x1041;
-                            }
-                            if (str_in(ftext, "theme4")) {
-                                theme = 4;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x10A2;
-                            }
-                            if (str_in(ftext, "theme5")) {
-                                theme = 5;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x01C8;
-                            }
-                            if (str_in(ftext, "theme6")) {
-                                theme = 6;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x00A1;
-                            }
-                            if (str_in(ftext, "theme7")) {
-                                theme = 7;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x4083;
-                            }
-                            if (str_in(ftext, "theme8")) {
-                                theme = 8;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x7BE0;
-                            }
-                            if (str_in(ftext, "theme9")) {
-                                theme = 9;
-                                draw_window();
-                                drag = 0;
-                                bg_col = 0x0110;
-                            }
-                            if (str_in(ftext, "clear")) {
-                                drag = 0;
-                                help_col = 65;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "winrght")) {
-                                drag = 0;
-                                win_x += 50;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "winlft")) {
-                                drag = 0;
-                                win_x -= 50;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "winup")) {
-                                drag = 0;
-                                win_y -= 50;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "windwn")) {
-                                drag = 0;
-                                win_y += 50;
-                                draw_window();
-                            }
-                            if (str_in(ftext, "speaker")) {
-                                play_sound(750);
-                                sleep(250);
-                                no_sound();
-                            }
-                            if (str_in(ftext, "scrblack")) {
-                                for (int y = 0; y < 768; y++) {
-                                    for (int x = 0; x < 1024; x++) {
-                                        gfx_memory[y * 1024 + x] = 0x0000;
-                                    }
-                                }
-                            }
-                            if (str_in(ftext, "scrwhite")) {
-                                for (int y = 0; y < 768; y++) {
-                                    for (int x = 0; x < 1024; x++) {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            if (str_in(ftext, "stbusy")) {
-                                drag = 1;
-                            }
-                            if (str_in(ftext, "stfree")) { drag = 0; }
-                            if (str_in(ftext, "stcrit")) { drag = 2; }
-                            if (str_in(ftext, "drawwin")) {
-                                for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                   else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
-                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            print_string("App", win_x + 27, win_y + 27, 0xFFFF);
-                            }
-                            }
-                            if (str_in(ftext, "printtext")) { print_string(ftext, 300, 359, 0x0000); }
-                            if (str_in(ftext, "sleep"))  { sleep(2000); }
-                            if (str_in(ftext, "errscr")) { error("Caused by user programm. Code: 0x00"); }
-                            if (str_in(ftext, "shtdwn")) { shutdown(); }
-                            if (str_in(ftext, "trailon")) { tail = 1; }
-                            if (str_in(ftext, "trailoff")) { tail = 0; }
-                            if (str_in(ftext, "format")) {
-                                textid = 0;
-                                for (int i = 0; i < 99; i++) {
-                                    ftext[i] = '\0';}
-                                maxfs_format("maxOS Disk");
-                                fid = 0;
-                            }
-                        }
-                        }
-                        }
+
+void filew(void) {
+    maxp_launch_app(MAXP_APP_EXPLORER);
 }
-void help() {
-                        if (pos_x >= win_x + 10 && pos_x <= win_x + 50 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) {
-                            int help_col = win_y + 45;
-                            drag = 1;
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                   else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
-                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Arrows to move window.", win_x + 30, help_col, 0x0000);
-                            print_string("C to clear screen and close windows.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("1-9 to change system theme.", win_x + 30, help_col + 30, 0x0000);
-                            print_string("F1/F2 to enable and disable write mode.", win_x + 30, help_col + 45, 0x0000);
-                            print_string("F to format virtual disk.", win_x + 30, help_col + 60, 0x0000);
-                            print_string("F3/F4 to enable and disable key-mouse mode.", win_x + 30, help_col + 75, 0x0000);
-                            print_string("F5/F6 to enable and disable mouse trail.", win_x + 30, help_col + 90, 0x0000);
-                            print_string("F7/F8 to enable and disable main window corner.", win_x + 30, help_col + 105, 0x0000);
-                        }
+
+void help(void) {
+    notepad_open_file_by_name("readme.txt");
+    maxp_set_active_app(MAXP_APP_NOTEPAD);
 }
-void cpu_win() {
-                            if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y >= win_y + 20 && pos_y <= win_y + 32 && drag == 0) {
-                            int help_col = win_y + 45;
-                            drag = 1;
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22|| y == win_y + 22 + win_h - 41 || x == win_x + 20|| x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                   else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                                    }
-                                }
-                            }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x+1)] = 0x0000;
-                            gfx_memory[(swin_y+1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                            gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                            char cpu_name[49];
-                            get_cpu(cpu_name);
-                            print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string(cpu_name, win_x + 30, help_col, 0x0000);
-                            print_string("Arch: x86_64 Long Mode (64-bit)", win_x + 30, help_col + 15, 0x0200);
-                            print_string("Press c to close.", win_x + 30, help_col + 30, 0x0000);
-                        }
+
+void cpu_win(void) {
+    maxp_launch_app(MAXP_APP_SYSINFO);
 }
+
 void int_str(int num, char* str) {
     int i = 0;
     if (num == 0) {
@@ -1557,141 +904,85 @@ void win_corners() {
 }
 void draw_window() {
     cursor_bg_saved = 0;
-    for (int y = 0; y < 768; y++) {
+    // 1. Draw desktop wallpaper pattern for entire desktop
+    for (int y = 0; y < 730; y++) {
         int row_offset = y << 10;
         for (int x = 0; x < 1024; x++) {
             if (theme == 1) {
-                if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x10A2;
-                }
+                if (((x ^ y) & 16) == 0) { gfx_memory[row_offset + x] = 0x10A2; }
                 else { gfx_memory[row_offset + x] = 0x2124; }
-            }
-            if (theme == 2) {
-                if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x4002;
-                }
+            } else if (theme == 2) {
+                if (((x ^ y) & 16) == 0) { gfx_memory[row_offset + x] = 0x4002; }
                 else { gfx_memory[row_offset + x] = 0x8085; }
-            }            
-            if (theme == 3) {
-                if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x2080;
-                }
+            } else if (theme == 3) {
+                if (((x ^ y) & 16) == 0) { gfx_memory[row_offset + x] = 0x2080; }
                 else { gfx_memory[row_offset + x] = 0x4100; }
-            }            
-            if (theme == 4) {
-                if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x10A2;
-                }
+            } else if (theme == 4) {
+                if (((x ^ y) & 16) == 0) { gfx_memory[row_offset + x] = 0x10A2; }
                 else { gfx_memory[row_offset + x] = 0x2945; }
-            }            
-            if (theme == 5) {
-                if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x010A;
-                }
+            } else if (theme == 5) {
+                if (((x ^ y) & 16) == 0) { gfx_memory[row_offset + x] = 0x010A; }
                 else { gfx_memory[row_offset + x] = 0x03EF; }
-            }
-            if (theme == 6) {
-                if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x0102;
-                }
+            } else if (theme == 6) {
+                if (((x ^ y) & 16) == 0) { gfx_memory[row_offset + x] = 0x0102; }
                 else { gfx_memory[row_offset + x] = 0x05E0; }
-            }            
-            if (theme == 7) {
-                if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x4004;
-                }
+            } else if (theme == 7) {
+                if (((x ^ y) & 16) == 0) { gfx_memory[row_offset + x] = 0x4004; }
                 else { gfx_memory[row_offset + x] = 0xFBEF; }
-            }
-            if (theme == 8) {
-                if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0xE62F;
-                }
+            } else if (theme == 8) {
+                if (((x ^ y) & 16) == 0) { gfx_memory[row_offset + x] = 0xE62F; }
                 else { gfx_memory[row_offset + x] = 0x8B04; }
-            }
-            if (theme == 9) {
-                if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x0801;
-                }
+            } else if (theme == 9) {
+                if (((x ^ y) & 16) == 0) { gfx_memory[row_offset + x] = 0x0801; }
                 else { gfx_memory[row_offset + x] = 0x2000; }
             }
         }
     }
-    for (int y = win_y; y < win_y + win_h; y++) {
-        for (int x = win_x; x < win_x + win_w; x++) {
-            if (y == win_y || y == win_y + win_h - 1 || x == win_x || x == win_x + win_w - 1) {
-                if (theme == 1) {
-                    gfx_memory[y * 1024 + x] = 0xC618;}
-                if (theme == 2) {
-                    gfx_memory[y * 1024 + x] = 0xFFFA;}
-                if (theme == 3) { gfx_memory[y * 1024 + x] = 0x7224; }
-                if (theme == 4) { gfx_memory[y * 1024 + x] = 0x9CF3; }
-                if (theme == 5) { gfx_memory[y * 1024 + x] = 0x0124; }
-                if (theme == 6) { gfx_memory[y * 1024 + x] = 0x0200; }
-                if (theme == 7) { gfx_memory[y * 1024 + x] = 0x50C3; }
-                if (theme == 8) { gfx_memory[y * 1024 + x] = 0x5A21; }
-                if (theme == 9) { gfx_memory[y * 1024 + x] = 0xFC00; }
-            }
-            else if (y < win_y + 3) {
-                if (theme == 1) {
-                    gfx_memory[y * 1024 + x] = 0x3D7F;}
-                if (theme == 2) {
-                    gfx_memory[y * 1024 + x] = 0xB269;
+
+    // 2. Desktop icons on the left side
+    taskbar_draw_desktop_icons();
+
+    // 3. Desktop center widget if no app is active or if active app is minimized
+    int active_app = maxp_get_active_app();
+    if (active_app == MAXP_APP_NONE || taskbar_is_app_minimized()) {
+        int card_x = 220, card_y = 150, card_w = 640, card_h = 370;
+        for (int y = card_y; y < card_y + card_h; y++) {
+            for (int x = card_x; x < card_x + card_w; x++) {
+                if (y == card_y || y == card_y + card_h - 1 || x == card_x || x == card_x + card_w - 1) {
+                    gfx_memory[y * 1024 + x] = 0x0000;
+                } else if (y < card_y + 24) {
+                    gfx_memory[y * 1024 + x] = 0x11EB;
+                } else {
+                    gfx_memory[y * 1024 + x] = 0xEF59;
                 }
-                if (theme == 3) { gfx_memory[y * 1024 + x] = 0xD460; }
-                if (theme == 4) { gfx_memory[y * 1024 + x] = 0x4A29; }
-                if (theme == 5) { gfx_memory[y * 1024 + x] = 0x0DE5; }
-                if (theme == 6) { gfx_memory[y * 1024 + x] = 0x05E5; }
-                if (theme == 7) { gfx_memory[y * 1024 + x] = 0xFCEF; }
-                if (theme == 8) { gfx_memory[y * 1024 + x] = 0xFFFA; }
-                if (theme == 9) { gfx_memory[y * 1024 + x] = 0xFBEF; }
             }
-            else if (y < win_y + 9) {
-                if (theme == 1) {
-                    gfx_memory[y * 1024 + x] = 0x2417;}
-                if (theme == 2) {
-                    gfx_memory[y * 1024 + x] = 0x81C6;
-                }
-                if (theme == 3) { gfx_memory[y * 1024 + x] = 0x92E0; }
-                if (theme == 4) { gfx_memory[y * 1024 + x] = 0x31C6; }
-                if (theme == 5) { gfx_memory[y * 1024 + x] = 0x03EA; }
-                if (theme == 6) { gfx_memory[y * 1024 + x] = 0x03E3; }
-                if (theme == 7) { gfx_memory[y * 1024 + x] = 0xB9CD; }
-                if (theme == 8) { gfx_memory[y * 1024 + x] = 0xE60B; }
-                if (theme == 9) { gfx_memory[y * 1024 + x] = 0xF800; }
-            }
-            else if (y < win_y + 15) {
-                if (theme == 1) {
-                    gfx_memory[y * 1024 + x] = 0x110F;}
-                if (theme == 2) {
-                    gfx_memory[y * 1024 + x] = 0x4924;
-                }
-                if (theme == 3) { gfx_memory[y * 1024 + x] = 0x51A0; }
-                if (theme == 4) { gfx_memory[y * 1024 + x] = 0x1923; }
-                if (theme == 5) { gfx_memory[y * 1024 + x] = 0x01A4; }
-                if (theme == 6) { gfx_memory[y * 1024 + x] = 0x01E1; }
-                if (theme == 7) { gfx_memory[y * 1024 + x] = 0x7186; }
-                if (theme == 8) { gfx_memory[y * 1024 + x] = 0x9BC5; }
-                if (theme == 9) { gfx_memory[y * 1024 + x] = 0x5000; }
-            }
-            else {
-                gfx_memory[y * 1024 + x] = 0xFFFF;
-            }
-       }
+        }
+        print_string("Welcome to maxOS RedCycle x86_64", card_x + 14, card_y + 6, 0xFFFF);
+        print_string("Desktop & Applications Environment", card_x + 25, card_y + 36, 0x11EB);
+        print_string("Modular applications use .maxP executable files on maxFS 2.0", card_x + 25, card_y + 60, 0x0000);
+        print_string("- Launch applications from Desktop icons on the left side", card_x + 25, card_y + 88, 0x0000);
+        print_string("- Or click [maxOS] Start Menu button on bottom-left", card_x + 25, card_y + 110, 0x0000);
+        print_string("- Active apps appear as tabs in the Taskbar (toggle minimize)", card_x + 25, card_y + 132, 0x0000);
+        print_string("Registered .maxP Programs:", card_x + 25, card_y + 162, 0x0200);
+        print_string("[Notepad.maxP] [Explorer.maxP] [Calc.maxP]", card_x + 35, card_y + 184, 0x03EA);
+        print_string("[SysInfo.maxP] [Pong.maxP]     [Install.maxP]", card_x + 35, card_y + 206, 0x24EE);
+        print_string("Hotkeys: Keys 1-9 switch themes | Esc/c closes active app", card_x + 25, card_y + 242, 0x7BEF);
+        print_string("System Status: 64-bit Long Mode | PML4 Paging | ATA Ready", card_x + 25, card_y + 270, 0x0000);
+        print_string("maxOS Desktop v2.0 - by maxTech", card_x + 25, card_y + 310, 0x8085);
+    } else {
+        // Render active window
+        if (notepad_open) { notepad_draw(); }
+        else if (explorer_open) { explorer_draw(); }
+        else if (calc_open) { calc_draw(); }
+        else if (sysinfo_open) { sysinfo_draw(); }
+        else if (pong_open) { pong_draw(); }
+        else if (installer_open) { installer_draw(); }
     }
-    if (corners == 1) { win_corners(); }
-    if (theme == 3) { print_string("maxOS x86_64 Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    else if (theme == 4) { print_string("maxOS x86_64 Tora", win_x + 10, win_y + 5, 0xFFFF); }
-    else if (theme == 8) { print_string("maxOS x86_64", win_x + 10, win_y + 5, 0x20C0); }
-    else {
-        print_string("maxOS x86_64", win_x + 10, win_y + 5, 0xFFFF); }
-    clock();
-    draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-    draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-    draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
-    draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
-    draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
-    draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
-    draw_instbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
+
+    // 4. Taskbar across the bottom
+    taskbar_draw();
+
+    // 5. Cursor
     draw_cursor(pos_x, pos_y);
 }
 

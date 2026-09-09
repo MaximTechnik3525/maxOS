@@ -1,5 +1,6 @@
 #include "notepad.h"
 #include "maxfs.h"
+#include "maxp.h"
 
 extern unsigned short* _gfx_memory_backend;
 #define gfx_memory _gfx_memory_backend
@@ -407,11 +408,13 @@ void notepad_open_file_by_name(const char* name) {
     msg[p] = '\0';
     notepad_set_status(msg);
 
+    maxp_close_all_windows();
     notepad_open = 1;
     drag = 1;
     focus_mode = 0;
     file_picker_open = 0;
-    notepad_draw();
+    maxp_set_active_app(MAXP_APP_NOTEPAD);
+    draw_window();
     play_sound(600); sleep(60); play_sound(900); sleep(60); no_sound();
 }
 
@@ -420,8 +423,9 @@ void notepad_open_window(void) {
     drag = 1;
     focus_mode = 0;
     file_picker_open = 0;
+    maxp_set_active_app(MAXP_APP_NOTEPAD);
     notepad_set_status("Ready | Click [Save] or [Open]");
-    notepad_draw();
+    draw_window();
     play_sound(500); sleep(60); no_sound();
 }
 
@@ -429,6 +433,7 @@ void notepad_close_window(void) {
     notepad_open = 0;
     file_picker_open = 0;
     drag = 0;
+    maxp_set_active_app(MAXP_APP_NONE);
     draw_window();
     play_sound(350); sleep(60); no_sound();
 }

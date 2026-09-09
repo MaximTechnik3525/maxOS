@@ -22,13 +22,18 @@ echo "=== [2/5] Компиляция исходного кода MaxOS (x86_64) 
 nasm -f elf64 entry.asm -o entry.o
 $CC -c ata.c -o ata.o $CFLAGS
 $CC -c maxfs.c -o maxfs.o $CFLAGS
+$CC -c maxp.c -o maxp.o $CFLAGS
+$CC -c taskbar.c -o taskbar.o $CFLAGS
 $CC -c notepad.c -o notepad.o $CFLAGS
 $CC -c installer.c -o installer.o $CFLAGS
 $CC -c explorer.c -o explorer.o $CFLAGS
+$CC -c calc.c -o calc.o $CFLAGS
+$CC -c sysinfo.c -o sysinfo.o $CFLAGS
+$CC -c pong.c -o pong.o $CFLAGS
 $CC -c kernel.c -o kernel.o $CFLAGS
 
 echo "=== [3/5] Линковка 64-битного ядра (ELF64) ==="
-$LD --no-warn-rwx-segments -T linker.ld -o mykernel.bin entry.o mbr_data.o kernel.o ata.o maxfs.o notepad.o installer.o explorer.o
+$LD --no-warn-rwx-segments -T linker.ld -o mykernel.bin entry.o mbr_data.o kernel.o ata.o maxfs.o maxp.o taskbar.o notepad.o installer.o explorer.o calc.o sysinfo.o pong.o
 
 echo "=== [4/5] Подготовка структуры ISO и сборка maxos.iso ==="
 mkdir -p iso/boot/grub

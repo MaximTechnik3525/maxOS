@@ -2,6 +2,7 @@
 #include "notepad.h"
 #include "maxfs.h"
 #include "ata.h"
+#include "maxp.h"
 
 extern unsigned short* _gfx_memory_backend;
 #define gfx_memory _gfx_memory_backend
@@ -166,6 +167,8 @@ void explorer_draw(void) {
                 type_str = "[CFG]"; type_col = 0xFD20;
             } else if (str_ends_with(vf->name, ".bin") || str_ends_with(vf->name, ".iso")) {
                 type_str = "[BIN]"; type_col = 0x981F;
+            } else if (str_ends_with(vf->name, ".maxP") || str_ends_with(vf->name, ".maxp")) {
+                type_str = "[maxP]"; type_col = 0x05E5;
             } else if (str_ends_with(vf->name, ".mapp") || str_ends_with(vf->name, ".app")) {
                 type_str = "[APP]"; type_col = 0x05E5;
             }
@@ -218,6 +221,7 @@ void explorer_draw(void) {
 void explorer_open_window(void) {
     explorer_open = 1;
     drag = 1;
+    maxp_set_active_app(MAXP_APP_EXPLORER);
     if (maxfs_is_mounted()) {
         maxfs_mount(); // Resync directory from disk
     }
@@ -228,13 +232,14 @@ void explorer_open_window(void) {
             break;
         }
     }
-    explorer_draw();
+    draw_window();
     play_sound(550); sleep(60); no_sound();
 }
 
 void explorer_close_window(void) {
     explorer_open = 0;
     drag = 0;
+    maxp_set_active_app(MAXP_APP_NONE);
     draw_window();
     play_sound(350); sleep(60); no_sound();
 }
@@ -328,7 +333,11 @@ int explorer_handle_click(int mouse_x, int mouse_y) {
                     }
                     chosen_name[p] = '\0';
                     explorer_open = 0;
-                    notepad_open_file_by_name(chosen_name);
+                    if (maxp_is_maxp_file(chosen_name)) {
+                        maxp_launch_file(chosen_name);
+                    } else {
+                        notepad_open_file_by_name(chosen_name);
+                    }
                     return 1;
                 }
                 selected_file = i;
@@ -352,8 +361,8 @@ int explorer_handle_click(int mouse_x, int mouse_y) {
 int explorer_handle_key(char ascii_char, unsigned char scan_code) {
     if (!explorer_open) return 0;
 
-    // F2 (0x3C) or Escape (0x01)
-    if (scan_code == 0x01 || scan_code == 0x3C || ascii_char == 'S') {
+    // F2 (0x3C), Escape (0x01), 'c', 'C', 'q', 'Q', 'S'
+    if (scan_code == 0x01 || scan_code == 0x3C || ascii_char == 'c' || ascii_char == 'C' || ascii_char == 'q' || ascii_char == 'Q' || ascii_char == 'S') {
         explorer_close_window();
         return 1;
     }
@@ -376,7 +385,11 @@ int explorer_handle_key(char ascii_char, unsigned char scan_code) {
             }
             chosen_name[p] = '\0';
             explorer_open = 0;
-            notepad_open_file_by_name(chosen_name);
+            if (maxp_is_maxp_file(chosen_name)) {
+                maxp_launch_file(chosen_name);
+            } else {
+                notepad_open_file_by_name(chosen_name);
+            }
             return 1;
         }
         return 1;
@@ -423,5 +436,5 @@ int explorer_handle_key(char ascii_char, unsigned char scan_code) {
         return 1;
     }
 
-    return 1;
+    return 0;
 }

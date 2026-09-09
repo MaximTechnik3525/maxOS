@@ -1,6 +1,7 @@
 #include "installer.h"
 #include "maxfs.h"
 #include "ata.h"
+#include "maxp.h"
 
 extern unsigned short* _gfx_memory_backend;
 #define gfx_memory _gfx_memory_backend
@@ -184,7 +185,7 @@ static void installer_run_install(void) {
     installer_set_step(60, "3/5: Installing OS Kernel to LBA 32...");
     play_sound(800); sleep(100); no_sound();
     const unsigned char* kernel_mem = (const unsigned char*)0x100000;
-    for (unsigned int s = 0; s < 200; s++) {
+    for (unsigned int s = 0; s < 240; s++) {
         ata_write_sector(32 + s, kernel_mem + (s * 512));
     }
     maxfs_write_file("kernel.bin", (const char*)kernel_mem, 1024);
@@ -192,10 +193,16 @@ static void installer_run_install(void) {
     // Step 4: Write default configuration & documents
     installer_set_step(80, "4/5: Writing system configs and documents...");
     play_sound(950); sleep(100); no_sound();
-    maxfs_write_file("system.cfg", "theme=1\nresolution=1024x768x16\nos=maxOS RedCycle\n", 52);
-    maxfs_write_file("welcome.txt", "Welcome to maxOS!\nInstalled on your real Hard Disk with maxFS 2.0.", 67);
-    maxfs_write_file("readme.txt", "maxOS RedCycle 2.0\nPersistent storage via ATA PIO driver.\nAll edits persist!", 77);
+    maxfs_write_file("system.cfg", "theme=1\nresolution=1024x768x16\nos=maxOS RedCycle x86_64\n", 59);
+    maxfs_write_file("welcome.txt", "Welcome to maxOS x86_64!\nInstalled on your real Hard Disk with maxFS 2.0.", 74);
+    maxfs_write_file("readme.txt", "maxOS RedCycle 2.0 (x86_64 Long Mode)\nPrograms use .maxP extension!\nAll edits persist!", 88);
     maxfs_write_file("notes.txt", "Sample document stored on hard drive sectors.\nOpen and edit in Notepad!", 71);
+    maxfs_write_file("notepad.maxP", "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 2.0 Text Editor\n", 73);
+    maxfs_write_file("explorer.maxP", "MAXP\nNAME=Explorer\nEXEC=explorer\nICON=EXP\nDESC=File & Disk Manager\n", 67);
+    maxfs_write_file("calc.maxP", "MAXP\nNAME=Calculator\nEXEC=calc\nICON=CALC\nDESC=Desktop GUI Calculator\n", 71);
+    maxfs_write_file("sysinfo.maxP", "MAXP\nNAME=SysInfo\nEXEC=sysinfo\nICON=CPU\nDESC=x86_64 Long Mode System Info\n", 76);
+    maxfs_write_file("pong.maxP", "MAXP\nNAME=Pong\nEXEC=pong\nICON=PONG\nDESC=Retro Pong Arcade Game\n", 64);
+    maxfs_write_file("install.maxP", "MAXP\nNAME=Installer\nEXEC=installer\nICON=INST\nDESC=maxOS System Setup & HDD Installer\n", 83);
 
     // Step 5: Flush cache & verify
     installer_set_step(100, "5/5: Verifying & Flushing ATA cache...");
@@ -209,18 +216,20 @@ void installer_open_window(void) {
     installer_open = 1;
     drag = 1;
     install_progress = 0;
+    maxp_set_active_app(MAXP_APP_INSTALLER);
     if (maxfs_is_mounted()) {
         installer_set_step(100, "Drive already contains installed maxOS.");
     } else {
         installer_set_step(0, "Click [Install maxOS] to begin setup.");
     }
-    installer_draw();
+    draw_window();
     play_sound(600); sleep(60); no_sound();
 }
 
 void installer_close_window(void) {
     installer_open = 0;
     drag = 0;
+    maxp_set_active_app(MAXP_APP_NONE);
     draw_window();
     play_sound(400); sleep(60); no_sound();
 }
@@ -269,8 +278,8 @@ int installer_handle_click(int mouse_x, int mouse_y) {
 int installer_handle_key(char ascii_char, unsigned char scan_code) {
     if (!installer_open) return 0;
 
-    // F2 or Escape closes installer
-    if (scan_code == 0x01 || scan_code == 0x3C || ascii_char == 'S') {
+    // F2 (0x3C), Escape (0x01), 'c', 'C', 'q', 'Q', 'S'
+    if (scan_code == 0x01 || scan_code == 0x3C || ascii_char == 'c' || ascii_char == 'C' || ascii_char == 'q' || ascii_char == 'Q' || ascii_char == 'S') {
         installer_close_window();
         return 1;
     }
@@ -281,5 +290,5 @@ int installer_handle_key(char ascii_char, unsigned char scan_code) {
         return 1;
     }
 
-    return 1;
+    return 0;
 }

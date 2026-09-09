@@ -31,17 +31,17 @@ start:
     cmp ax, 0x004F
     jne boot_fail
 
-    ; 3. Read Kernel (160 sectors = 80 KB) from LBA 32 to 0x1000:0000 (0x10000)
+    ; 3. Read Kernel (120 sectors = 60 KB) from LBA 32 to 0x1000:0000 (physical 0x10000)
     mov si, dap
     mov dl, [boot_drive]
     mov ah, 0x42
     int 0x13
     jc boot_fail
 
-    ; Read second chunk (60 sectors = 30 KB) from LBA 132 to 0x1C80:0000
-    mov word [dap + 2], 60
-    mov word [dap + 6], 0x1C80
-    mov dword [dap + 8], 132
+    ; Read second chunk (120 sectors = 60 KB) from LBA 152 to 0x1F00:0000 (physical 0x1F000)
+    mov word [dap + 2], 120
+    mov word [dap + 6], 0x1F00
+    mov dword [dap + 8], 152
     mov si, dap
     mov dl, [boot_drive]
     mov ah, 0x42
@@ -85,17 +85,17 @@ pm_start:
     cmp dword [0x10000], 0x464C457F
     je .load_elf
 
-    ; If raw binary, copy directly to 0x100000 and jump to 0x100040
+    ; If raw binary, copy directly to 0x100000 and jump to 0x101000
     mov esi, 0x10000
     mov edi, 0x100000
-    mov ecx, (160 * 512) / 4
+    mov ecx, (240 * 512) / 4
     rep movsd
-    ; Clear BSS (from 0x100000 + 160*512 to 0x130000)
-    mov edi, 0x100000 + (160 * 512)
+    ; Clear BSS (from 0x100000 + 240*512 to 0x150000)
+    mov edi, 0x100000 + (240 * 512)
     mov ecx, (64 * 1024) / 4
     xor eax, eax
     rep stosd
-    mov dword [k_entry], 0x100040
+    mov dword [k_entry], 0x101000
     jmp .enter_kernel
 
 .load_elf:
@@ -159,7 +159,7 @@ align 4
 dap:
     db 16           ; packet size
     db 0            ; reserved
-    dw 100          ; sector count (100 sectors = 50 KB)
+    dw 120          ; sector count (120 sectors = 60 KB)
     dw 0x0000       ; offset
     dw 0x1000       ; segment 0x1000 (physical 0x10000)
     dq 32           ; LBA 32

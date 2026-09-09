@@ -18,10 +18,23 @@ errscr - running the error screen.
 trailon, trailoff - enables and disables cursor trail.
 
 ### maxOS 2.0 New Features:
+- **64-Bit Long Mode (x86_64)**: 4-level PML4 paging with 2MB huge pages, AMD64 System V ABI, Long Mode GDT.
 - **ATA Hard Disk Driver (`ata.c` / `ata.h`)**: Direct low-level sector reading & writing via ATA PIO (LBA28).
 - **maxFS 2.0 Persistent Filesystem (`maxfs.c` / `maxfs.h`)**: Superblock, Inodes, Sector Allocation Bitmap, persistent storage for files.
-- **GUI System Setup & Installer v2.0 (`installer.c` / `installer.h`)**: Click `Inst` button on desktop or press `F9` to install maxOS directly to hard disk with MBR bootloader.
+- **GUI System Setup & Installer v2.0 (`installer.c` / `installer.h`)**: Install maxOS directly to hard disk with MBR bootloader and pre-seeded .maxP applications.
 - **Custom MBR Bootloader (`boot_mbr.asm`)**: Boots maxOS directly from HDD (`./build.sh --boot-hdd`).
+- **Desktop Environment & Taskbar (`taskbar.c` / `taskbar.h`)**: 
+  - Desktop icons on left side.
+  - Start Menu popup with app launcher, themes, and shutdown.
+  - Bottom Taskbar with active app tab (click tab or press `F10` to minimize/restore).
+  - System Tray with `[x64]` badge, `[HDD]` mount indicator, and real-time RTC clock.
+- **Modular Applications & `.maxP` Format (`maxp.c` / `maxp.h`)**:
+  - `notepad.maxP` (`notepad.c`): GUI Text Editor 2.0 with color palette, custom filenames, file picker.
+  - `explorer.maxP` (`explorer.c`): Graphical file manager with support for opening `.maxP` files and text files.
+  - `calc.maxP` (`calc.c`): 3D GUI Calculator with arithmetic operations and LCD display.
+  - `sysinfo.maxP` (`sysinfo.c`): System hardware & CPU/RAM/VBE inspection.
+  - `pong.maxP` (`pong.c`): Retro Pong arcade game.
+  - `install.maxP` (`installer.c`): Disk setup and system installer.
 
 If you want create own build, you can edit project files, and run compilers (build.bat for Windows, build.sh for Linux).
 - `./build.sh` — build and run in QEMU with ISO and HDD.
