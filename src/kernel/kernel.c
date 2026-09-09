@@ -278,7 +278,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 
                 if ((delta_x > -250 && delta_x < 250) && (delta_y > -250 && delta_y < 250)) {
                     if (delta_x != 0 || delta_y != 0) {
-                        if (tail == 0) { prev_cursor(); }
+                        prev_cursor();
                         pos_x += delta_x / 3;
                         pos_y -= delta_y / 3;
                         if (pos_x > 1024 - 12) pos_x = 1024 - 12;
@@ -369,10 +369,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (ascii_char == 'G') { km_mode = 0; play_sound(1000); sleep(50); no_sound(); draw_window(); continue; }
 
                     if (km_mode == 1) {
-                        if (ascii_char == 'U' && pos_y >= 15) { if (tail == 0) prev_cursor(); pos_y -= 15; draw_cursor(pos_x, pos_y); }
-                        if (ascii_char == 'D' && pos_y <= 768 - 27) { if (tail == 0) prev_cursor(); pos_y += 15; draw_cursor(pos_x, pos_y); }
-                        if (ascii_char == 'R' && pos_x <= 1024 - 27) { if (tail == 0) prev_cursor(); pos_x += 15; draw_cursor(pos_x, pos_y); }
-                        if (ascii_char == 'L' && pos_x >= 15) { if (tail == 0) prev_cursor(); pos_x -= 15; draw_cursor(pos_x, pos_y); }
+                        if (ascii_char == 'U' && pos_y >= 15) { prev_cursor(); pos_y -= 15; draw_cursor(pos_x, pos_y); }
+                        if (ascii_char == 'D' && pos_y <= 768 - 27) { prev_cursor(); pos_y += 15; draw_cursor(pos_x, pos_y); }
+                        if (ascii_char == 'R' && pos_x <= 1024 - 27) { prev_cursor(); pos_x += 15; draw_cursor(pos_x, pos_y); }
+                        if (ascii_char == 'L' && pos_x >= 15) { prev_cursor(); pos_x -= 15; draw_cursor(pos_x, pos_y); }
                         if (ascii_char == 'e') {
                             if (taskbar_handle_click(pos_x, pos_y)) continue;
                             if (notepad_open && notepad_handle_click(pos_x, pos_y)) continue;
@@ -465,7 +465,7 @@ void pump_events_nonblocking(void) {
 
                 if ((delta_x > -250 && delta_x < 250) && (delta_y > -250 && delta_y < 250)) {
                     if (delta_x != 0 || delta_y != 0) {
-                        if (tail == 0) { prev_cursor(); }
+                        prev_cursor();
                         pos_x += delta_x / 3;
                         pos_y -= delta_y / 3;
                         if (pos_x > 1024 - 12) pos_x = 1024 - 12;
@@ -599,6 +599,8 @@ void prev_cursor() {
         }
     }
     cursor_bg_saved = 0;
+    cursor_saved_x = -1;
+    cursor_saved_y = -1;
 }
 void outb(unsigned short port, unsigned char data) {
     if (get_cpl() == 3) return;
@@ -663,14 +665,46 @@ void draw_rect(int rx, int ry, int rw, int rh, unsigned short color) {
     if (ry + rh > SCREEN_HEIGHT) rh = SCREEN_HEIGHT - ry;
     if (rw <= 0 || rh <= 0) return;
 
+    if (cursor_bg_saved) {
+        int cx0 = cursor_saved_x, cy0 = cursor_saved_y;
+        int cx1 = cx0 + 12, cy1 = cy0 + 12;
+        int ix0 = (rx > cx0) ? rx : cx0;
+        int iy0 = (ry > cy0) ? ry : cy0;
+        int ix1 = (rx + rw < cx1) ? (rx + rw) : cx1;
+        int iy1 = (ry + rh < cy1) ? (ry + rh) : cy1;
+        if (ix0 < ix1 && iy0 < iy1) {
+            for (int cy = iy0; cy < iy1; cy++) {
+                int by = cy - cy0;
+                for (int cx = ix0; cx < ix1; cx++) {
+                    int bx = cx - cx0;
+                    cursor_bg[by][bx] = color;
+                }
+            }
+        }
+    }
+
     for (int y = ry; y < ry + rh; y++) {
         int row = y * SCREEN_WIDTH;
         for (int x = rx; x < rx + rw; x++) {
+            if (cursor_bg_saved &&
+                x >= cursor_saved_x && x < cursor_saved_x + 12 &&
+                y >= cursor_saved_y && y < cursor_saved_y + 12 &&
+                mouse_arrow[y - cursor_saved_y][x - cursor_saved_x] != 0) {
+                continue;
+            }
             gfx_memory[row + x] = color;
         }
     }
 }
 void draw_cursor(int mouse_x, int mouse_y) {
+    if (cursor_bg_saved) {
+        prev_cursor();
+    }
+    if (mouse_x < 0) mouse_x = 0;
+    if (mouse_x > 1024 - 12) mouse_x = 1024 - 12;
+    if (mouse_y < 0) mouse_y = 0;
+    if (mouse_y > 768 - 12) mouse_y = 768 - 12;
+
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
             int screen_x = mouse_x + x;
@@ -802,7 +836,19 @@ void draw_char(char c, int start_x, int start_y, unsigned short color) {
         unsigned char row = bitmap[y];
         for (int x = 0; x < 8; x++) {
             if ((row & (0x80 >> x)) != 0) {
-                gfx_memory[(start_y + y) * 1024 + (start_x + x)] = color;
+                int px = start_x + x;
+                int py = start_y + y;
+                if (px >= 0 && px < 1024 && py >= 0 && py < 768) {
+                    if (cursor_bg_saved &&
+                        px >= cursor_saved_x && px < cursor_saved_x + 12 &&
+                        py >= cursor_saved_y && py < cursor_saved_y + 12) {
+                        cursor_bg[py - cursor_saved_y][px - cursor_saved_x] = color;
+                        if (mouse_arrow[py - cursor_saved_y][px - cursor_saved_x] != 0) {
+                            continue;
+                        }
+                    }
+                    gfx_memory[py * 1024 + px] = color;
+                }
             }
         }
     }
@@ -912,7 +958,7 @@ int desktop_handle_click(int mouse_x, int mouse_y) {
 }
 
 void draw_window() {
-    cursor_bg_saved = 0;
+    prev_cursor();
 
     // 1. Draw desktop wallpaper pattern for entire desktop
     static const struct {

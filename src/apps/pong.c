@@ -202,7 +202,6 @@ void pong_tick(void) {
 
     // Redraw ball
     draw_rect(ball_x, ball_y, ball_size, ball_size, 0xFFE0);
-    draw_cursor(pos_x, pos_y);
 }
 
 int pong_handle_click(int mouse_x, int mouse_y) {
@@ -230,7 +229,6 @@ int pong_handle_click(int mouse_x, int mouse_y) {
         draw_rect(pad_x, pad_y, pad_w, pad_h, 0x0000);
         draw_rect(pad_x + 1, pad_y + 1, pad_w - 2, 2, 0xFFFF);
         draw_rect(pad_x + 1, pad_y + 3, pad_w - 2, pad_h - 4, 0x24EE);
-        draw_cursor(pos_x, pos_y);
     }
 
     // If game over, click restarts
@@ -264,7 +262,6 @@ int pong_handle_key(char ascii_char, unsigned char scan_code) {
         draw_rect(pad_x, pad_y, pad_w, pad_h, 0x0000);
         draw_rect(pad_x + 1, pad_y + 1, pad_w - 2, 2, 0xFFFF);
         draw_rect(pad_x + 1, pad_y + 3, pad_w - 2, pad_h - 4, 0x24EE);
-        draw_cursor(pos_x, pos_y);
         return 1;
     }
 
@@ -276,7 +273,6 @@ int pong_handle_key(char ascii_char, unsigned char scan_code) {
         draw_rect(pad_x, pad_y, pad_w, pad_h, 0x0000);
         draw_rect(pad_x + 1, pad_y + 1, pad_w - 2, 2, 0xFFFF);
         draw_rect(pad_x + 1, pad_y + 3, pad_w - 2, pad_h - 4, 0x24EE);
-        draw_cursor(pos_x, pos_y);
         return 1;
     }
 
