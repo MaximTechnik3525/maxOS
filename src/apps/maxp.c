@@ -167,6 +167,7 @@ int maxp_launch_app(int app_id) {
     // If already running, bring to focus
     if (maxp_is_app_running(app_id)) {
         active_app_id = app_id;
+        taskbar_set_app_minimized(0);
         draw_window();
         return 1;
     }
@@ -175,7 +176,7 @@ int maxp_launch_app(int app_id) {
     task_create(info ? info->name : "App", 0, 1, app_id);
 
     active_app_id = app_id;
-    play_sound(750); sleep(40); play_sound(1100); sleep(50); no_sound();
+    taskbar_set_app_minimized(0);
 
     switch (app_id) {
         case MAXP_APP_NOTEPAD:
@@ -204,6 +205,8 @@ int maxp_launch_app(int app_id) {
             draw_window();
             return 0;
     }
+
+    play_sound(750); sleep(30); play_sound(1100); sleep(40); no_sound();
     return 1;
 }
 

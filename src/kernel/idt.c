@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "user.h"
 #include "maxp.h"
+#include "task.h"
 
 // 256 IDT Descriptors in 64-bit Long Mode
 static struct idt_entry_64 idt64[256] __attribute__((aligned(16)));
@@ -72,6 +73,58 @@ unsigned long long get_uptime_ms(void) {
     return system_ticks;
 }
 
+void divide_error_handler(unsigned long long rip, unsigned long long cs) {
+    debug_puts("[CPU] #DE Divide by Zero! RIP=0x");
+    debug_print_num(rip, 16);
+    debug_puts(" CS=0x");
+    debug_print_num(cs, 16);
+    debug_puts("\n");
+
+    if ((cs & 3) == 3) {
+        debug_log("CPU", "Divide by zero in Ring 3 User Mode. Terminating application.");
+        maxp_close_all_windows();
+        draw_window();
+        if (ring3_is_app_active()) {
+            exit_to_kernel();
+        } else {
+            task_exit();
+        }
+    }
+}
+
+void invalid_opcode_handler(unsigned long long rip, unsigned long long cs) {
+    debug_puts("[CPU] #UD Invalid Opcode! RIP=0x");
+    debug_print_num(rip, 16);
+    debug_puts(" CS=0x");
+    debug_print_num(cs, 16);
+    debug_puts("\n");
+
+    if ((cs & 3) == 3) {
+        debug_log("CPU", "Invalid opcode in Ring 3 User Mode. Terminating application.");
+        maxp_close_all_windows();
+        draw_window();
+        if (ring3_is_app_active()) {
+            exit_to_kernel();
+        } else {
+            task_exit();
+        }
+    }
+}
+
+void double_fault_handler(unsigned long long err, unsigned long long rip, unsigned long long cs) {
+    debug_puts("[CPU] #DF DOUBLE FAULT! Fatal crash! ERR=0x");
+    debug_print_num(err, 16);
+    debug_puts(" RIP=0x");
+    debug_print_num(rip, 16);
+    debug_puts(" CS=0x");
+    debug_print_num(cs, 16);
+    debug_puts("\n");
+
+    while (1) {
+        __asm__ __volatile__("cli; hlt");
+    }
+}
+
 void gp_fault_handler(unsigned long long err, unsigned long long rip, unsigned long long cs) {
     debug_puts("[CPU] #GP General Protection Fault! RIP=0x");
     debug_print_num(rip, 16);
@@ -85,7 +138,11 @@ void gp_fault_handler(unsigned long long err, unsigned long long rip, unsigned l
         debug_log("CPU", "Fault in Ring 3 User Mode. Gracefully terminating application.");
         maxp_close_all_windows();
         draw_window();
-        exit_to_kernel();
+        if (ring3_is_app_active()) {
+            exit_to_kernel();
+        } else {
+            task_exit();
+        }
     }
 }
 
@@ -106,7 +163,11 @@ void page_fault_handler(unsigned long long err, unsigned long long rip, unsigned
         debug_log("CPU", "Fault in Ring 3 User Mode. Gracefully terminating application.");
         maxp_close_all_windows();
         draw_window();
-        exit_to_kernel();
+        if (ring3_is_app_active()) {
+            exit_to_kernel();
+        } else {
+            task_exit();
+        }
     }
 }
 
@@ -116,7 +177,10 @@ void idt_init(void) {
         set_idt_gate(i, default_exception_entry, 0x8E); // Present, Ring 0, 64-bit Interrupt Gate
     }
 
-    // 2. Install dedicated exception handlers with error code pop
+    // 2. Install dedicated exception handlers
+    set_idt_gate(0,  divide_error_entry, 0x8E);
+    set_idt_gate(6,  invalid_opcode_entry, 0x8E);
+    set_idt_gate(8,  double_fault_entry, 0x8E);
     set_idt_gate(13, gp_fault_entry, 0x8E);
     set_idt_gate(14, page_fault_entry, 0x8E);
 

@@ -54,6 +54,7 @@ void mem_open_window(void) {
     mem_open = 1;
     optimize_flash = 0;
     drag = 1;
+    selected_task_idx = 0;
     maxp_set_active_app(MAXP_APP_MEM);
     draw_window();
 }
@@ -83,12 +84,12 @@ static void draw_task_manager(int sx, int sy, int sw, int sh) {
 
     // Table Header Bar
     draw_rect(table_x + 1, table_y + 1, table_w - 2, 22, 0xCE79);
-    print_string("PID", table_x + 10, table_y + 6, 0x0000);
-    print_string("PROCESS NAME", table_x + 60, table_y + 6, 0x0000);
-    print_string("PRIVILEGE", table_x + 215, table_y + 6, 0x0000);
-    print_string("STATE", table_x + 335, table_y + 6, 0x0000);
-    print_string("CPU TIME", table_x + 435, table_y + 6, 0x0000);
-    print_string("STATUS", table_x + 525, table_y + 6, 0x0000);
+    print_string("PID", table_x + 8, table_y + 6, 0x0000);
+    print_string("PROCESS NAME", table_x + 48, table_y + 6, 0x0000);
+    print_string("PRIVILEGE", table_x + 190, table_y + 6, 0x0000);
+    print_string("STATE", table_x + 345, table_y + 6, 0x0000);
+    print_string("CPU TIME", table_x + 440, table_y + 6, 0x0000);
+    print_string("STATUS", table_x + 550, table_y + 6, 0x0000);
 
     if (selected_task_idx >= tcount) selected_task_idx = tcount - 1;
     if (selected_task_idx < 0) selected_task_idx = 0;
@@ -104,16 +105,16 @@ static void draw_task_manager(int sx, int sy, int sw, int sh) {
 
         // PID
         int_str(tlist[i].pid, num_buf);
-        print_string(num_buf, table_x + 15, ry + 4, text_col);
+        print_string(num_buf, table_x + 12, ry + 4, text_col);
 
         // Name
-        print_string(tlist[i].name, table_x + 60, ry + 4, text_col);
+        print_string(tlist[i].name, table_x + 48, ry + 4, text_col);
 
         // Privilege
         if (tlist[i].is_user) {
-            print_string("Ring 3 (User)", table_x + 215, ry + 4, is_sel ? 0x07E0 : 0x03EA);
+            print_string("Ring 3 (User)", table_x + 190, ry + 4, is_sel ? 0x07E0 : 0x03EA);
         } else {
-            print_string("Ring 0 (Kernel)", table_x + 215, ry + 4, is_sel ? 0xCE79 : 0x11EB);
+            print_string("Ring 0 (Kernel)", table_x + 190, ry + 4, is_sel ? 0xCE79 : 0x11EB);
         }
 
         // State
@@ -122,29 +123,29 @@ static void draw_task_manager(int sx, int sy, int sw, int sh) {
         else if (tlist[i].state == TASK_RUNNING) st = "RUNNING";
         else if (tlist[i].state == TASK_SLEEPING) st = "SLEEPING";
         else if (tlist[i].state == TASK_DEAD) st = "DEAD";
-        print_string((char*)st, table_x + 335, ry + 4, text_col);
+        print_string((char*)st, table_x + 345, ry + 4, text_col);
 
         // CPU ticks
         int_str((int)tlist[i].total_ticks, num_buf);
-        print_string(num_buf, table_x + 435, ry + 4, text_col);
-        print_string(" ms", table_x + 480, ry + 4, text_col);
+        print_string(num_buf, table_x + 440, ry + 4, text_col);
+        print_string(" ms", table_x + 485, ry + 4, text_col);
 
         // Status
         if (tlist[i].state == TASK_RUNNING) {
-            print_string("Active", table_x + 525, ry + 4, 0x07E0);
+            print_string("Active", table_x + 550, ry + 4, 0x07E0);
         } else if (tlist[i].state == TASK_READY) {
-            print_string("Queued", table_x + 525, ry + 4, text_col);
+            print_string("Queued", table_x + 550, ry + 4, text_col);
         } else if (tlist[i].state == TASK_SLEEPING) {
-            print_string("Idle", table_x + 525, ry + 4, 0x8085);
+            print_string("Idle", table_x + 550, ry + 4, 0x8085);
         } else {
-            print_string("Exited", table_x + 525, ry + 4, 0xF800);
+            print_string("Exited", table_x + 550, ry + 4, 0xF800);
         }
     }
 
     // Bottom Action Buttons in Task Manager mode:
-    draw_btn(sx + 20, sy + sh - 34, 130, 22, "Memory View (m)", 0x24EE, 0xFFFF);
-    draw_btn(sx + 160, sy + sh - 34, 110, 22, "Refresh (r)", 0xC618, 0x0000);
-    draw_btn(sx + 280, sy + sh - 34, 120, 22, "Kill Task (k)", 0xF800, 0xFFFF);
+    draw_btn(sx + 20, sy + sh - 34, 140, 22, "Memory View (m)", 0x24EE, 0xFFFF);
+    draw_btn(sx + 170, sy + sh - 34, 110, 22, "Refresh (r)", 0xC618, 0x0000);
+    draw_btn(sx + 290, sy + sh - 34, 120, 22, "Kill Task (k)", 0xF800, 0xFFFF);
     draw_btn(sx + sw - 100, sy + sh - 34, 80, 22, "Close (c)", 0xF9A6, 0x0000);
 }
 
@@ -223,12 +224,12 @@ void mem_draw(void) {
     int_str((int)mi.usage_percent, pct_str);
 
     print_string("RAM Usage: ", bar_x, bar_y + 30, 0x0000);
-    print_string(pct_str, bar_x + 85, bar_y + 30, 0x0000);
-    print_string("% (Used: ", bar_x + 105, bar_y + 30, 0x0000);
-    print_string(used_mb, bar_x + 165, bar_y + 30, 0x03EA);
-    print_string("/ Total: ", bar_x + 245, bar_y + 30, 0x0000);
-    print_string(total_mb, bar_x + 315, bar_y + 30, 0x0200);
-    print_string(")", bar_x + 395, bar_y + 30, 0x0000);
+    print_string(pct_str, bar_x + 95, bar_y + 30, 0x0000);
+    print_string("%  (Used: ", bar_x + 125, bar_y + 30, 0x0000);
+    print_string(used_mb, bar_x + 195, bar_y + 30, 0x03EA);
+    print_string("/ Total: ", bar_x + 280, bar_y + 30, 0x0000);
+    print_string(total_mb, bar_x + 355, bar_y + 30, 0x0200);
+    print_string(")", bar_x + 440, bar_y + 30, 0x0000);
 
     // Section 2: Detailed Breakdown Panels
     int stats_y = bar_y + 54;
@@ -353,7 +354,7 @@ int mem_handle_click(int mouse_x, int mouse_y) {
     if (mem_view_mode == 1) {
         // Task Manager Mode
         // "Memory View (m)" button
-        if (mouse_x >= sx + 20 && mouse_x <= sx + 150 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+        if (mouse_x >= sx + 20 && mouse_x <= sx + 160 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
             mem_view_mode = 0;
             mem_draw();
             play_sound(750); sleep(20); no_sound();
@@ -361,20 +362,24 @@ int mem_handle_click(int mouse_x, int mouse_y) {
         }
 
         // "Refresh (r)" button
-        if (mouse_x >= sx + 160 && mouse_x <= sx + 270 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+        if (mouse_x >= sx + 170 && mouse_x <= sx + 280 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
             mem_draw();
             play_sound(750); sleep(20); no_sound();
             return 1;
         }
 
         // "Kill Task (k)" button
-        if (mouse_x >= sx + 280 && mouse_x <= sx + 400 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+        if (mouse_x >= sx + 290 && mouse_x <= sx + 410 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
             task_info_t tlist[MAX_TASKS];
             int tcount = task_get_list(tlist, MAX_TASKS);
             if (selected_task_idx >= 0 && selected_task_idx < tcount) {
                 int pid_to_kill = tlist[selected_task_idx].pid;
                 if (pid_to_kill > 0) {
+                    int aid = tlist[selected_task_idx].app_id;
                     task_kill(pid_to_kill);
+                    if (aid > 0 && aid != MAXP_APP_MEM) {
+                        maxp_close_app(aid);
+                    }
                     play_sound(400); sleep(40); play_sound(250); sleep(60); no_sound();
                     mem_draw();
                     return 1;
@@ -475,7 +480,11 @@ int mem_handle_key(char ascii_char, unsigned char scan_code) {
         if (selected_task_idx >= 0 && selected_task_idx < tcount) {
             int pid_to_kill = tlist[selected_task_idx].pid;
             if (pid_to_kill > 0) {
+                int aid = tlist[selected_task_idx].app_id;
                 task_kill(pid_to_kill);
+                if (aid > 0 && aid != MAXP_APP_MEM) {
+                    maxp_close_app(aid);
+                }
                 play_sound(400); sleep(40); play_sound(250); sleep(60); no_sound();
                 mem_draw();
                 return 1;

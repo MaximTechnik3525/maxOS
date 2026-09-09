@@ -3,6 +3,7 @@
 #include "user.h"
 #include "idt.h"
 #include "debug.h"
+#include "user/syscall.h"
 
 static task_t tasks[MAX_TASKS];
 static task_t* current_task = 0;
@@ -59,7 +60,17 @@ void task_init(void) {
     debug_log("SCHED", "Preemptive Multitasking Scheduler Initialized (PID 0 active)");
 }
 
+static void default_task_worker(void) {
+    while (1) {
+        task_sleep(50);
+    }
+}
+
 int task_create(const char* name, void (*entry)(void), int is_user, int app_id) {
+    // Disable interrupts to prevent schedule_tick during task creation
+    unsigned long long flags;
+    __asm__ __volatile__("pushfq; pop %0; cli" : "=r"(flags));
+
     int pid = -1;
     for (int i = 1; i < MAX_TASKS; i++) {
         if (tasks[i].state == TASK_UNUSED || tasks[i].state == TASK_DEAD) {
@@ -68,13 +79,14 @@ int task_create(const char* name, void (*entry)(void), int is_user, int app_id) 
         }
     }
     if (pid == -1) {
+        __asm__ __volatile__("push %0; popfq" : : "r"(flags));
         debug_log("SCHED", "Task table full! Cannot spawn new process.");
         return -1;
     }
 
     task_t* t = &tasks[pid];
     t->pid = pid;
-    t->state = TASK_READY;
+    t->state = TASK_UNUSED; // Keep UNUSED while initializing
     t->is_user = is_user;
     t->app_id = app_id;
     t->time_slice = DEFAULT_TIME_SLICE;
@@ -114,8 +126,8 @@ int task_create(const char* name, void (*entry)(void), int is_user, int app_id) 
     tf->r14 = 0;
     tf->r15 = 0;
 
-    if (is_user) {
-        // Ring 3 process
+    if (is_user && entry != 0) {
+        // Real Ring 3 user process
         unsigned char* ustack_top = t->ustack + TASK_STACK_SIZE - 16;
         tf->ss = 0x23; // User DS/SS (0x20 | 3)
         tf->rsp = (unsigned long long)ustack_top;
@@ -123,19 +135,25 @@ int task_create(const char* name, void (*entry)(void), int is_user, int app_id) 
         tf->cs = 0x2B; // User CS (0x28 | 3)
         tf->rip = (unsigned long long)entry;
     } else {
-        // Ring 0 kernel task
+        // Kernel task or background worker
+        void (*safe_entry)(void) = entry ? entry : default_task_worker;
         unsigned char* k_rsp = (unsigned char*)(kstack_top - sizeof(struct trap_frame) - 16);
-        // Put task_exit address as return pointer if entry returns
         *((unsigned long long*)k_rsp) = (unsigned long long)task_exit;
 
         tf->ss = 0x10; // Kernel DS/SS
         tf->rsp = (unsigned long long)k_rsp;
         tf->rflags = 0x202; // IF=1
         tf->cs = 0x08; // Kernel CS
-        tf->rip = (unsigned long long)entry;
+        tf->rip = (unsigned long long)safe_entry;
     }
 
     t->rsp = (unsigned long long)tf;
+
+    // Mark as READY only after stack and trap frame are completely initialized!
+    t->state = TASK_READY;
+
+    // Restore interrupt state
+    __asm__ __volatile__("push %0; popfq" : : "r"(flags));
 
     debug_log_app_event("SCHED", "Created Process", pid);
     return pid;
@@ -166,6 +184,10 @@ int task_kill(int pid) {
 }
 
 void task_sleep(unsigned long long ms) {
+    if (get_cpl() == 3) {
+        u_sleep((unsigned int)ms);
+        return;
+    }
     if (!scheduler_active || !current_task) {
         sleep((unsigned int)ms);
         return;
@@ -181,6 +203,10 @@ void task_sleep(unsigned long long ms) {
 }
 
 void task_yield(void) {
+    if (get_cpl() == 3) {
+        u_yield();
+        return;
+    }
     if (current_task) {
         current_task->time_slice = 0;
     }
@@ -289,7 +315,7 @@ unsigned long long schedule_tick(unsigned long long current_rsp) {
             tasks[0].time_slice = DEFAULT_TIME_SLICE;
             current_task = &tasks[0];
             tss_set_rsp0(tasks[0].kstack_top);
-            return tasks[0].rsp;
+            return (tasks[0].rsp != 0) ? tasks[0].rsp : current_rsp;
         }
         return current_rsp;
     }

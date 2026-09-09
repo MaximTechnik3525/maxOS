@@ -28,12 +28,18 @@ void pit_init(unsigned int freq_hz);
 unsigned long long get_uptime_ms(void);
 
 // C Exception Handlers
+void divide_error_handler(unsigned long long rip, unsigned long long cs);
+void invalid_opcode_handler(unsigned long long rip, unsigned long long cs);
+void double_fault_handler(unsigned long long err, unsigned long long rip, unsigned long long cs);
 void gp_fault_handler(unsigned long long err, unsigned long long rip, unsigned long long cs);
 void page_fault_handler(unsigned long long err, unsigned long long rip, unsigned long long cs);
 
 // Assembly Routines
 void load_idt(void* idtr);
 void irq0_timer_entry(void);
+void divide_error_entry(void);
+void invalid_opcode_entry(void);
+void double_fault_entry(void);
 void gp_fault_entry(void);
 void page_fault_entry(void);
 void default_exception_entry(void);
