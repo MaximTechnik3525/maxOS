@@ -8,6 +8,8 @@
 #include "sysinfo.h"
 #include "pong.h"
 #include "installer.h"
+#include "debug.h"
+#include "ata.h"
 #include "user/syscall.h"
 
 // 64-bit Task State Segment (AMD64 Architecture Manual Vol 2)
@@ -157,6 +159,22 @@ long syscall_dispatcher(long num, long a1, long a2, long a3, long a4, long a5) {
             no_sound();
             return 0;
 
+        case SYS_ATA_READ:
+            return ata_read_sector((unsigned int)a1, (unsigned char*)a2);
+
+        case SYS_ATA_WRITE:
+            return ata_write_sector((unsigned int)a1, (const unsigned char*)a2);
+
+        case SYS_ATA_FLUSH:
+            return ata_flush();
+
+        case SYS_ATA_STATUS:
+            return ata_is_available();
+
+        case SYS_DEBUG_LOG:
+            debug_log((const char*)a1, (const char*)a2);
+            return 0;
+
         default:
             return -1;
     }
@@ -211,7 +229,7 @@ static void ring3_app_worker(void) {
 void ring3_app_draw(int app_id) {
     r3_target_app = app_id;
     r3_action = 0;
-    void* u_stack = user_stack + sizeof(user_stack) - 32;
+    void* u_stack = user_stack + sizeof(user_stack) - 40;
     run_in_ring3(ring3_app_worker, u_stack);
 }
 
@@ -221,7 +239,7 @@ int ring3_app_handle_click(int app_id, int mouse_x, int mouse_y) {
     r3_arg_x = mouse_x;
     r3_arg_y = mouse_y;
     r3_result = 0;
-    void* u_stack = user_stack + sizeof(user_stack) - 32;
+    void* u_stack = user_stack + sizeof(user_stack) - 40;
     run_in_ring3(ring3_app_worker, u_stack);
     return r3_result;
 }
@@ -232,7 +250,7 @@ int ring3_app_handle_key(int app_id, char ascii_char, unsigned char scan_code) {
     r3_arg_ch = ascii_char;
     r3_arg_scan = scan_code;
     r3_result = 0;
-    void* u_stack = user_stack + sizeof(user_stack) - 32;
+    void* u_stack = user_stack + sizeof(user_stack) - 40;
     run_in_ring3(ring3_app_worker, u_stack);
     return r3_result;
 }
@@ -240,7 +258,7 @@ int ring3_app_handle_key(int app_id, char ascii_char, unsigned char scan_code) {
 void ring3_app_step(int app_id) {
     r3_target_app = app_id;
     r3_action = 3;
-    void* u_stack = user_stack + sizeof(user_stack) - 32;
+    void* u_stack = user_stack + sizeof(user_stack) - 40;
     run_in_ring3(ring3_app_worker, u_stack);
 }
 
@@ -296,7 +314,7 @@ static void ring3_user_entry(void) {
 
 void ring3_demo_launch(void) {
     ring3_demo_active = 1;
-    void* u_stack = user_stack + sizeof(user_stack) - 32;
+    void* u_stack = user_stack + sizeof(user_stack) - 40;
     run_in_ring3(ring3_user_entry, u_stack);
     ring3_demo_active = 0;
     draw_window();

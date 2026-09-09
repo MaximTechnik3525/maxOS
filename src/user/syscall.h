@@ -12,6 +12,13 @@
 #define SYS_GET_MOUSE     7
 #define SYS_GET_CPL       8
 #define SYS_DRAW_WINDOW   9
+#define SYS_GET_TICKS     10
+#define SYS_NO_SOUND      11
+#define SYS_ATA_READ      12
+#define SYS_ATA_WRITE     13
+#define SYS_ATA_FLUSH     14
+#define SYS_ATA_STATUS    15
+#define SYS_DEBUG_LOG     16
 
 // Low-level 64-bit SYSCALL wrappers (System V AMD64 ABI)
 static inline long syscall0(long num) {
@@ -118,6 +125,26 @@ static inline unsigned long long u_get_ticks(void) {
 
 static inline void u_no_sound(void) {
     syscall0(SYS_NO_SOUND);
+}
+
+static inline int u_ata_read(unsigned int lba, unsigned char* buf) {
+    return (int)syscall2(SYS_ATA_READ, (long)lba, (long)buf);
+}
+
+static inline int u_ata_write(unsigned int lba, const unsigned char* buf) {
+    return (int)syscall2(SYS_ATA_WRITE, (long)lba, (long)buf);
+}
+
+static inline int u_ata_flush(void) {
+    return (int)syscall0(SYS_ATA_FLUSH);
+}
+
+static inline int u_ata_status(void) {
+    return (int)syscall0(SYS_ATA_STATUS);
+}
+
+static inline void u_debug_log(const char* tag, const char* msg) {
+    syscall2(SYS_DEBUG_LOG, (long)tag, (long)msg);
 }
 
 #endif // USER_SYSCALL_H

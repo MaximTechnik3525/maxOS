@@ -10,6 +10,17 @@ struct ATADevice {
     char model[41];
 };
 
+struct ATADebugStats {
+    unsigned int reads_count;
+    unsigned int writes_count;
+    unsigned int flushes_count;
+    unsigned int errors_count;
+    unsigned int last_lba;
+    unsigned char last_status;
+    unsigned char last_error_reg;
+    char last_op[8];
+};
+
 extern struct ATADevice ata_primary_master;
 
 int ata_init(void);
@@ -20,5 +31,6 @@ int ata_read_sectors(unsigned int lba, int count, unsigned char* buffer);
 int ata_write_sectors(unsigned int lba, int count, const unsigned char* buffer);
 int ata_flush(void);
 int ata_is_available(void);
+const struct ATADebugStats* ata_get_debug_stats(void);
 
 #endif // ATA_H

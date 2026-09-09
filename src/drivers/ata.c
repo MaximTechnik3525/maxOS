@@ -1,6 +1,15 @@
 #include "ata.h"
+#include "debug.h"
+#include "user/syscall.h"
+
+extern long get_cpl(void);
 
 struct ATADevice ata_primary_master = {0, 0, 0, "Not Detected"};
+static struct ATADebugStats ata_debug_stats = {0, 0, 0, 0, 0, 0, 0, "IDLE"};
+
+const struct ATADebugStats* ata_get_debug_stats(void) {
+    return &ata_debug_stats;
+}
 
 static inline unsigned char ata_inb(unsigned short port) {
     unsigned char ret;
@@ -114,18 +123,49 @@ int ata_identify(void) {
 }
 
 int ata_init(void) {
+    debug_log("ATA", "Initializing ATA Controller (Primary Master)...");
     // Disable interrupts by setting nIEN bit in Device Control register
     ata_outb(0x3F6, 0x02);
-    return ata_identify();
+    int res = ata_identify();
+    if (res == 0) {
+        debug_log("ATA", "ATA Drive Detected and Initialized");
+    } else {
+        debug_log("ATA", "ATA Drive Not Detected");
+    }
+    return res;
 }
 
 int ata_is_available(void) {
+    if (get_cpl() == 3) {
+        return u_ata_status();
+    }
     return ata_primary_master.present;
 }
 
 int ata_read_sector(unsigned int lba, unsigned char* buffer) {
-    if (!ata_primary_master.present) return -1;
-    if (ata_wait_bsy() != 0) return -1;
+    if (get_cpl() == 3) {
+        return u_ata_read(lba, buffer);
+    }
+
+    ata_debug_stats.last_lba = lba;
+    ata_debug_stats.last_op[0] = 'R';
+    ata_debug_stats.last_op[1] = 'E';
+    ata_debug_stats.last_op[2] = 'A';
+    ata_debug_stats.last_op[3] = 'D';
+    ata_debug_stats.last_op[4] = '\0';
+
+    if (!ata_primary_master.present) {
+        ata_debug_stats.errors_count++;
+        debug_log_ata_event("RD-NOPRES", lba, 1, -1);
+        return -1;
+    }
+    if (ata_wait_bsy() != 0) {
+        ata_debug_stats.errors_count++;
+        ata_debug_stats.last_status = ata_inb(0x1F7);
+        ata_debug_stats.last_error_reg = ata_inb(0x1F1);
+        debug_log_ata_event("RD-TIMEOUT", lba, 1, -1);
+        return -1;
+    }
 
     ata_outb(0x1F6, 0xE0 | ((lba >> 24) & 0x0F));
     ata_delay();
@@ -137,19 +177,57 @@ int ata_read_sector(unsigned int lba, unsigned char* buffer) {
     ata_outb(0x1F7, 0x20); // READ SECTORS
     ata_delay();
 
-    if (ata_wait_bsy() != 0) return -1;
-    if (ata_wait_drq() != 0) return -1;
+    if (ata_wait_bsy() != 0) {
+        ata_debug_stats.errors_count++;
+        ata_debug_stats.last_status = ata_inb(0x1F7);
+        ata_debug_stats.last_error_reg = ata_inb(0x1F1);
+        debug_log_ata_event("RD-BSYERR", lba, 1, -1);
+        return -1;
+    }
+    if (ata_wait_drq() != 0) {
+        ata_debug_stats.errors_count++;
+        ata_debug_stats.last_status = ata_inb(0x1F7);
+        ata_debug_stats.last_error_reg = ata_inb(0x1F1);
+        debug_log_ata_event("RD-DRQERR", lba, 1, -1);
+        return -1;
+    }
 
     unsigned short* ptr = (unsigned short*)buffer;
     for (int i = 0; i < 256; i++) {
         ptr[i] = ata_inw(0x1F0);
     }
+
+    ata_debug_stats.reads_count++;
+    ata_debug_stats.last_status = ata_inb(0x1F7);
+    debug_log_ata_event("READ", lba, 1, 0);
     return 0;
 }
 
 int ata_write_sector(unsigned int lba, const unsigned char* buffer) {
-    if (!ata_primary_master.present) return -1;
-    if (ata_wait_bsy() != 0) return -1;
+    if (get_cpl() == 3) {
+        return u_ata_write(lba, buffer);
+    }
+
+    ata_debug_stats.last_lba = lba;
+    ata_debug_stats.last_op[0] = 'W';
+    ata_debug_stats.last_op[1] = 'R';
+    ata_debug_stats.last_op[2] = 'I';
+    ata_debug_stats.last_op[3] = 'T';
+    ata_debug_stats.last_op[4] = 'E';
+    ata_debug_stats.last_op[5] = '\0';
+
+    if (!ata_primary_master.present) {
+        ata_debug_stats.errors_count++;
+        debug_log_ata_event("WR-NOPRES", lba, 1, -1);
+        return -1;
+    }
+    if (ata_wait_bsy() != 0) {
+        ata_debug_stats.errors_count++;
+        ata_debug_stats.last_status = ata_inb(0x1F7);
+        ata_debug_stats.last_error_reg = ata_inb(0x1F1);
+        debug_log_ata_event("WR-TIMEOUT", lba, 1, -1);
+        return -1;
+    }
 
     ata_outb(0x1F6, 0xE0 | ((lba >> 24) & 0x0F));
     ata_delay();
@@ -161,8 +239,20 @@ int ata_write_sector(unsigned int lba, const unsigned char* buffer) {
     ata_outb(0x1F7, 0x30); // WRITE SECTORS
     ata_delay();
 
-    if (ata_wait_bsy() != 0) return -1;
-    if (ata_wait_drq() != 0) return -1;
+    if (ata_wait_bsy() != 0) {
+        ata_debug_stats.errors_count++;
+        ata_debug_stats.last_status = ata_inb(0x1F7);
+        ata_debug_stats.last_error_reg = ata_inb(0x1F1);
+        debug_log_ata_event("WR-BSYERR", lba, 1, -1);
+        return -1;
+    }
+    if (ata_wait_drq() != 0) {
+        ata_debug_stats.errors_count++;
+        ata_debug_stats.last_status = ata_inb(0x1F7);
+        ata_debug_stats.last_error_reg = ata_inb(0x1F1);
+        debug_log_ata_event("WR-DRQERR", lba, 1, -1);
+        return -1;
+    }
 
     const unsigned short* ptr = (const unsigned short*)buffer;
     for (int i = 0; i < 256; i++) {
@@ -172,8 +262,17 @@ int ata_write_sector(unsigned int lba, const unsigned char* buffer) {
     // Flush cache
     ata_outb(0x1F7, 0xE7);
     ata_delay();
-    if (ata_wait_bsy() != 0) return -1;
+    if (ata_wait_bsy() != 0) {
+        ata_debug_stats.errors_count++;
+        ata_debug_stats.last_status = ata_inb(0x1F7);
+        ata_debug_stats.last_error_reg = ata_inb(0x1F1);
+        debug_log_ata_event("WR-FLUSHERR", lba, 1, -1);
+        return -1;
+    }
 
+    ata_debug_stats.writes_count++;
+    ata_debug_stats.last_status = ata_inb(0x1F7);
+    debug_log_ata_event("WRITE", lba, 1, 0);
     return 0;
 }
 
@@ -196,8 +295,29 @@ int ata_write_sectors(unsigned int lba, int count, const unsigned char* buffer) 
 }
 
 int ata_flush(void) {
+    if (get_cpl() == 3) {
+        return u_ata_flush();
+    }
+
+    ata_debug_stats.last_op[0] = 'F';
+    ata_debug_stats.last_op[1] = 'L';
+    ata_debug_stats.last_op[2] = 'U';
+    ata_debug_stats.last_op[3] = 'S';
+    ata_debug_stats.last_op[4] = 'H';
+    ata_debug_stats.last_op[5] = '\0';
+
     if (!ata_primary_master.present) return -1;
     ata_outb(0x1F7, 0xE7);
     ata_delay();
-    return ata_wait_bsy();
+    int ret = ata_wait_bsy();
+    if (ret == 0) {
+        ata_debug_stats.flushes_count++;
+        debug_log_ata_event("FLUSH", 0, 0, 0);
+    } else {
+        ata_debug_stats.errors_count++;
+        ata_debug_stats.last_status = ata_inb(0x1F7);
+        ata_debug_stats.last_error_reg = ata_inb(0x1F1);
+        debug_log_ata_event("FLUSH-ERR", 0, 0, -1);
+    }
+    return ret;
 }

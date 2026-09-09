@@ -23,7 +23,7 @@ fi
 # Создаем папку для объектных и бинарных файлов сборки
 mkdir -p build
 
-CFLAGS="-std=gnu99 -ffreestanding -O2 -Wall -Wextra -mno-red-zone -mcmodel=small -Isrc -Isrc/kernel -Isrc/drivers -Isrc/fs -Isrc/apps -Isrc/boot"
+CFLAGS="-std=gnu99 -ffreestanding -O2 -Wall -Wextra -mno-red-zone -mstackrealign -mcmodel=small -Isrc -Isrc/kernel -Isrc/drivers -Isrc/fs -Isrc/apps -Isrc/boot"
 
 echo "=== [1/5] Сборка MBR загрузчика ==="
 nasm -f bin src/boot/boot_mbr.asm -o build/boot_mbr.bin
@@ -33,6 +33,7 @@ echo "=== [2/5] Компиляция исходного кода MaxOS (x86_64) 
 nasm -f elf64 src/boot/entry.asm -o build/entry.o
 nasm -f elf64 src/kernel/syscall_asm.asm -o build/syscall_asm.o
 nasm -f elf64 src/kernel/idt_asm.asm -o build/idt_asm.o
+$CC -c src/kernel/debug.c -o build/debug.o $CFLAGS
 $CC -c src/kernel/idt.c -o build/idt.o $CFLAGS
 $CC -c src/kernel/user.c -o build/user.o $CFLAGS
 $CC -c src/drivers/ata.c -o build/ata.o $CFLAGS
@@ -50,9 +51,9 @@ $CC -c src/kernel/kernel.c -o build/kernel.o $CFLAGS
 echo "=== [3/5] Линковка 64-битного ядра (ELF64) ==="
 $LD --no-warn-rwx-segments -T src/linker.ld -o build/mykernel.bin \
     build/entry.o build/mbr_data.o build/syscall_asm.o build/idt_asm.o \
-    build/idt.o build/user.o build/kernel.o build/ata.o build/maxfs.o \
-    build/maxp.o build/taskbar.o build/notepad.o build/installer.o \
-    build/explorer.o build/calc.o build/sysinfo.o build/pong.o
+    build/debug.o build/idt.o build/user.o build/kernel.o build/ata.o \
+    build/maxfs.o build/maxp.o build/taskbar.o build/notepad.o \
+    build/installer.o build/explorer.o build/calc.o build/sysinfo.o build/pong.o
 
 echo "=== [4/5] Подготовка структуры ISO и сборка maxos.iso ==="
 mkdir -p iso/boot/grub
@@ -100,8 +101,8 @@ echo "============================================="
 
 if [ "$1" == "--boot-hdd" ]; then
     echo " Запуск maxOS напрямую с жесткого диска (HDD) в QEMU x86_64..."
-    qemu-system-x86_64 -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -drive file=maxos_disk.img,format=raw,index=0,media=disk -boot c
+    qemu-system-x86_64 -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -drive file=maxos_disk.img,format=raw,index=0,media=disk -boot c -serial stdio
 elif [ "$1" != "--no-run" ]; then
     echo " Запуск в QEMU x86_64 с подключенным жестким диском..."
-    qemu-system-x86_64 -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -drive file=maxos_disk.img,format=raw,index=0,media=disk -cdrom maxos.iso -boot d
+    qemu-system-x86_64 -audiodev alsa,id=snd0 -machine pcspk-audiodev=snd0 -drive file=maxos_disk.img,format=raw,index=0,media=disk -cdrom maxos.iso -boot d -serial stdio
 fi

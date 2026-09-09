@@ -1,5 +1,8 @@
 #include "idt.h"
 #include "kernel.h"
+#include "debug.h"
+#include "user.h"
+#include "maxp.h"
 
 // 256 IDT Descriptors in 64-bit Long Mode
 static struct idt_entry_64 idt64[256] __attribute__((aligned(16)));
@@ -69,24 +72,66 @@ unsigned long long get_uptime_ms(void) {
     return system_ticks;
 }
 
+void gp_fault_handler(unsigned long long err, unsigned long long rip, unsigned long long cs) {
+    debug_puts("[CPU] #GP General Protection Fault! RIP=0x");
+    debug_print_num(rip, 16);
+    debug_puts(" CS=0x");
+    debug_print_num(cs, 16);
+    debug_puts(" ERR=0x");
+    debug_print_num(err, 16);
+    debug_puts("\n");
+
+    if ((cs & 3) == 3) {
+        debug_log("CPU", "Fault in Ring 3 User Mode. Gracefully terminating application.");
+        maxp_close_all_windows();
+        draw_window();
+        exit_to_kernel();
+    }
+}
+
+void page_fault_handler(unsigned long long err, unsigned long long rip, unsigned long long cs) {
+    unsigned long long cr2;
+    __asm__ __volatile__("mov %%cr2, %0" : "=r"(cr2));
+    debug_puts("[CPU] #PF Page Fault! CR2=0x");
+    debug_print_num(cr2, 16);
+    debug_puts(" RIP=0x");
+    debug_print_num(rip, 16);
+    debug_puts(" CS=0x");
+    debug_print_num(cs, 16);
+    debug_puts(" ERR=0x");
+    debug_print_num(err, 16);
+    debug_puts("\n");
+
+    if ((cs & 3) == 3) {
+        debug_log("CPU", "Fault in Ring 3 User Mode. Gracefully terminating application.");
+        maxp_close_all_windows();
+        draw_window();
+        exit_to_kernel();
+    }
+}
+
 void idt_init(void) {
     // 1. Initialize all 256 gates with default exception handler
     for (int i = 0; i < 256; i++) {
         set_idt_gate(i, default_exception_entry, 0x8E); // Present, Ring 0, 64-bit Interrupt Gate
     }
 
-    // 2. Install IRQ 0 (Timer Tick) at vector 32 (0x20)
+    // 2. Install dedicated exception handlers with error code pop
+    set_idt_gate(13, gp_fault_entry, 0x8E);
+    set_idt_gate(14, page_fault_entry, 0x8E);
+
+    // 3. Install IRQ 0 (Timer Tick) at vector 32 (0x20)
     set_idt_gate(32, irq0_timer_entry, 0x8E);
 
-    // 3. Load IDTR
+    // 4. Load IDTR
     idtr.limit = sizeof(idt64) - 1;
     idtr.base = (unsigned long long)&idt64;
     load_idt(&idtr);
 
-    // 4. Remap PIC and configure PIT to 1000 Hz (1ms per tick)
+    // 5. Remap PIC and configure PIT to 1000 Hz (1ms per tick)
     pic_remap();
     pit_init(1000);
 
-    // 5. Enable hardware interrupts!
+    // 6. Enable hardware interrupts
     __asm__ __volatile__("sti");
 }

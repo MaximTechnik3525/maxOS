@@ -9,6 +9,7 @@
 #include "pong.h"
 
 #include "kernel.h"
+#include "user.h"
 
 int start_menu_open = 0;
 static int app_minimized = 0;
@@ -61,9 +62,21 @@ void taskbar_close_start_menu(void) {
     }
 }
 
+static unsigned char last_rtc_sec = 0, last_rtc_min = 0, last_rtc_hour = 12;
+
 static unsigned char read_rtc(unsigned char reg) {
+    if (get_cpl() == 3) {
+        if (reg == 0x00) return last_rtc_sec;
+        if (reg == 0x02) return last_rtc_min;
+        if (reg == 0x04) return last_rtc_hour;
+        return 0;
+    }
     outb(0x70, reg);
-    return inb(0x71);
+    unsigned char val = inb(0x71);
+    if (reg == 0x00) last_rtc_sec = val;
+    else if (reg == 0x02) last_rtc_min = val;
+    else if (reg == 0x04) last_rtc_hour = val;
+    return val;
 }
 
 static int bcd_to_bin(unsigned char val) {

@@ -47,6 +47,7 @@ struct multiboot_info {
 #include "kernel.h"
 #include "user.h"
 #include "idt.h"
+#include "debug.h"
 #include "user/syscall.h"
 
 unsigned short* _gfx_memory_backend;
@@ -205,6 +206,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     struct multiboot_info* mbi = (struct multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
     if (mbi->framebuffer_pitch > 0) { REAL_PITCH = mbi->framebuffer_pitch / 2; }
+
+    // Initialize Diagnostic Serial Debugger (COM1 38400 baud)
+    debug_init();
 
     init_mouse();
 
@@ -501,7 +505,10 @@ void sleep(unsigned int ms) {
         }
     }
 }
-void outw(unsigned short port, unsigned short val) { __asm__ volatile("outw %0, %1" : : "a"(val), "Nd"(port)); }
+void outw(unsigned short port, unsigned short val) {
+    if (get_cpl() == 3) return;
+    __asm__ volatile("outw %0, %1" : : "a"(val), "Nd"(port));
+}
 void shutdown() {
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
@@ -593,7 +600,10 @@ void prev_cursor() {
     }
     cursor_bg_saved = 0;
 }
-void outb(unsigned short port, unsigned char data) {__asm__ __volatile__("outb %0, %1" : : "a"(data), "Nd"(port));}
+void outb(unsigned short port, unsigned char data) {
+    if (get_cpl() == 3) return;
+    __asm__ __volatile__("outb %0, %1" : : "a"(data), "Nd"(port));
+}
 void wait_mouse(unsigned char type) {
     unsigned int timeout = 100000;
     if (type == 0) {
@@ -710,6 +720,7 @@ void draw_cursor(int mouse_x, int mouse_y) {
 }
 
 unsigned char inb(unsigned short port) {
+    if (get_cpl() == 3) return 0;
     unsigned char result;
     __asm__ __volatile__("inb %1, %0" : "=a"(result) : "Nd"(port));
     return result;

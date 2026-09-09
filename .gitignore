@@ -7,6 +7,7 @@ build/
 *.img
 *.iso
 
-# Sockets and scratch
+# Sockets, logs and scratch
 *.sock
+*.log
 scratch/

@@ -8,6 +8,7 @@
 #include "pong.h"
 
 #include "kernel.h"
+#include "debug.h"
 
 static int active_app_id = MAXP_APP_NONE;
 
@@ -37,10 +38,20 @@ int maxp_get_active_app(void) {
 }
 
 void maxp_set_active_app(int app_id) {
-    active_app_id = app_id;
+    if (active_app_id != app_id) {
+        if (active_app_id != MAXP_APP_NONE && app_id == MAXP_APP_NONE) {
+            const struct MaxPAppInfo* prev_info = maxp_get_app_info(active_app_id);
+            debug_log_app_event(prev_info ? prev_info->name : "App", "Window Closed", active_app_id);
+        }
+        active_app_id = app_id;
+    }
 }
 
 void maxp_close_all_windows(void) {
+    if (active_app_id != MAXP_APP_NONE) {
+        const struct MaxPAppInfo* info = maxp_get_app_info(active_app_id);
+        debug_log_app_event(info ? info->name : "App", "Closing Application Window", active_app_id);
+    }
     if (notepad_open) notepad_close_window();
     if (explorer_open) explorer_close_window();
     if (installer_open) installer_close_window();
@@ -75,6 +86,9 @@ int maxp_is_maxp_file(const char* filename) {
 }
 
 int maxp_launch_app(int app_id) {
+    const struct MaxPAppInfo* info = maxp_get_app_info(app_id);
+    debug_log_app_event(info ? info->name : "App", "Launching Application", app_id);
+
     // Close current window if switching
     maxp_close_all_windows();
 

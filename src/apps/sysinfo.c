@@ -4,6 +4,7 @@
 #include "maxp.h"
 #include "kernel.h"
 #include "user.h"
+#include "debug.h"
 
 void get_cpu(char* buffer);
 
@@ -99,14 +100,69 @@ void sysinfo_draw(void) {
     print_string("Kernel Load Address:        0x00100000 (1 MB Physical RAM)", sx + 25, row_y, 0x0000);
     row_y += 24;
 
-    // Section 4: Storage & Filesystem
-    print_string("[ Storage & Filesystem ]", sx + 20, row_y, 0x11EB);
+    // Section 4: Storage & ATA Driver Diagnostics
+    print_string("[ Storage & ATA Driver Diagnostics ]", sx + 20, row_y, 0x11EB);
     row_y += 16;
-    print_string("Filesystem: maxFS 2.0 Inode-Based Persistent Filesystem", sx + 25, row_y, 0x0000);
+    print_string("Storage Device: ATA Primary Master (IDE PIO)", sx + 25, row_y, 0x0000);
     row_y += 15;
-    print_string("Storage Device: ATA Primary Master (IDE PIO Mode)", sx + 25, row_y, 0x0000);
+    print_string("Drive Model: ", sx + 25, row_y, 0x0000);
+    print_string(ata_primary_master.present ? ata_primary_master.model : "Not Detected", sx + 135, row_y, 0x24EE);
     row_y += 15;
-    print_string("Program Executable Format: .maxP (maxOS Program)", sx + 25, row_y, 0x0000);
+
+    char numbuf[32];
+    print_string("Capacity: ", sx + 25, row_y, 0x0000);
+    int_str((int)ata_primary_master.size_mb, numbuf);
+    print_string(numbuf, sx + 115, row_y, 0x03EA);
+    print_string(" MB (", sx + 155, row_y, 0x0000);
+    int_str((int)ata_primary_master.total_sectors, numbuf);
+    print_string(numbuf, sx + 200, row_y, 0x03EA);
+    print_string(" sectors) | maxFS 2.0 Inode FS", sx + 280, row_y, 0x0000);
+    row_y += 15;
+
+    const struct ATADebugStats* stats = ata_get_debug_stats();
+    print_string("IO Counters: Reads=", sx + 25, row_y, 0x0000);
+    int_str((int)stats->reads_count, numbuf);
+    print_string(numbuf, sx + 200, row_y, 0x0200);
+    print_string(" Writes=", sx + 245, row_y, 0x0000);
+    int_str((int)stats->writes_count, numbuf);
+    print_string(numbuf, sx + 320, row_y, 0x0200);
+    print_string(" Flushes=", sx + 355, row_y, 0x0000);
+    int_str((int)stats->flushes_count, numbuf);
+    print_string(numbuf, sx + 440, row_y, 0x0200);
+    print_string(" Errors=", sx + 475, row_y, 0x0000);
+    int_str((int)stats->errors_count, numbuf);
+    print_string(numbuf, sx + 545, row_y, (stats->errors_count > 0) ? 0xF800 : 0x0200);
+    row_y += 15;
+
+    print_string("Last ATA Operation: ", sx + 25, row_y, 0x0000);
+    print_string((char*)stats->last_op, sx + 210, row_y, 0x24EE);
+    print_string(" | LBA: ", sx + 275, row_y, 0x0000);
+    int_str((int)stats->last_lba, numbuf);
+    print_string(numbuf, sx + 345, row_y, 0x0000);
+    print_string(" | Status Reg: 0x", sx + 410, row_y, 0x0000);
+    int_str((int)stats->last_status, numbuf);
+    print_string(numbuf, sx + 565, row_y, 0x0000);
+    row_y += 24;
+
+    // Section 5: Kernel & Application Debug Log (Circular Ring Buffer)
+    print_string("[ Diagnostic Kernel & App Log (COM1) ]", sx + 20, row_y, 0x11EB);
+    row_y += 16;
+    int count = debug_history_total;
+    if (count > 4) count = 4;
+    if (count == 0) {
+        print_string("No log entries recorded yet.", sx + 25, row_y, 0x7BEF);
+    } else {
+        for (int i = 0; i < count; i++) {
+            const struct DebugLogEntry* ent = debug_get_entry(debug_history_total - count + i);
+            if (ent) {
+                print_string("[", sx + 25, row_y, 0x7BEF);
+                print_string((char*)ent->tag, sx + 32, row_y, 0x03EA);
+                print_string("] ", sx + 62, row_y, 0x7BEF);
+                print_string((char*)ent->msg, sx + 75, row_y, 0x0000);
+                row_y += 15;
+            }
+        }
+    }
 
     // Bottom action buttons
     draw_ui_btn(sx + 20, sy + sh - 34, 80, 22, "Refresh", 0xC618, 0x0000);

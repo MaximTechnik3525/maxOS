@@ -14,6 +14,11 @@
 #define SYS_DRAW_WINDOW   9  // sys_draw_window(void)
 #define SYS_GET_TICKS     10 // sys_get_ticks(void) -> returns millisecond tick count
 #define SYS_NO_SOUND      11 // sys_no_sound(void)
+#define SYS_ATA_READ      12 // sys_ata_read(unsigned int lba, unsigned char* buf)
+#define SYS_ATA_WRITE     13 // sys_ata_write(unsigned int lba, const unsigned char* buf)
+#define SYS_ATA_FLUSH     14 // sys_ata_flush(void)
+#define SYS_ATA_STATUS    15 // sys_ata_status(void)
+#define SYS_DEBUG_LOG     16 // sys_debug_log(char* tag, char* msg)
 
 // Privilege Levels & GDT Selectors (x86_64 Long Mode)
 #define KERNEL_CS         0x08

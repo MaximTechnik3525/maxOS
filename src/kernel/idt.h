@@ -27,9 +27,15 @@ void pic_remap(void);
 void pit_init(unsigned int freq_hz);
 unsigned long long get_uptime_ms(void);
 
+// C Exception Handlers
+void gp_fault_handler(unsigned long long err, unsigned long long rip, unsigned long long cs);
+void page_fault_handler(unsigned long long err, unsigned long long rip, unsigned long long cs);
+
 // Assembly Routines
 void load_idt(void* idtr);
 void irq0_timer_entry(void);
+void gp_fault_entry(void);
+void page_fault_entry(void);
 void default_exception_entry(void);
 
 #endif // IDT_H
