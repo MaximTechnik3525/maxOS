@@ -474,44 +474,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         sleep(100);
                         no_sound();
                     }
-                    if (ascii_char == 'F' && drag == 0) {
-                        w_mode = 1;
-                        for (int y = win_y + 200; y < win_y + 500; y++) {
-                            for (int x = win_x + 20; x < win_x + 720; x++) {
-                                if (y == win_y + 200 || y == win_y + 499 || x == win_x + 20|| x == win_x + 719) {
-                                    gfx_memory[y * 1024 + x] = 0x0320;
-                                }
-                                else if (y < win_y + 203) {
-                                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                                }
-                                else if (y < win_y + 209) {
-                                    gfx_memory[y * 1024 + x] = 0x24EE;
-                                }
-                                else if (y < win_y + 215) {
-                                    gfx_memory[y * 1024 + x] = 0x11EB;
-                                }
-                                else {
-                                    gfx_memory[y * 1024 + x] = 0xFFFF;
-                                }
-                            }
-                        }
-                        int swin_x = win_x + 20;
-                        int swin_y = win_y + 200;
-                        int swin_w = win_w - 40;
-                        gfx_memory[swin_y * 1024 + swin_x] = 0xFFFF;
-                        gfx_memory[swin_y * 1024 + (swin_x+1)] = 0xFFFF;
-                        gfx_memory[(swin_y+1) * 1024 + swin_x] = 0xFFFF;
-                        int right_edges = swin_x + swin_w - 1;
-                        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                        gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                        gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                        print_string("Text editor", win_x + 24, win_y + 204, 0xFFFF);
-                        print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("You can write own programs. Press F2 to exit.", win_x + 24, win_y + 230, 0x0000);
-                        play_sound(500);
-                        sleep(100);
-                        no_sound();
-                    }
                     if (ascii_char == 'T' && km_mode == 0 && drag == 0) {
                         km_mode = 1;
                         play_sound(200);
@@ -646,61 +608,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         play_sound(800);
                         sleep(100);
                         no_sound();
-                    }
-                }   
-                if (scan_code < 0x80 && w_mode == 1) {
-                    char ascii_char = scan_code_to_ascii(scan_code);
-                    if (ascii_char != 'F' && ascii_char != 'S' && ascii_char != 'B' && textid < 76) {
-                        ftext[textid] = ascii_char;
-                        textid++;
-                        ftext[textid] = '\0';
-                        print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("You can write own programs. Press F2 to exit.", win_x + 24, win_y + 230, 0x0000);
-                    }
-                    if (ascii_char == 'S') {
-                        w_mode = 0;
-                        draw_window();
-                        play_sound(300);
-                        sleep(100);
-                        no_sound();
-                    }
-                    if (ascii_char == 'B') {
-                        if (textid > 0) {
-                            textid--;
-                            ftext[textid] = '\0';
-                        }
-                        for (int y = win_y + 200; y < win_y + 500; y++) {
-                            for (int x = win_x + 20; x < win_x + 720; x++) {
-                                if (y == win_y + 200 || y == win_y + 499 || x == win_x + 20|| x == win_x + 719) {
-                                    gfx_memory[y * 1024 + x] = 0x0320;
-                                }
-                                else if (y < win_y + 203) {
-                                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                                }
-                                else if (y < win_y + 209) {
-                                    gfx_memory[y * 1024 + x] = 0x24EE;
-                                }
-                                else if (y < win_y + 215) {
-                                    gfx_memory[y * 1024 + x] = 0x11EB;
-                                }
-                                else {
-                                    gfx_memory[y * 1024 + x] = 0xFFFF;
-                                }
-                            }
-                        }
-                        int swin_x = win_x + 20;
-                        int swin_y = win_y + 200;
-                        int swin_w = win_w - 40;
-                        gfx_memory[swin_y * 1024 + swin_x] = 0xFFFF;
-                        gfx_memory[swin_y * 1024 + (swin_x+1)] = 0xFFFF;
-                        gfx_memory[(swin_y+1) * 1024 + swin_x] = 0xFFFF;
-                        int right_edges = swin_x + swin_w - 1;
-                        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                        gfx_memory[swin_y * 1024 + (right_edges+1)] = 0xFFFF;
-                        gfx_memory[(swin_y+1) * 1024 + right_edges] = 0xFFFF;
-                        print_string("Text editor", win_x + 24, win_y + 204, 0xFFFF);
-                        print_string(ftext, win_x + 24, win_y + 220, 0x0000);
-                        print_string("You can write own programs. Press F2 to exit.", win_x + 24, win_y + 230, 0x0000);
                     }
                 }
             }
@@ -1128,7 +1035,7 @@ void filew() {
         print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
         print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-
+        print_string(ftext, win_x + 30, help_col, 0x0000);
         while (1) {
             unsigned char status = inb(0x64);
             if ((status & 0x01) && !(status & 0x20)) {
@@ -1182,6 +1089,14 @@ void filew() {
                             print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
                             print_string(ftext, win_x + 30, help_col, 0x0000);
                         }
+                    }
+                    else if (ascii_char == 'F') {
+                        play_sound(800); sleep(100); no_sound();
+                        save_open();
+                        w_mode = 0;
+                        drag = 0;
+                        draw_window();
+                        break;
                     }
                 }
             }
