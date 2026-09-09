@@ -46,6 +46,8 @@ struct multiboot_info {
 #include "pong.h"
 #include "kernel.h"
 #include "user.h"
+#include "idt.h"
+#include "user/syscall.h"
 
 unsigned short* _gfx_memory_backend;
 unsigned int REAL_PITCH = 1024;
@@ -206,6 +208,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 
     init_mouse();
 
+    // Initialize 64-bit IDT, 8259 PIC Remap, and PIT 1000Hz Timer
+    idt_init();
+
+    // Initialize Ring 3 User Space, TSS, and SYSCALL MSRs
+    user_mode_init();
+
     // Splash screen
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
@@ -224,9 +232,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     print_string("by maxTech", 10, 10, 0x24EE);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(1500);
-
-    // Initialize Ring 3 User Space, TSS, and SYSCALL MSRs
-    user_mode_init();
 
     // Initialize all filesystem, application, and GUI subsystems
     maxfs_init();
@@ -267,7 +272,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 if (sign_x) delta_x |= 0xFFFFFF00;
                 if (sign_y) delta_y |= 0xFFFFFF00;
 
-                if ((delta_x > -100 && delta_x < 100) && (delta_y > -100 && delta_y < 100)) {
+                if ((delta_x > -250 && delta_x < 250) && (delta_y > -250 && delta_y < 250)) {
                     if (delta_x != 0 || delta_y != 0) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x += delta_x / 3;
@@ -283,24 +288,15 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (taskbar_handle_click(pos_x, pos_y)) {
                             continue;
                         }
-                        if (notepad_open) {
-                            if (notepad_handle_click(pos_x, pos_y)) continue;
+                        int active_app = maxp_get_active_app();
+                        int handled = 0;
+                        if (active_app != MAXP_APP_NONE) {
+                            handled = ring3_app_handle_click(active_app, pos_x, pos_y);
                         }
-                        if (explorer_open) {
-                            if (explorer_handle_click(pos_x, pos_y)) continue;
+                        if (!handled) {
+                            handled = desktop_handle_click(pos_x, pos_y);
                         }
-                        if (calc_open) {
-                            if (calc_handle_click(pos_x, pos_y)) continue;
-                        }
-                        if (sysinfo_open) {
-                            if (sysinfo_handle_click(pos_x, pos_y)) continue;
-                        }
-                        if (pong_open) {
-                            if (pong_handle_click(pos_x, pos_y)) continue;
-                        }
-                        if (installer_open) {
-                            if (installer_handle_click(pos_x, pos_y)) continue;
-                        }
+                        if (handled) continue;
                     }
                 }
             } else {
@@ -312,23 +308,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (taskbar_handle_key(ascii_char, scan_code)) {
                         continue;
                     }
-                    if (notepad_open) {
-                        if (notepad_handle_key(ascii_char, scan_code)) continue;
-                    }
-                    if (explorer_open) {
-                        if (explorer_handle_key(ascii_char, scan_code)) continue;
-                    }
-                    if (calc_open) {
-                        if (calc_handle_key(ascii_char, scan_code)) continue;
-                    }
-                    if (sysinfo_open) {
-                        if (sysinfo_handle_key(ascii_char, scan_code)) continue;
-                    }
-                    if (pong_open) {
-                        if (pong_handle_key(ascii_char, scan_code)) continue;
-                    }
-                    if (installer_open) {
-                        if (installer_handle_key(ascii_char, scan_code)) continue;
+                    int active_app = maxp_get_active_app();
+                    if (active_app != MAXP_APP_NONE) {
+                        if (ring3_app_handle_key(active_app, ascii_char, scan_code)) continue;
                     }
 
                     // Start Menu shortcut (Win key / M)
@@ -407,7 +389,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             }
         } else {
             if (pong_open) {
-                pong_tick();
+                ring3_app_step(MAXP_APP_PONG);
                 sleep(16);
             } else {
                 clock_timer++;
@@ -457,15 +439,65 @@ void int_str(int num, char* str) {
         str[len - 1 - j] = temp;
     }
 }
+void pump_events_nonblocking(void) {
+    unsigned char status = inb(0x64);
+    if (status & 0x01) {
+        if ((status & 0x20) && w_mode == 0 && drag != 2) {
+            unsigned char p0 = inb(0x60);
+            if (p0 & 0x08) {
+                int timeout = 1000;
+                while (!(inb(0x64) & 0x01) && timeout--);
+                unsigned char p1 = inb(0x60);
+                timeout = 1000;
+                while (!(inb(0x64) & 0x01) && timeout--);
+                unsigned char p2 = inb(0x60);
+
+                int sign_x = p0 & 0x10;
+                int sign_y = p0 & 0x20;
+                int delta_x = p1;
+                int delta_y = p2;
+                if (sign_x) delta_x |= 0xFFFFFF00;
+                if (sign_y) delta_y |= 0xFFFFFF00;
+
+                if ((delta_x > -250 && delta_x < 250) && (delta_y > -250 && delta_y < 250)) {
+                    if (delta_x != 0 || delta_y != 0) {
+                        if (tail == 0) { prev_cursor(); }
+                        pos_x += delta_x / 3;
+                        pos_y -= delta_y / 3;
+                        if (pos_x > 1024 - 12) pos_x = 1024 - 12;
+                        if (pos_x < 0) pos_x = 0;
+                        if (pos_y > 768 - 12) pos_y = 768 - 12;
+                        if (pos_y < 0) pos_y = 0;
+                        draw_cursor(pos_x, pos_y);
+                    }
+                }
+            }
+        }
+    }
+}
+
 void sleep(unsigned int ms) {
-    for (unsigned int i = 0; i < ms; i++) {
-        outb(0x43, 0x30);
-        outb(0x40, 0xA9);
-        outb(0x40, 0x04);
-        unsigned char status = 0;
-        while ((status & 0x80) == 0) {
-            outb(0x43, 0xE2);
-            status = inb(0x40);
+    if (get_cpl() == 3) {
+        u_sleep(ms);
+        return;
+    }
+    unsigned long long start_ticks = system_ticks;
+    unsigned long long target = start_ticks + ms;
+    int safety = 5000000;
+    while (system_ticks < target && safety--) {
+        pump_events_nonblocking();
+        __asm__ __volatile__("pause");
+    }
+    if (system_ticks == start_ticks) {
+        for (unsigned int i = 0; i < ms; i++) {
+            outb(0x43, 0x30);
+            outb(0x40, 0xA9);
+            outb(0x40, 0x04);
+            unsigned char status = 0;
+            while ((status & 0x80) == 0) {
+                outb(0x43, 0xE2);
+                status = inb(0x40);
+            }
         }
     }
 }
@@ -522,6 +554,11 @@ int str_in(char* main_string, char* substring) {
     return 0;
 }
 void play_sound(unsigned int nfreq) {
+    if (get_cpl() == 3) {
+        u_play_sound(nfreq, 0);
+        return;
+    }
+    if (nfreq == 0) return;
     unsigned int div;
     unsigned char tmp;
     div = 1193180 / nfreq;
@@ -534,6 +571,10 @@ void play_sound(unsigned int nfreq) {
     }
 }
 void no_sound() {
+    if (get_cpl() == 3) {
+        u_no_sound();
+        return;
+    }
     unsigned char tmp = inb(0x61) & 0xFC;
     outb(0x61, tmp);
 }
@@ -602,6 +643,10 @@ void get_cpu(char* buffer) {
 }
 
 void draw_rect(int rx, int ry, int rw, int rh, unsigned short color) {
+    if (get_cpl() == 3) {
+        u_draw_rect(rx, ry, rw, rh, color);
+        return;
+    }
     if (rx < 0) { rw += rx; rx = 0; }
     if (ry < 0) { rh += ry; ry = 0; }
     if (rx + rw > SCREEN_WIDTH) rw = SCREEN_WIDTH - rx;
@@ -758,6 +803,103 @@ unsigned char read_rtc_register(unsigned char reg) {
     outb(0x70, reg);
     return inb(0x71);
 }
+void draw_ui_button(int x, int y, int w, int h, const char* text, unsigned short bg_col, unsigned short text_col, int sunken) {
+    unsigned short top_left = sunken ? 0x4208 : 0xFFFF;
+    unsigned short bot_right = sunken ? 0xFFFF : 0x4208;
+
+    draw_rect(x, y, w, h, bg_col);
+    draw_rect(x, y, w, 1, top_left);
+    draw_rect(x, y, 1, h, top_left);
+    draw_rect(x, y + h - 1, w, 1, bot_right);
+    draw_rect(x + w - 1, y, 1, h, bot_right);
+
+    int len = 0;
+    while (text[len]) len++;
+    int tx = x + (w - (len * 9)) / 2;
+    int ty = y + (h - 8) / 2;
+    if (sunken) { tx++; ty++; }
+    print_string((char*)text, tx, ty, text_col);
+}
+
+int desktop_handle_click(int mouse_x, int mouse_y) {
+    // 1. Check Desktop Icons on the left side
+    if (mouse_x >= 10 && mouse_x <= 95) {
+        for (int i = 0; i < 7; i++) {
+            int iy = 20 + (i * 86);
+            if (mouse_y >= iy - 4 && mouse_y <= iy + 74) {
+                if (i == 0) maxp_launch_app(MAXP_APP_NOTEPAD);
+                else if (i == 1) maxp_launch_app(MAXP_APP_EXPLORER);
+                else if (i == 2) maxp_launch_app(MAXP_APP_CALC);
+                else if (i == 3) maxp_launch_app(MAXP_APP_SYSINFO);
+                else if (i == 4) maxp_launch_app(MAXP_APP_PONG);
+                else if (i == 5) maxp_launch_app(MAXP_APP_INSTALLER);
+                else if (i == 6) {
+                    maxp_launch_app(MAXP_APP_NOTEPAD);
+                    notepad_open_file_by_name("readme.txt");
+                    draw_window();
+                    draw_cursor(pos_x, pos_y);
+                }
+                return 1;
+            }
+        }
+    }
+
+    // 2. Check Welcome Card 3D Buttons when card is visible
+    int active_app = maxp_get_active_app();
+    if (active_app == MAXP_APP_NONE || taskbar_is_app_minimized()) {
+        int card_x = 220, card_y = 150;
+
+        // Row 1 (y = card_y + 142 .. card_y + 168)
+        if (mouse_y >= card_y + 142 && mouse_y <= card_y + 168) {
+            if (mouse_x >= card_x + 30 && mouse_x <= card_x + 205) {
+                maxp_launch_app(MAXP_APP_NOTEPAD);
+                return 1;
+            }
+            if (mouse_x >= card_x + 230 && mouse_x <= card_x + 405) {
+                maxp_launch_app(MAXP_APP_EXPLORER);
+                return 1;
+            }
+            if (mouse_x >= card_x + 430 && mouse_x <= card_x + 605) {
+                maxp_launch_app(MAXP_APP_CALC);
+                return 1;
+            }
+        }
+
+        // Row 2 (y = card_y + 178 .. card_y + 204)
+        if (mouse_y >= card_y + 178 && mouse_y <= card_y + 204) {
+            if (mouse_x >= card_x + 30 && mouse_x <= card_x + 205) {
+                maxp_launch_app(MAXP_APP_SYSINFO);
+                return 1;
+            }
+            if (mouse_x >= card_x + 230 && mouse_x <= card_x + 405) {
+                maxp_launch_app(MAXP_APP_PONG);
+                return 1;
+            }
+            if (mouse_x >= card_x + 430 && mouse_x <= card_x + 605) {
+                maxp_launch_app(MAXP_APP_INSTALLER);
+                return 1;
+            }
+        }
+
+        // Row 3 (y = card_y + 214 .. card_y + 240)
+        if (mouse_y >= card_y + 214 && mouse_y <= card_y + 240) {
+            if (mouse_x >= card_x + 30 && mouse_x <= card_x + 310) {
+                ring3_demo_launch();
+                return 1;
+            }
+            if (mouse_x >= card_x + 325 && mouse_x <= card_x + 605) {
+                theme = (theme % 9) + 1;
+                draw_window();
+                draw_cursor(pos_x, pos_y);
+                play_sound(700); sleep(30); no_sound();
+                return 1;
+            }
+        }
+    }
+
+    return 0;
+}
+
 void draw_window() {
     cursor_bg_saved = 0;
 
@@ -807,24 +949,41 @@ void draw_window() {
         }
         print_string("Welcome to maxOS RedCycle v3.0 x86_64", card_x + 14, card_y + 6, 0xFFFF);
         print_string("Desktop & Applications Environment", card_x + 25, card_y + 36, 0x11EB);
-        print_string("Modular applications use .maxP executable files on maxFS 2.0", card_x + 25, card_y + 60, 0x0000);
-        print_string("- Launch applications from Desktop icons on the left side", card_x + 25, card_y + 88, 0x0000);
-        print_string("- Or click [maxOS] Start Menu button on bottom-left", card_x + 25, card_y + 110, 0x0000);
-        print_string("- Active apps appear as tabs in the Taskbar (toggle minimize)", card_x + 25, card_y + 132, 0x0000);
-        print_string("Registered .maxP Programs:", card_x + 25, card_y + 162, 0x0200);
-        print_string("[Notepad.maxP] [Explorer.maxP] [Calc.maxP]", card_x + 35, card_y + 184, 0x03EA);
-        print_string("[SysInfo.maxP] [Pong.maxP]     [Install.maxP]", card_x + 35, card_y + 206, 0x24EE);
-        print_string("Hotkeys: Keys 1-9 switch themes | U: Ring 3 Demo | Esc/c closes", card_x + 25, card_y + 242, 0x7BEF);
-        print_string("System Status: 64-bit Long Mode | Ring 3 Ready | ATA Ready", card_x + 25, card_y + 270, 0x0000);
-        print_string("maxOS Desktop v3.0 - by maxTech", card_x + 25, card_y + 310, 0x8085);
+        print_string("Modular applications use .maxP executable files on maxFS 2.0", card_x + 25, card_y + 58, 0x0000);
+        print_string("- Launch applications from Desktop icons on the left side", card_x + 25, card_y + 78, 0x0000);
+        print_string("- Or click [maxOS] Start Menu button on bottom-left", card_x + 25, card_y + 96, 0x0000);
+        print_string("- Click any button below to launch an application directly:", card_x + 25, card_y + 116, 0x0200);
+
+        // Row 1 3D Buttons
+        draw_ui_button(card_x + 30, card_y + 142, 175, 26, "Notepad.maxP", 0xCE79, 0x0000, 0);
+        draw_ui_button(card_x + 230, card_y + 142, 175, 26, "Explorer.maxP", 0xCE79, 0x0000, 0);
+        draw_ui_button(card_x + 430, card_y + 142, 175, 26, "Calc.maxP", 0xCE79, 0x0000, 0);
+
+        // Row 2 3D Buttons
+        draw_ui_button(card_x + 30, card_y + 178, 175, 26, "SysInfo.maxP", 0xCE79, 0x0000, 0);
+        draw_ui_button(card_x + 230, card_y + 178, 175, 26, "Pong.maxP", 0xCE79, 0x0000, 0);
+        draw_ui_button(card_x + 430, card_y + 178, 175, 26, "Install.maxP", 0xCE79, 0x0000, 0);
+
+        // Row 3 3D Buttons
+        draw_ui_button(card_x + 30, card_y + 214, 280, 26, "[*] Ring 3 User Mode Demo", 0x03EA, 0xFFFF, 0);
+        draw_ui_button(card_x + 325, card_y + 214, 280, 26, "Change Desktop Theme", 0x24EE, 0x0000, 0);
+
+        print_string("Security: Ring 3 CPL=3 Protected User Space (All Apps)", card_x + 25, card_y + 254, 0x0200);
+        print_string("Hardware: 64-bit IDT Interrupts | PIT 1000Hz (Non-blocking)", card_x + 25, card_y + 274, 0x11EB);
+        print_string("Hotkeys: Keys 1-9 switch themes | U: Ring 3 Demo | Esc/c: Close", card_x + 25, card_y + 296, 0x7BEF);
+        print_string("maxOS Desktop v3.0 x86_64 - by maxTech", card_x + 25, card_y + 326, 0x8085);
     } else {
         // Render active window
-        if (notepad_open) { notepad_draw(); }
-        else if (explorer_open) { explorer_draw(); }
-        else if (calc_open) { calc_draw(); }
-        else if (sysinfo_open) { sysinfo_draw(); }
-        else if (pong_open) { pong_draw(); }
-        else if (installer_open) { installer_draw(); }
+        if (get_cpl() == 3) {
+            if (notepad_open) { notepad_draw(); }
+            else if (explorer_open) { explorer_draw(); }
+            else if (calc_open) { calc_draw(); }
+            else if (sysinfo_open) { sysinfo_draw(); }
+            else if (pong_open) { pong_draw(); }
+            else if (installer_open) { installer_draw(); }
+        } else {
+            ring3_app_draw(active_app);
+        }
     }
 
     // 4. Taskbar across the bottom
@@ -835,6 +994,10 @@ void draw_window() {
 }
 
 void print_string(char* str, int x, int y, unsigned short color) {
+    if (get_cpl() == 3) {
+        u_print_string(str, x, y, color);
+        return;
+    }
     while (*str != 0) {
         draw_char(*str, x, y, color);
         x += 9;

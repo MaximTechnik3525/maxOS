@@ -42,4 +42,9 @@ void int_str(int num, char* str);
 int str_in(char* main_string, char* substring);
 char scan_code_to_ascii(unsigned char scan_code);
 
+// Desktop and Non-blocking event pump
+void draw_ui_button(int x, int y, int w, int h, const char* text, unsigned short bg_col, unsigned short text_col, int sunken);
+int desktop_handle_click(int mouse_x, int mouse_y);
+void pump_events_nonblocking(void);
+
 #endif // KERNEL_H

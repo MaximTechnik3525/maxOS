@@ -47,7 +47,7 @@ enter_ring3:
     push rsi                    ; User RSP
     pushfq
     pop rax
-    and rax, ~0x200             ; Keep IF=0 (maxOS runs polling I/O with no IDT)
+    or rax, 0x200               ; Enable IF=1 (IDT is active, timer ticks)
     push rax                    ; RFLAGS
     push 0x2B                   ; User CS (Selector 0x28 | RPL 3)
     push rdi                    ; User RIP
@@ -80,7 +80,7 @@ run_in_ring3:
     push rsi                    ; User RSP
     pushfq
     pop rax
-    and rax, ~0x200             ; Keep IF=0 (maxOS runs polling I/O with no IDT)
+    or rax, 0x200               ; Enable IF=1 (IDT is active, timer ticks)
     push rax                    ; RFLAGS
     push 0x2B                   ; User CS
     push rdi                    ; User RIP
@@ -92,6 +92,9 @@ run_in_ring3:
 ; ------------------------------------------------------------------------------
 exit_to_kernel:
     mov rsp, [saved_kernel_rsp]
+    mov ax, 0x10                ; Restore Kernel DS
+    mov ds, ax
+    mov es, ax
     pop r15
     pop r14
     pop r13
@@ -158,8 +161,9 @@ syscall_entry_asm:
     mov rdi, rax                ; num   -> 1st param (RDI)
     mov r9, r8                  ; arg 5 -> 6th param (R9)
     mov r8, r10                 ; arg 4 -> 5th param (R8)
-
+    sti                         ; Enable interrupts during syscall execution
     call syscall_dispatcher
+    cli                         ; Disable interrupts for atomic user context restoration
     ; Return value from C dispatcher is in RAX!
 
     add rsp, 8

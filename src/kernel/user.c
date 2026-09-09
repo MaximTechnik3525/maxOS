@@ -1,5 +1,13 @@
 #include "user.h"
 #include "kernel.h"
+#include "idt.h"
+#include "maxp.h"
+#include "notepad.h"
+#include "explorer.h"
+#include "calc.h"
+#include "sysinfo.h"
+#include "pong.h"
+#include "installer.h"
 #include "user/syscall.h"
 
 // 64-bit Task State Segment (AMD64 Architecture Manual Vol 2)
@@ -17,8 +25,9 @@ struct __attribute__((packed)) tss64_t {
 
 static struct tss64_t default_tss;
 
-// Exported from src/boot/entry.asm
+// Exported from src/boot/entry.asm and src/kernel/idt_asm.asm
 extern unsigned long long stack_top;
+extern unsigned long long interrupt_stack_top;
 extern unsigned long long gdt64_tss_entry[2];
 unsigned long long* kernel_stack_top = &stack_top;
 
@@ -53,7 +62,8 @@ void user_mode_init(void) {
     for (unsigned int i = 0; i < sizeof(struct tss64_t); i++) {
         ((unsigned char*)&default_tss)[i] = 0;
     }
-    default_tss.rsp0 = (unsigned long long)&stack_top;
+    // Dedicated stack top loaded by hardware on interrupt from Ring 3
+    default_tss.rsp0 = (unsigned long long)&interrupt_stack_top;
     default_tss.iopb_offset = sizeof(struct tss64_t); // Disable raw I/O for Ring 3
 
     // 2. Install 16-byte 64-bit TSS descriptor into GDT (at selector 0x30)
@@ -89,7 +99,7 @@ void user_mode_init(void) {
 }
 
 /* -------------------------------------------------------------------------
- * Kernel Syscall Dispatcher (Called by syscall_entry_asm)
+ * Kernel Syscall Dispatcher (Called by syscall_entry_asm in Ring 0)
  * ------------------------------------------------------------------------- */
 long syscall_dispatcher(long num, long a1, long a2, long a3, long a4, long a5) {
     switch (num) {
@@ -109,9 +119,15 @@ long syscall_dispatcher(long num, long a1, long a2, long a3, long a4, long a5) {
             return 0;
 
         case SYS_PLAY_SOUND:
-            play_sound((unsigned int)a1);
-            sleep((unsigned int)a2);
-            no_sound();
+            if (a1 == 0) {
+                no_sound();
+            } else {
+                play_sound((unsigned int)a1);
+                if (a2 > 0) {
+                    sleep((unsigned int)a2);
+                    no_sound();
+                }
+            }
             return 0;
 
         case SYS_SLEEP:
@@ -134,9 +150,102 @@ long syscall_dispatcher(long num, long a1, long a2, long a3, long a4, long a5) {
             draw_window();
             return 0;
 
+        case SYS_GET_TICKS:
+            return (long)get_uptime_ms();
+
+        case SYS_NO_SOUND:
+            no_sound();
+            return 0;
+
         default:
             return -1;
     }
+}
+
+/* -------------------------------------------------------------------------
+ * Ring 3 Application Worker (Executes all applications in User Mode)
+ * ------------------------------------------------------------------------- */
+static int r3_target_app = 0;
+static int r3_action = 0; // 0=draw, 1=click, 2=key, 3=step
+static int r3_arg_x = 0;
+static int r3_arg_y = 0;
+static char r3_arg_ch = 0;
+static unsigned char r3_arg_scan = 0;
+static int r3_result = 0;
+static int r3_app_running = 0;
+
+static void ring3_app_worker(void) {
+    r3_app_running = 1;
+    if (r3_action == 0) {
+        // Draw active application in Ring 3
+        if (r3_target_app == MAXP_APP_NOTEPAD) notepad_draw();
+        else if (r3_target_app == MAXP_APP_EXPLORER) explorer_draw();
+        else if (r3_target_app == MAXP_APP_CALC) calc_draw();
+        else if (r3_target_app == MAXP_APP_SYSINFO) sysinfo_draw();
+        else if (r3_target_app == MAXP_APP_PONG) pong_draw();
+        else if (r3_target_app == MAXP_APP_INSTALLER) installer_draw();
+    } else if (r3_action == 1) {
+        // Click handler in Ring 3
+        if (r3_target_app == MAXP_APP_NOTEPAD) r3_result = notepad_handle_click(r3_arg_x, r3_arg_y);
+        else if (r3_target_app == MAXP_APP_EXPLORER) r3_result = explorer_handle_click(r3_arg_x, r3_arg_y);
+        else if (r3_target_app == MAXP_APP_CALC) r3_result = calc_handle_click(r3_arg_x, r3_arg_y);
+        else if (r3_target_app == MAXP_APP_SYSINFO) r3_result = sysinfo_handle_click(r3_arg_x, r3_arg_y);
+        else if (r3_target_app == MAXP_APP_PONG) r3_result = pong_handle_click(r3_arg_x, r3_arg_y);
+        else if (r3_target_app == MAXP_APP_INSTALLER) r3_result = installer_handle_click(r3_arg_x, r3_arg_y);
+    } else if (r3_action == 2) {
+        // Keyboard handler in Ring 3
+        if (r3_target_app == MAXP_APP_NOTEPAD) r3_result = notepad_handle_key(r3_arg_ch, r3_arg_scan);
+        else if (r3_target_app == MAXP_APP_EXPLORER) r3_result = explorer_handle_key(r3_arg_ch, r3_arg_scan);
+        else if (r3_target_app == MAXP_APP_CALC) r3_result = calc_handle_key(r3_arg_ch, r3_arg_scan);
+        else if (r3_target_app == MAXP_APP_SYSINFO) r3_result = sysinfo_handle_key(r3_arg_ch, r3_arg_scan);
+        else if (r3_target_app == MAXP_APP_PONG) r3_result = pong_handle_key(r3_arg_ch, r3_arg_scan);
+        else if (r3_target_app == MAXP_APP_INSTALLER) r3_result = installer_handle_key(r3_arg_ch, r3_arg_scan);
+    } else if (r3_action == 3) {
+        // Step handler in Ring 3
+        if (r3_target_app == MAXP_APP_PONG) pong_tick();
+    }
+    r3_app_running = 0;
+    u_exit();
+}
+
+void ring3_app_draw(int app_id) {
+    r3_target_app = app_id;
+    r3_action = 0;
+    void* u_stack = user_stack + sizeof(user_stack) - 32;
+    run_in_ring3(ring3_app_worker, u_stack);
+}
+
+int ring3_app_handle_click(int app_id, int mouse_x, int mouse_y) {
+    r3_target_app = app_id;
+    r3_action = 1;
+    r3_arg_x = mouse_x;
+    r3_arg_y = mouse_y;
+    r3_result = 0;
+    void* u_stack = user_stack + sizeof(user_stack) - 32;
+    run_in_ring3(ring3_app_worker, u_stack);
+    return r3_result;
+}
+
+int ring3_app_handle_key(int app_id, char ascii_char, unsigned char scan_code) {
+    r3_target_app = app_id;
+    r3_action = 2;
+    r3_arg_ch = ascii_char;
+    r3_arg_scan = scan_code;
+    r3_result = 0;
+    void* u_stack = user_stack + sizeof(user_stack) - 32;
+    run_in_ring3(ring3_app_worker, u_stack);
+    return r3_result;
+}
+
+void ring3_app_step(int app_id) {
+    r3_target_app = app_id;
+    r3_action = 3;
+    void* u_stack = user_stack + sizeof(user_stack) - 32;
+    run_in_ring3(ring3_app_worker, u_stack);
+}
+
+int ring3_is_app_active(void) {
+    return r3_app_running;
 }
 
 /* -------------------------------------------------------------------------

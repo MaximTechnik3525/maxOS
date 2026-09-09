@@ -77,11 +77,16 @@ void sysinfo_draw(void) {
     print_string("Model: ", sx + 25, row_y, 0x0000);
     print_string(cpu_model, sx + 80, row_y, 0x24EE);
     row_y += 15;
-    print_string("Mode:  64-bit Long Mode | PML4 4-Level Paging (2MB Huge Pages)", sx + 25, row_y, 0x0000);
+    print_string("Mode:  64-bit Long Mode | PML4 Paging | System V AMD64 ABI", sx + 25, row_y, 0x0000);
     row_y += 15;
-    print_string("Features: PAE Enabled | SSE/SSE2 Capable | System V AMD64 ABI", sx + 25, row_y, 0x0000);
+    print_string("Interrupts: 64-bit IDT Active | 8259 PIC Remapped | PIT 1000Hz Timer", sx + 25, row_y, 0x03EA);
     row_y += 15;
-    print_string("Privilege: Ring 3 User Mode Supported (TSS + Fast Syscall)", sx + 25, row_y, 0x03EA);
+    long current_cpl = get_cpl();
+    if (current_cpl == 3) {
+        print_string("Privilege: Ring 3 User Mode (CPL = 3) [ALL APPS PROTECTED]", sx + 25, row_y, 0x03EA);
+    } else {
+        print_string("Privilege: Ring 0 Kernel Mode (User Mode Ready)", sx + 25, row_y, 0x03EA);
+    }
     row_y += 24;
 
     // Section 3: Video & Memory

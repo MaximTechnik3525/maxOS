@@ -112,4 +112,12 @@ static inline void u_draw_window(void) {
     syscall0(SYS_DRAW_WINDOW);
 }
 
+static inline unsigned long long u_get_ticks(void) {
+    return (unsigned long long)syscall0(SYS_GET_TICKS);
+}
+
+static inline void u_no_sound(void) {
+    syscall0(SYS_NO_SOUND);
+}
+
 #endif // USER_SYSCALL_H

@@ -207,10 +207,10 @@ void taskbar_draw(void) {
     print_string((char*)tab_icon, tab_x + 8, tab_y + 8, tab_col);
     print_string((char*)tab_title, tab_x + 48, tab_y + 8, 0x0000);
 
-    // 4. System Tray on right (x = 810 .. 1018, y = 734, w = 208, h = 30)
-    int tray_x = 810;
+    // 4. System Tray on right (x = 760 .. 1018, y = 734, w = 258, h = 30)
+    int tray_x = 760;
     int tray_y = TASKBAR_Y + 4;
-    int tray_w = 208;
+    int tray_w = 258;
     int tray_h = 30;
 
     draw_3d_box(tray_x, tray_y, tray_w, tray_h, 1, 0xCE79);
@@ -223,6 +223,10 @@ void taskbar_draw(void) {
     int disk_ok = maxfs_is_mounted();
     draw_rect(tray_x + 48, tray_y + 5, 38, 18, 0x0000);
     print_string("HDD", tray_x + 52, tray_y + 9, disk_ok ? 0x07E0 : 0x7BEF);
+
+    // [R3] Ring 3 Active Badge
+    draw_rect(tray_x + 92, tray_y + 5, 32, 18, 0x0000);
+    print_string("R3", tray_x + 98, tray_y + 9, 0x07E0); // Bright green
 
     // Real-Time Clock
     taskbar_draw_clock();
