@@ -816,9 +816,44 @@ void save_open() {
         create_file("App.mapp", ftext); 
     }
     else { 
-        create_file("Unnamed.txt", ftext); 
+        create_file("Unnamed.txt", ftext);
+                for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                    for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                        if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+                            gfx_memory[y * 1024 + x] = 0x0320;
+                        }
+                        else if (y < win_y + 25) {
+                            gfx_memory[y * 1024 + x] = 0x3DEF;
+                        }
+                        else if (y < win_y + 31) {
+                            gfx_memory[y * 1024 + x] = 0x24EE;
+                        }
+                        else if (y < win_y + 37) {
+                            gfx_memory[y * 1024 + x] = 0x11EB;
+                        }
+                        else {
+                            gfx_memory[y * 1024 + x] = 0xFFFF;
+                        }
+                    }
+                }
+                int swin_x = win_x + 20;
+                int swin_y = win_y + 22;
+                int swin_w = win_w - 40;
+                gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
+                gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
+                int right_edges = swin_x + swin_w - 1;
+                gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
+                gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+                print_string(ram_disk[fid].name, win_x + 28, win_y + 28, 0x0000);
+                print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
+                print_string(ram_disk[fid].content, win_x + 30, help_col + 6, 0x0000);
+                print_string("Press c to close this window.", win_x + 30, help_col + 20, 0x0000);
     }
-
+    if (fid < 4) {
+        fid ++;
+    }
     repeats = 1;
     if (str_in(ftext, ".mapp")) {
         if (str_in(ftext, "repeat0")) { repeats = 0; }
@@ -833,7 +868,7 @@ void save_open() {
                     unsigned char scan_code = inb(0x60);
                     if (scan_code < 0x80) {
                         char ascii_char = scan_code_to_ascii(scan_code);
-                        if (ascii_char != 'e') { break; }
+                        if (ascii_char != '10') { break; }
                     }
                 }
             }
@@ -970,7 +1005,7 @@ void save_open() {
                 gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
                 gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
                 gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
-                print_string("App", win_x + 27, win_y + 27, 0xFFFF);
+                print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
             }
         }
         if (str_in(ftext, "printtext")) { print_string(ftext, 300, 359, 0x0000); }
@@ -1092,7 +1127,13 @@ void filew() {
                     }
                     else if (ascii_char == 'F') {
                         play_sound(800); sleep(100); no_sound();
+                        draw_window();
                         save_open();
+                        w_mode = 0;
+                        break;
+                    }
+                    else if (ascii_char == 'S') {
+                        play_sound(150); sleep(100); no_sound();
                         w_mode = 0;
                         drag = 0;
                         draw_window();
@@ -1191,7 +1232,7 @@ void cpu_win() {
         print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Your CPU:", win_x + 30, help_col, 0x0000);
         print_string(cpu_name, win_x + 120, help_col, 0x0000);
-        print_string("Press c to close.", win_x + 30, help_col + 15, 0x0000);
+        print_string("Press c to close this window.", win_x + 30, help_col + 15, 0x0000);
     }
 }
 
@@ -1436,7 +1477,7 @@ void draw_filebtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
             gfx_memory[y * 1024 + x] = 0xC618;
         }
     }
-    print_string("File", txt_pos_x, txt_pos_y, 0x0000);
+    print_string("Note", txt_pos_x, txt_pos_y, 0x0000);
 }
 void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
