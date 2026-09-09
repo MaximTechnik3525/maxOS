@@ -44,11 +44,18 @@ struct multiboot_info {
 #include "calc.h"
 #include "sysinfo.h"
 #include "pong.h"
+#include "mem.h"
 #include "kernel.h"
 #include "user.h"
 #include "idt.h"
 #include "debug.h"
 #include "user/syscall.h"
+
+extern char _kernel_start[];
+extern char _kernel_end[];
+
+static unsigned int mb_mem_lower = 640;
+static unsigned int mb_mem_upper = 130048;
 
 unsigned short* _gfx_memory_backend;
 unsigned int REAL_PITCH = 1024;
@@ -206,6 +213,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     struct multiboot_info* mbi = (struct multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
     if (mbi->framebuffer_pitch > 0) { REAL_PITCH = mbi->framebuffer_pitch / 2; }
+    if (mbi->flags & 0x01) {
+        mb_mem_lower = mbi->mem_lower;
+        mb_mem_upper = mbi->mem_upper;
+    }
 
     // Initialize Diagnostic Serial Debugger (COM1 38400 baud)
     debug_init();
@@ -247,6 +258,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     calc_init();
     sysinfo_init();
     pong_init();
+    mem_init();
 
     drag = 0;
     draw_window();
@@ -335,6 +347,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (ascii_char == 'E' || ascii_char == 'e') { maxp_launch_app(MAXP_APP_EXPLORER); continue; }
                     if (ascii_char == 'K' || ascii_char == 'k') { maxp_launch_app(MAXP_APP_CALC); continue; }
                     if (ascii_char == 'S' || ascii_char == 's') { maxp_launch_app(MAXP_APP_SYSINFO); continue; }
+                    if (ascii_char == 'R' || ascii_char == 'r') { maxp_launch_app(MAXP_APP_MEM); continue; }
                     if (ascii_char == 'P' || ascii_char == 'p') { maxp_launch_app(MAXP_APP_PONG); continue; }
                     if (ascii_char == 'I' || ascii_char == 'i') { maxp_launch_app(MAXP_APP_INSTALLER); continue; }
                     if (ascii_char == 'U' || ascii_char == 'u') { ring3_demo_launch(); continue; }
@@ -379,6 +392,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             if (explorer_open && explorer_handle_click(pos_x, pos_y)) continue;
                             if (calc_open && calc_handle_click(pos_x, pos_y)) continue;
                             if (sysinfo_open && sysinfo_handle_click(pos_x, pos_y)) continue;
+                            if (mem_open && mem_handle_click(pos_x, pos_y)) continue;
                             if (pong_open && pong_handle_click(pos_x, pos_y)) continue;
                             if (installer_open && installer_handle_click(pos_x, pos_y)) continue;
                         }
@@ -441,6 +455,60 @@ void int_str(int num, char* str) {
         char temp = str[j];
         str[j] = str[len - 1 - j];
         str[len - 1 - j] = temp;
+    }
+}
+
+void get_system_mem_info(struct SystemMemInfo* info) {
+    if (!info) return;
+
+    info->lower_kb = mb_mem_lower;
+    info->upper_kb = mb_mem_upper;
+
+    // Total memory: 1024 KB conventional + upper_kb extended memory
+    if (mb_mem_upper > 0) {
+        info->total_kb = 1024 + mb_mem_upper;
+    } else {
+        info->total_kb = 128 * 1024;
+    }
+
+    // Kernel binary size in RAM
+    unsigned long k_size = (unsigned long)(_kernel_end - _kernel_start);
+    info->kernel_kb = (unsigned int)((k_size + 1023) / 1024);
+
+    // VESA VBE linear framebuffer: 1024 * 768 * 2 = 1,572,864 bytes = 1536 KB
+    info->vram_kb = (SCREEN_WIDTH * SCREEN_HEIGHT * 2) / 1024;
+
+    // 64-bit Paging structures: PML4 (4KB) + PDPT (4KB) + 4xPD (16KB) = 24 KB
+    info->paging_kb = 24;
+
+    // Stacks: Kernel stack (16KB) + Ring 3 User stack (16KB) + TSS (4KB) = 36 KB
+    info->stacks_kb = 36;
+
+    // maxFS storage: 32 files * 1064 bytes + metadata = ~38 KB
+    info->ramdisk_kb = 38;
+
+    // Dynamic app heap & active buffers: 1024 KB base + 256 KB per open app
+    unsigned int active_apps_count = 0;
+    if (notepad_open) active_apps_count++;
+    if (explorer_open) active_apps_count++;
+    if (calc_open) active_apps_count++;
+    if (sysinfo_open) active_apps_count++;
+    if (pong_open) active_apps_count++;
+    if (installer_open) active_apps_count++;
+    if (mem_open) active_apps_count++;
+
+    info->apps_dynamic_kb = 1024 + (active_apps_count * 256);
+
+    info->used_kb = info->kernel_kb + info->vram_kb + info->paging_kb +
+                    info->stacks_kb + info->ramdisk_kb + info->apps_dynamic_kb;
+
+    if (info->used_kb > info->total_kb) {
+        info->free_kb = 0;
+        info->usage_percent = 100;
+    } else {
+        info->free_kb = info->total_kb - info->used_kb;
+        info->usage_percent = (unsigned int)(((unsigned long long)info->used_kb * 100) / info->total_kb);
+        if (info->usage_percent == 0 && info->used_kb > 0) info->usage_percent = 1;
     }
 }
 void pump_events_nonblocking(void) {
@@ -881,16 +949,17 @@ void draw_ui_button(int x, int y, int w, int h, const char* text, unsigned short
 int desktop_handle_click(int mouse_x, int mouse_y) {
     // 1. Check Desktop Icons on the left side
     if (mouse_x >= 10 && mouse_x <= 95) {
-        for (int i = 0; i < 7; i++) {
-            int iy = 20 + (i * 86);
+        for (int i = 0; i < 8; i++) {
+            int iy = 16 + (i * 84);
             if (mouse_y >= iy - 4 && mouse_y <= iy + 74) {
                 if (i == 0) maxp_launch_app(MAXP_APP_NOTEPAD);
                 else if (i == 1) maxp_launch_app(MAXP_APP_EXPLORER);
                 else if (i == 2) maxp_launch_app(MAXP_APP_CALC);
                 else if (i == 3) maxp_launch_app(MAXP_APP_SYSINFO);
-                else if (i == 4) maxp_launch_app(MAXP_APP_PONG);
-                else if (i == 5) maxp_launch_app(MAXP_APP_INSTALLER);
-                else if (i == 6) {
+                else if (i == 4) maxp_launch_app(MAXP_APP_MEM);
+                else if (i == 5) maxp_launch_app(MAXP_APP_PONG);
+                else if (i == 6) maxp_launch_app(MAXP_APP_INSTALLER);
+                else if (i == 7) {
                     maxp_launch_app(MAXP_APP_NOTEPAD);
                     notepad_open_file_by_name("readme.txt");
                     draw_window();
@@ -908,43 +977,47 @@ int desktop_handle_click(int mouse_x, int mouse_y) {
 
         // Row 1 (y = card_y + 142 .. card_y + 168)
         if (mouse_y >= card_y + 142 && mouse_y <= card_y + 168) {
-            if (mouse_x >= card_x + 30 && mouse_x <= card_x + 205) {
+            if (mouse_x >= card_x + 30 && mouse_x <= card_x + 165) {
                 maxp_launch_app(MAXP_APP_NOTEPAD);
                 return 1;
             }
-            if (mouse_x >= card_x + 230 && mouse_x <= card_x + 405) {
+            if (mouse_x >= card_x + 175 && mouse_x <= card_x + 310) {
                 maxp_launch_app(MAXP_APP_EXPLORER);
                 return 1;
             }
-            if (mouse_x >= card_x + 430 && mouse_x <= card_x + 605) {
+            if (mouse_x >= card_x + 320 && mouse_x <= card_x + 455) {
                 maxp_launch_app(MAXP_APP_CALC);
+                return 1;
+            }
+            if (mouse_x >= card_x + 465 && mouse_x <= card_x + 610) {
+                maxp_launch_app(MAXP_APP_SYSINFO);
                 return 1;
             }
         }
 
         // Row 2 (y = card_y + 178 .. card_y + 204)
         if (mouse_y >= card_y + 178 && mouse_y <= card_y + 204) {
-            if (mouse_x >= card_x + 30 && mouse_x <= card_x + 205) {
-                maxp_launch_app(MAXP_APP_SYSINFO);
+            if (mouse_x >= card_x + 30 && mouse_x <= card_x + 165) {
+                maxp_launch_app(MAXP_APP_MEM);
                 return 1;
             }
-            if (mouse_x >= card_x + 230 && mouse_x <= card_x + 405) {
+            if (mouse_x >= card_x + 175 && mouse_x <= card_x + 310) {
                 maxp_launch_app(MAXP_APP_PONG);
                 return 1;
             }
-            if (mouse_x >= card_x + 430 && mouse_x <= card_x + 605) {
+            if (mouse_x >= card_x + 320 && mouse_x <= card_x + 455) {
                 maxp_launch_app(MAXP_APP_INSTALLER);
+                return 1;
+            }
+            if (mouse_x >= card_x + 465 && mouse_x <= card_x + 610) {
+                ring3_demo_launch();
                 return 1;
             }
         }
 
         // Row 3 (y = card_y + 214 .. card_y + 240)
         if (mouse_y >= card_y + 214 && mouse_y <= card_y + 240) {
-            if (mouse_x >= card_x + 30 && mouse_x <= card_x + 310) {
-                ring3_demo_launch();
-                return 1;
-            }
-            if (mouse_x >= card_x + 325 && mouse_x <= card_x + 605) {
+            if (mouse_x >= card_x + 30 && mouse_x <= card_x + 610) {
                 theme = (theme % 9) + 1;
                 draw_window();
                 draw_cursor(pos_x, pos_y);
@@ -1012,18 +1085,19 @@ void draw_window() {
         print_string("- Click any button below to launch an application directly:", card_x + 25, card_y + 116, 0x0200);
 
         // Row 1 3D Buttons
-        draw_ui_button(card_x + 30, card_y + 142, 175, 26, "Notepad.maxP", 0xCE79, 0x0000, 0);
-        draw_ui_button(card_x + 230, card_y + 142, 175, 26, "Explorer.maxP", 0xCE79, 0x0000, 0);
-        draw_ui_button(card_x + 430, card_y + 142, 175, 26, "Calc.maxP", 0xCE79, 0x0000, 0);
+        draw_ui_button(card_x + 30, card_y + 142, 135, 26, "Notepad.maxP", 0xCE79, 0x0000, 0);
+        draw_ui_button(card_x + 175, card_y + 142, 135, 26, "Explorer.maxP", 0xCE79, 0x0000, 0);
+        draw_ui_button(card_x + 320, card_y + 142, 135, 26, "Calc.maxP", 0xCE79, 0x0000, 0);
+        draw_ui_button(card_x + 465, card_y + 142, 145, 26, "SysInfo.maxP", 0xCE79, 0x0000, 0);
 
         // Row 2 3D Buttons
-        draw_ui_button(card_x + 30, card_y + 178, 175, 26, "SysInfo.maxP", 0xCE79, 0x0000, 0);
-        draw_ui_button(card_x + 230, card_y + 178, 175, 26, "Pong.maxP", 0xCE79, 0x0000, 0);
-        draw_ui_button(card_x + 430, card_y + 178, 175, 26, "Install.maxP", 0xCE79, 0x0000, 0);
+        draw_ui_button(card_x + 30, card_y + 178, 135, 26, "Mem.maxP", 0x05E0, 0x0000, 0);
+        draw_ui_button(card_x + 175, card_y + 178, 135, 26, "Pong.maxP", 0xCE79, 0x0000, 0);
+        draw_ui_button(card_x + 320, card_y + 178, 135, 26, "Install.maxP", 0xCE79, 0x0000, 0);
+        draw_ui_button(card_x + 465, card_y + 178, 145, 26, "Ring 3 Demo", 0x03EA, 0xFFFF, 0);
 
         // Row 3 3D Buttons
-        draw_ui_button(card_x + 30, card_y + 214, 280, 26, "[*] Ring 3 User Mode Demo", 0x03EA, 0xFFFF, 0);
-        draw_ui_button(card_x + 325, card_y + 214, 280, 26, "Change Desktop Theme", 0x24EE, 0x0000, 0);
+        draw_ui_button(card_x + 30, card_y + 214, 580, 26, "Change Desktop Theme (Keys 1-9)", 0xBDD7, 0x0000, 0);
 
         print_string("Security: Ring 3 CPL=3 Protected User Space (All Apps)", card_x + 25, card_y + 254, 0x0200);
         print_string("Hardware: 64-bit IDT Interrupts | PIT 1000Hz (Non-blocking)", card_x + 25, card_y + 274, 0x11EB);
@@ -1036,6 +1110,7 @@ void draw_window() {
             else if (explorer_open) { explorer_draw(); }
             else if (calc_open) { calc_draw(); }
             else if (sysinfo_open) { sysinfo_draw(); }
+            else if (mem_open) { mem_draw(); }
             else if (pong_open) { pong_draw(); }
             else if (installer_open) { installer_draw(); }
         } else {

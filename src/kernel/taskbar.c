@@ -7,6 +7,7 @@
 #include "calc.h"
 #include "sysinfo.h"
 #include "pong.h"
+#include "mem.h"
 
 #include "kernel.h"
 #include "user.h"
@@ -111,29 +112,30 @@ void taskbar_draw_clock(void) {
 }
 
 void taskbar_draw_desktop_icons(void) {
-    // 7 desktop icons on the left side
-    const char* icon_names[7] = {
-        "Notepad", "Explorer", "Calc", "SysInfo", "Pong", "Installer", "Readme"
+    // 8 desktop icons on the left side
+    const char* icon_names[8] = {
+        "Notepad", "Explorer", "Calc", "SysInfo", "Mem", "Pong", "Installer", "Readme"
     };
-    const char* icon_files[7] = {
-        "notepad.maxP", "explorer.maxP", "calc.maxP", "sysinfo.maxP", "pong.maxP", "install.maxP", "readme.txt"
+    const char* icon_files[8] = {
+        "notepad.maxP", "explorer.maxP", "calc.maxP", "sysinfo.maxP", "mem.maxP", "pong.maxP", "install.maxP", "readme.txt"
     };
-    const char* icon_badges[7] = {
-        "NP", "EXP", "CAL", "CPU", "PNG", "INS", "TXT"
+    const char* icon_badges[8] = {
+        "NP", "EXP", "CAL", "CPU", "MEM", "PNG", "INS", "TXT"
     };
-    unsigned short icon_colors[7] = {
+    unsigned short icon_colors[8] = {
         0x03EA, // Green
         0x24EE, // Cyan
         0xF621, // Amber
         0x0DE5, // Teal
+        0x05E0, // Lime green for Mem
         0x7BEF, // Steel blue
         0x92E0, // Purple
         0xFFFF  // White
     };
 
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 8; i++) {
         int ix = 20;
-        int iy = 20 + (i * 86);
+        int iy = 16 + (i * 84);
 
         // Icon Graphic Box (36x36 3D beveled)
         draw_3d_box(ix + 12, iy, 38, 38, 0, icon_colors[i]);
@@ -213,6 +215,10 @@ void taskbar_draw(void) {
         tab_title = "Install.maxP";
         tab_icon = "[INS]";
         tab_col = 0x92E0;
+    } else if (active_app == MAXP_APP_MEM) {
+        tab_title = "Mem.maxP";
+        tab_icon = "[MEM]";
+        tab_col = 0x05E0;
     }
 
     int is_tab_active = (active_app != MAXP_APP_NONE && !app_minimized);
@@ -247,9 +253,9 @@ void taskbar_draw(void) {
     // 5. Start Menu Popup if open
     if (start_menu_open) {
         int sm_x = 4;
-        int sm_y = 445;
+        int sm_y = 415;
         int sm_w = 230;
-        int sm_h = 282;
+        int sm_h = 312;
 
         // Popup frame with 3D shadow
         draw_rect(sm_x, sm_y, sm_w, sm_h, 0x0000);
@@ -273,19 +279,20 @@ void taskbar_draw(void) {
         print_string("maxOS v3.0 x64", sm_x + 34, sm_y + 8, 0xFFFF);
 
         // Program items
-        const char* sm_items[6] = {
+        const char* sm_items[7] = {
             "Notepad.maxP",
             "Explorer.maxP",
             "Calculator.maxP",
             "SysInfo.maxP",
+            "Mem Monitor.maxP",
             "Pong Arcade.maxP",
             "Installer.maxP"
         };
-        const char* sm_badges[6] = { "NP", "EXP", "CAL", "CPU", "PNG", "INS" };
-        unsigned short sm_colors[6] = { 0x03EA, 0x24EE, 0xF621, 0x0DE5, 0x7BEF, 0x92E0 };
+        const char* sm_badges[7] = { "NP", "EXP", "CAL", "CPU", "MEM", "PNG", "INS" };
+        unsigned short sm_colors[7] = { 0x03EA, 0x24EE, 0xF621, 0x0DE5, 0x05E0, 0x7BEF, 0x92E0 };
 
-        for (int i = 0; i < 6; i++) {
-            int iy = sm_y + 32 + (i * 28);
+        for (int i = 0; i < 7; i++) {
+            int iy = sm_y + 30 + (i * 27);
             draw_rect(sm_x + 28, iy, 30, 22, sm_colors[i]);
             int badge_x = (i == 0) ? (sm_x + 34) : (sm_x + 30);
             print_string((char*)sm_badges[i], badge_x, iy + 6, 0x0000);
@@ -293,17 +300,17 @@ void taskbar_draw(void) {
         }
 
         // Separator line
-        draw_rect(sm_x + 28, sm_y + 204, sm_w - 32, 1, 0x7BEF);
-        draw_rect(sm_x + 28, sm_y + 205, sm_w - 32, 1, 0xFFFF);
+        draw_rect(sm_x + 28, sm_y + 222, sm_w - 32, 1, 0x7BEF);
+        draw_rect(sm_x + 28, sm_y + 223, sm_w - 32, 1, 0xFFFF);
 
         // System Options
-        draw_rect(sm_x + 28, sm_y + 212, 30, 22, 0xFCEF);
-        print_string("TH", sm_x + 34, sm_y + 218, 0x0000);
-        print_string("Themes (Key 1-9)", sm_x + 64, sm_y + 218, 0x0000);
+        draw_rect(sm_x + 28, sm_y + 230, 30, 22, 0xFCEF);
+        print_string("TH", sm_x + 34, sm_y + 236, 0x0000);
+        print_string("Themes (Key 1-9)", sm_x + 64, sm_y + 236, 0x0000);
 
-        draw_rect(sm_x + 28, sm_y + 242, 30, 22, 0xF9A6);
-        print_string("OFF", sm_x + 30, sm_y + 248, 0x0000);
-        print_string("Shutdown System", sm_x + 64, sm_y + 248, 0x0000);
+        draw_rect(sm_x + 28, sm_y + 260, 30, 22, 0xF9A6);
+        print_string("OFF", sm_x + 30, sm_y + 266, 0x0000);
+        print_string("Shutdown System", sm_x + 64, sm_y + 266, 0x0000);
     }
 }
 
@@ -317,29 +324,30 @@ int taskbar_handle_click(int mouse_x, int mouse_y) {
     // 2. If Start Menu is open, check menu items
     if (start_menu_open) {
         int sm_x = 4;
-        int sm_y = 445;
+        int sm_y = 415;
         int sm_w = 230;
-        int sm_h = 282;
+        int sm_h = 312;
 
         if (mouse_x >= sm_x && mouse_x <= sm_x + sm_w && mouse_y >= sm_y && mouse_y <= sm_y + sm_h) {
-            // Check 6 program items
-            for (int i = 0; i < 6; i++) {
-                int iy = sm_y + 32 + (i * 28);
-                if (mouse_y >= iy && mouse_y <= iy + 26) {
+            // Check 7 program items
+            for (int i = 0; i < 7; i++) {
+                int iy = sm_y + 30 + (i * 27);
+                if (mouse_y >= iy && mouse_y <= iy + 25) {
                     start_menu_open = 0;
                     app_minimized = 0;
                     if (i == 0) maxp_launch_app(MAXP_APP_NOTEPAD);
                     else if (i == 1) maxp_launch_app(MAXP_APP_EXPLORER);
                     else if (i == 2) maxp_launch_app(MAXP_APP_CALC);
                     else if (i == 3) maxp_launch_app(MAXP_APP_SYSINFO);
-                    else if (i == 4) maxp_launch_app(MAXP_APP_PONG);
-                    else if (i == 5) maxp_launch_app(MAXP_APP_INSTALLER);
+                    else if (i == 4) maxp_launch_app(MAXP_APP_MEM);
+                    else if (i == 5) maxp_launch_app(MAXP_APP_PONG);
+                    else if (i == 6) maxp_launch_app(MAXP_APP_INSTALLER);
                     return 1;
                 }
             }
 
             // Check Themes item
-            if (mouse_y >= sm_y + 212 && mouse_y <= sm_y + 236) {
+            if (mouse_y >= sm_y + 228 && mouse_y <= sm_y + 252) {
                 theme = (theme % 9) + 1;
                 start_menu_open = 0;
                 draw_window();
@@ -349,7 +357,7 @@ int taskbar_handle_click(int mouse_x, int mouse_y) {
             }
 
             // Check Shutdown item
-            if (mouse_y >= sm_y + 242 && mouse_y <= sm_y + 270) {
+            if (mouse_y >= sm_y + 258 && mouse_y <= sm_y + 286) {
                 start_menu_open = 0;
                 shutdown();
                 return 1;
@@ -379,18 +387,19 @@ int taskbar_handle_click(int mouse_x, int mouse_y) {
     }
 
     // 4. Check Desktop Icons clicks on left (when not covered by active window or if clicked directly)
-    for (int i = 0; i < 7; i++) {
+    for (int i = 0; i < 8; i++) {
         int ix = 20;
-        int iy = 20 + (i * 86);
+        int iy = 16 + (i * 84);
         if (mouse_x >= ix && mouse_x <= ix + 64 && mouse_y >= iy && mouse_y <= iy + 76) {
             app_minimized = 0;
             if (i == 0) maxp_launch_app(MAXP_APP_NOTEPAD);
             else if (i == 1) maxp_launch_app(MAXP_APP_EXPLORER);
             else if (i == 2) maxp_launch_app(MAXP_APP_CALC);
             else if (i == 3) maxp_launch_app(MAXP_APP_SYSINFO);
-            else if (i == 4) maxp_launch_app(MAXP_APP_PONG);
-            else if (i == 5) maxp_launch_app(MAXP_APP_INSTALLER);
-            else if (i == 6) {
+            else if (i == 4) maxp_launch_app(MAXP_APP_MEM);
+            else if (i == 5) maxp_launch_app(MAXP_APP_PONG);
+            else if (i == 6) maxp_launch_app(MAXP_APP_INSTALLER);
+            else if (i == 7) {
                 // Open readme.txt in Notepad
                 notepad_open_file_by_name("readme.txt");
                 maxp_set_active_app(MAXP_APP_NOTEPAD);
@@ -435,8 +444,9 @@ int taskbar_handle_key(char ascii_char, unsigned char scan_code) {
         if (ascii_char == '2') { start_menu_open = 0; maxp_launch_app(MAXP_APP_EXPLORER); return 1; }
         if (ascii_char == '3') { start_menu_open = 0; maxp_launch_app(MAXP_APP_CALC); return 1; }
         if (ascii_char == '4') { start_menu_open = 0; maxp_launch_app(MAXP_APP_SYSINFO); return 1; }
-        if (ascii_char == '5') { start_menu_open = 0; maxp_launch_app(MAXP_APP_PONG); return 1; }
-        if (ascii_char == '6') { start_menu_open = 0; maxp_launch_app(MAXP_APP_INSTALLER); return 1; }
+        if (ascii_char == '5') { start_menu_open = 0; maxp_launch_app(MAXP_APP_MEM); return 1; }
+        if (ascii_char == '6') { start_menu_open = 0; maxp_launch_app(MAXP_APP_PONG); return 1; }
+        if (ascii_char == '7') { start_menu_open = 0; maxp_launch_app(MAXP_APP_INSTALLER); return 1; }
         if (ascii_char == 't' || ascii_char == 'T') {
             theme = (theme % 9) + 1;
             start_menu_open = 0;

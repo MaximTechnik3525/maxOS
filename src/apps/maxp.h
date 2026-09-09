@@ -8,8 +8,9 @@
 #define MAXP_APP_SYSINFO   4
 #define MAXP_APP_PONG      5
 #define MAXP_APP_INSTALLER 6
+#define MAXP_APP_MEM       7
 
-#define MAXP_APP_COUNT     6
+#define MAXP_APP_COUNT     7
 
 struct MaxPAppInfo {
     int id;

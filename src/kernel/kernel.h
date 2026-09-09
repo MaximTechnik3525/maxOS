@@ -47,4 +47,22 @@ void draw_ui_button(int x, int y, int w, int h, const char* text, unsigned short
 int desktop_handle_click(int mouse_x, int mouse_y);
 void pump_events_nonblocking(void);
 
+// Memory Statistics for System & Mem App
+struct SystemMemInfo {
+    unsigned int total_kb;
+    unsigned int used_kb;
+    unsigned int free_kb;
+    unsigned int lower_kb;
+    unsigned int upper_kb;
+    unsigned int kernel_kb;
+    unsigned int vram_kb;
+    unsigned int paging_kb;
+    unsigned int stacks_kb;
+    unsigned int ramdisk_kb;
+    unsigned int apps_dynamic_kb;
+    unsigned int usage_percent;
+};
+
+void get_system_mem_info(struct SystemMemInfo* info);
+
 #endif // KERNEL_H

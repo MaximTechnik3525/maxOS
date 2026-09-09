@@ -46,6 +46,7 @@ $CC -c src/apps/explorer.c -o build/explorer.o $CFLAGS
 $CC -c src/apps/calc.c -o build/calc.o $CFLAGS
 $CC -c src/apps/sysinfo.c -o build/sysinfo.o $CFLAGS
 $CC -c src/apps/pong.c -o build/pong.o $CFLAGS
+$CC -c src/apps/mem.c -o build/mem.o $CFLAGS
 $CC -c src/kernel/kernel.c -o build/kernel.o $CFLAGS
 
 echo "=== [3/5] Линковка 64-битного ядра (ELF64) ==="
@@ -53,7 +54,7 @@ $LD --no-warn-rwx-segments -T src/linker.ld -o build/mykernel.bin \
     build/entry.o build/mbr_data.o build/syscall_asm.o build/idt_asm.o \
     build/debug.o build/idt.o build/user.o build/kernel.o build/ata.o \
     build/maxfs.o build/maxp.o build/taskbar.o build/notepad.o \
-    build/installer.o build/explorer.o build/calc.o build/sysinfo.o build/pong.o
+    build/installer.o build/explorer.o build/calc.o build/sysinfo.o build/pong.o build/mem.o
 
 echo "=== [4/5] Подготовка структуры ISO и сборка maxos.iso ==="
 mkdir -p iso/boot/grub

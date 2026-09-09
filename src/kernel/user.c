@@ -8,6 +8,7 @@
 #include "sysinfo.h"
 #include "pong.h"
 #include "installer.h"
+#include "mem.h"
 #include "debug.h"
 #include "ata.h"
 #include "user/syscall.h"
@@ -202,6 +203,7 @@ static void ring3_app_worker(void) {
         else if (r3_target_app == MAXP_APP_SYSINFO) sysinfo_draw();
         else if (r3_target_app == MAXP_APP_PONG) pong_draw();
         else if (r3_target_app == MAXP_APP_INSTALLER) installer_draw();
+        else if (r3_target_app == MAXP_APP_MEM) mem_draw();
     } else if (r3_action == 1) {
         // Click handler in Ring 3
         if (r3_target_app == MAXP_APP_NOTEPAD) r3_result = notepad_handle_click(r3_arg_x, r3_arg_y);
@@ -210,6 +212,7 @@ static void ring3_app_worker(void) {
         else if (r3_target_app == MAXP_APP_SYSINFO) r3_result = sysinfo_handle_click(r3_arg_x, r3_arg_y);
         else if (r3_target_app == MAXP_APP_PONG) r3_result = pong_handle_click(r3_arg_x, r3_arg_y);
         else if (r3_target_app == MAXP_APP_INSTALLER) r3_result = installer_handle_click(r3_arg_x, r3_arg_y);
+        else if (r3_target_app == MAXP_APP_MEM) r3_result = mem_handle_click(r3_arg_x, r3_arg_y);
     } else if (r3_action == 2) {
         // Keyboard handler in Ring 3
         if (r3_target_app == MAXP_APP_NOTEPAD) r3_result = notepad_handle_key(r3_arg_ch, r3_arg_scan);
@@ -218,6 +221,7 @@ static void ring3_app_worker(void) {
         else if (r3_target_app == MAXP_APP_SYSINFO) r3_result = sysinfo_handle_key(r3_arg_ch, r3_arg_scan);
         else if (r3_target_app == MAXP_APP_PONG) r3_result = pong_handle_key(r3_arg_ch, r3_arg_scan);
         else if (r3_target_app == MAXP_APP_INSTALLER) r3_result = installer_handle_key(r3_arg_ch, r3_arg_scan);
+        else if (r3_target_app == MAXP_APP_MEM) r3_result = mem_handle_key(r3_arg_ch, r3_arg_scan);
     } else if (r3_action == 3) {
         // Step handler in Ring 3
         if (r3_target_app == MAXP_APP_PONG) pong_tick();

@@ -6,6 +6,7 @@
 #include "calc.h"
 #include "sysinfo.h"
 #include "pong.h"
+#include "mem.h"
 
 #include "kernel.h"
 #include "debug.h"
@@ -18,7 +19,8 @@ static const struct MaxPAppInfo app_registry[MAXP_APP_COUNT] = {
     { MAXP_APP_CALC,      "Calculator",  "calc.maxP",     "GUI Calculator",             "CALC", 0xF621 },
     { MAXP_APP_SYSINFO,   "SysInfo",     "sysinfo.maxP",  "x86_64 Long Mode Info",      "CPU",  0x0DE5 },
     { MAXP_APP_PONG,      "Pong Arcade", "pong.maxP",     "Retro Arcade Game",          "PONG", 0x7BEF },
-    { MAXP_APP_INSTALLER, "Installer",   "install.maxP",  "maxOS HDD Setup",            "INST", 0x92E0 }
+    { MAXP_APP_INSTALLER, "Installer",   "install.maxP",  "maxOS HDD Setup",            "INST", 0x92E0 },
+    { MAXP_APP_MEM,       "Mem",         "mem.maxP",      "RAM & Memory Usage Monitor", "MEM",  0x24EE }
 };
 
 const struct MaxPAppInfo* maxp_get_app_info(int app_id) {
@@ -58,6 +60,7 @@ void maxp_close_all_windows(void) {
     if (calc_open) calc_close_window();
     if (sysinfo_open) sysinfo_close_window();
     if (pong_open) pong_close_window();
+    if (mem_open) mem_close_window();
     active_app_id = MAXP_APP_NONE;
 }
 
@@ -114,6 +117,9 @@ int maxp_launch_app(int app_id) {
         case MAXP_APP_INSTALLER:
             installer_open_window();
             break;
+        case MAXP_APP_MEM:
+            mem_open_window();
+            break;
         default:
             active_app_id = MAXP_APP_NONE;
             draw_window();
@@ -141,6 +147,9 @@ int maxp_launch_file(const char* filename) {
     if (str_equal(filename, "install.maxP") || str_equal(filename, "Install.maxP")) {
         return maxp_launch_app(MAXP_APP_INSTALLER);
     }
+    if (str_equal(filename, "mem.maxP") || str_equal(filename, "Mem.maxP")) {
+        return maxp_launch_app(MAXP_APP_MEM);
+    }
 
     // Inspect content if custom named .maxP file
     int slot = maxfs_find_file(filename);
@@ -159,6 +168,7 @@ int maxp_launch_file(const char* filename) {
                     if (target[0] == 's' && target[1] == 'y') return maxp_launch_app(MAXP_APP_SYSINFO);
                     if (target[0] == 'p' && target[1] == 'o') return maxp_launch_app(MAXP_APP_PONG);
                     if (target[0] == 'i' && target[1] == 'n') return maxp_launch_app(MAXP_APP_INSTALLER);
+                    if (target[0] == 'm' && target[1] == 'e') return maxp_launch_app(MAXP_APP_MEM);
                 }
                 idx++;
             }
@@ -192,6 +202,10 @@ void maxp_init(void) {
     if (maxfs_find_file("install.maxP") == -1) {
         const char* inst_content = "MAXP\nNAME=Installer\nEXEC=installer\nICON=INST\nDESC=maxOS System Setup & HDD Installer\n";
         maxfs_write_file("install.maxP", inst_content, 83);
+    }
+    if (maxfs_find_file("mem.maxP") == -1) {
+        const char* mem_content = "MAXP\nNAME=Mem\nEXEC=mem\nICON=MEM\nDESC=maxOS RAM & Memory Monitor\n";
+        maxfs_write_file("mem.maxP", mem_content, 66);
     }
     if (maxfs_find_file("readme.txt") == -1) {
         const char* rm = "Welcome to maxOS RedCycle v3.0 x86_64!\nPrograms use .maxP extension.\nUse Taskbar or Desktop icons to run apps.\n";
