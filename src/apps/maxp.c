@@ -7,10 +7,7 @@
 #include "sysinfo.h"
 #include "pong.h"
 
-extern void play_sound(unsigned int nfreq);
-extern void sleep(unsigned int ms);
-extern void no_sound(void);
-extern void draw_window(void);
+#include "kernel.h"
 
 static int active_app_id = MAXP_APP_NONE;
 

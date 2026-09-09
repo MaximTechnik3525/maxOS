@@ -2,23 +2,9 @@
 #include "maxfs.h"
 #include "maxp.h"
 
-extern unsigned short* _gfx_memory_backend;
-#define gfx_memory _gfx_memory_backend
+#include "kernel.h"
 
-extern int win_x, win_y, win_w, win_h;
-extern int pos_x, pos_y;
-extern int drag;
 extern int km_mode;
-
-void print_string(char* str, int x, int y, unsigned short color);
-void draw_char(char c, int start_x, int start_y, unsigned short color);
-void draw_cursor(int mouse_x, int mouse_y);
-void prev_cursor(void);
-void draw_window(void);
-void play_sound(unsigned int nfreq);
-void sleep(unsigned int ms);
-void no_sound(void);
-void int_str(int num, char* str);
 
 int notepad_open = 0;
 char ftext[1024] = {0};
@@ -56,17 +42,6 @@ void notepad_init(void) {
     fname_input[8] = '\0';
     fname_len = 8;
     for (int i = 0; i < 1024; i++) ftext[i] = '\0';
-}
-
-static void draw_rect(int rx, int ry, int rw, int rh, unsigned short color) {
-    for (int y = ry; y < ry + rh; y++) {
-        if (y < 0 || y >= 768) continue;
-        int row = y * 1024;
-        for (int x = rx; x < rx + rw; x++) {
-            if (x < 0 || x >= 1024) continue;
-            gfx_memory[row + x] = color;
-        }
-    }
 }
 
 static void draw_ui_btn(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col) {

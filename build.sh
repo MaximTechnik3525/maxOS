@@ -23,7 +23,7 @@ fi
 # Создаем папку для объектных и бинарных файлов сборки
 mkdir -p build
 
-CFLAGS="-std=gnu99 -ffreestanding -O2 -Wall -Wextra -mno-red-zone -mcmodel=small -mgeneral-regs-only -Isrc -Isrc/kernel -Isrc/drivers -Isrc/fs -Isrc/apps -Isrc/boot"
+CFLAGS="-std=gnu99 -ffreestanding -O2 -Wall -Wextra -mno-red-zone -mcmodel=small -Isrc -Isrc/kernel -Isrc/drivers -Isrc/fs -Isrc/apps -Isrc/boot"
 
 echo "=== [1/5] Сборка MBR загрузчика ==="
 nasm -f bin src/boot/boot_mbr.asm -o build/boot_mbr.bin

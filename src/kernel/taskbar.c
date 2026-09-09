@@ -8,38 +8,10 @@
 #include "sysinfo.h"
 #include "pong.h"
 
-extern unsigned short* _gfx_memory_backend;
-#define gfx_memory _gfx_memory_backend
-
-extern int pos_x, pos_y;
-extern int drag;
-extern int theme;
-
-void print_string(char* str, int x, int y, unsigned short color);
-void draw_cursor(int mouse_x, int mouse_y);
-void prev_cursor(void);
-void draw_window(void);
-void play_sound(unsigned int nfreq);
-void sleep(unsigned int ms);
-void no_sound(void);
-void int_str(int num, char* str);
-unsigned char inb(unsigned short port);
-void outb(unsigned short port, unsigned char data);
-void shutdown(void);
+#include "kernel.h"
 
 int start_menu_open = 0;
 static int app_minimized = 0;
-
-static void draw_rect(int rx, int ry, int rw, int rh, unsigned short color) {
-    for (int y = ry; y < ry + rh; y++) {
-        if (y < 0 || y >= 768) continue;
-        int row = y * 1024;
-        for (int x = rx; x < rx + rw; x++) {
-            if (x < 0 || x >= 1024) continue;
-            gfx_memory[row + x] = color;
-        }
-    }
-}
 
 static void draw_3d_box(int bx, int by, int bw, int bh, int sunken, unsigned short fill) {
     draw_rect(bx, by, bw, bh, 0x0000);
