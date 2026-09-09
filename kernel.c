@@ -245,7 +245,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 
         }
     }
-    print_string("maxOS DoubleFixes", 440, 420, 0x0DE5);
+    print_string("maxOS TextExplorer", 440, 420, 0x0DE5);
     print_string("by maximTechnik3525", 10, 10, 0x24EE);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
@@ -915,6 +915,7 @@ void save_open() {
                 gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
                 gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
                 gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+                print_string("Application", win_x + 28, win_y + 28, 0x0000);
                 print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
             }
         }
@@ -944,6 +945,17 @@ void save_open() {
     }
 }
 
+int str_cmp(char* str1, char* str2) {
+    int i = 0;
+    while(str1[i] != '\0' && str2[i] != '\0') {
+        if (str1[i] != str2[i]) {
+            return 0;
+        }
+        i++;
+    }
+    if (str1[i] != str2[i]) { return 0; }
+    return 1;
+}
 void filew() {
     if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) {
         int help_col = win_y + 45;
@@ -977,8 +989,14 @@ void filew() {
         gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
         gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
         gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
-        print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
-        print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
+        if (str_cmp(ftext, ram_disk[fid - 1].content)) {
+            print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
+            print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
+        }
+        else {
+            print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
+            print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
+        }
         print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
         print_string(ftext, win_x + 30, help_col, 0x0000);
         while (1) {
@@ -996,14 +1014,6 @@ void filew() {
                             ftext[textid] = ascii_char;
                             textid++;
                             ftext[textid] = '\0';
-                            print_string(ftext, win_x + 30, help_col, 0x0000);
-                        }
-                    }
-                    else if (ascii_char == 'B') {
-                        if (textid > 0) {
-                            textid--;
-                            ftext[textid] = '\0';
-                            
                             for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
                                 for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
                                     if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
@@ -1037,6 +1047,62 @@ void filew() {
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
                             print_string(ftext, win_x + 30, help_col, 0x0000);
+                            if (str_cmp(ftext, ram_disk[fid - 1].content)) {
+                                print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
+                                print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
+                            }
+                            else {
+                                print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
+                                print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
+                            }
+                            print_string(ftext, win_x + 30, help_col, 0x0000);
+                        }
+                    }
+                    else if (ascii_char == 'B') {
+                        if (textid > 0) {
+                            textid--;
+                            ftext[textid] = '\0';
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 1024 + x] = 0x0320;
+                                    }
+                                    else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
+                                    }
+                                    else {
+                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                    }
+                                }
+                            }
+                            int swin_x = win_x + 20;
+                            int swin_y = win_y + 22;
+                            int swin_w = win_w - 40;
+                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                            gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
+                            gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
+                            int right_edges = swin_x + swin_w - 1;
+                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                            gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
+                            gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+                            print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
+                            print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
+                            print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+                            print_string(ftext, win_x + 30, help_col, 0x0000);
+                            if (str_cmp(ftext, ram_disk[fid - 1].content)) {
+                                print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
+                                print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
+                            }
+                            else {
+                                print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
+                                print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
+                            }
                         }
                     }
                     else if (ascii_char == 'F') {
@@ -1781,14 +1847,14 @@ void draw_window() {
     }
     if (corners == 1) { win_corners(); }
     if (theme == 3) {
-        print_string("maxOS DoubleFixes Abrikos", win_x + 11, win_y + 6, 0x0000);
-        print_string("maxOS DoubleFixes Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS TextExplorer Abrikos", win_x + 11, win_y + 6, 0x0000);
+        print_string("maxOS TextExplorer Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
     if (theme == 4) {
-        print_string("maxOS DoubleFixes Tora", win_x + 11, win_y + 6, 0x0000);
-        print_string("maxOS DoubleFixes Tora", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS TextExplorer Tora", win_x + 11, win_y + 6, 0x0000);
+        print_string("maxOS TextExplorer Tora", win_x + 10, win_y + 5, 0xFFFF); }
     else {
-        print_string("maxOS DoubleFixes", win_x + 11, win_y + 6, 0x0000); 
-        print_string("maxOS DoubleFixes", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS TextExplorer", win_x + 11, win_y + 6, 0x0000); 
+        print_string("maxOS TextExplorer", win_x + 10, win_y + 5, 0xFFFF); }
     clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);

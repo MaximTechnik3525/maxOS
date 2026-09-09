@@ -26,7 +26,7 @@ insmod ext2
 set gfxmode=1024x768x16
 set gfxpayload=keep
 
-menuentry "maxOS DoubleFixes" {
+menuentry "maxOS TextExplorer" {
     # Ищем файл ядра по всему диску, игнорируя "буквы" и скобочки приводов
     search --no-floppy --set=root --file /boot/mykernel.bin
     multiboot /boot/mykernel.bin
