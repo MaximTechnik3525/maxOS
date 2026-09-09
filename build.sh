@@ -6,7 +6,7 @@ nasm -f elf32 entry.asm -o entry.o
 gcc -m32 -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 echo "=== [2/3] Линковка бинарного файла ядра ==="
-ld -m elf_i386 --no-warn-rwx-segments -T linker.ld -o mykernel.bin entry.o kernel.o
+ld -m elf_i386 --no-warn-rwx-segments -T linker.ld entry.o kernel.o -o mykernel.bin
 
 echo "=== [3/3] Создание структуры и генерация загрузочного диска ==="
 mkdir -p iso/boot/grub
