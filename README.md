@@ -19,22 +19,21 @@ trailon, trailoff - enables and disables cursor trail.
 
 ### maxOS 3.1 (RedCycle) Features:
 - **64-Bit Long Mode (x86_64)**: 4-level PML4 paging with 2MB huge pages, AMD64 System V ABI, Long Mode GDT (`src/boot/entry.asm`).
-- **Ring 3 Protected User Mode**: TSS and SYSCALL/SYSRET architecture isolating user apps from kernel space (`src/kernel/user.c`).
+- **Preemptive Task Scheduler (Путь B)**: Full hardware timer-driven preemptive multitasking (`src/kernel/task.c` / `task.h`). Round-Robin 20ms time slices, complete 15-register CPU trap frame preservation, SSE/FPU FXSAVE/FXRSTOR context switching, and per-process 32KB kernel & user stacks.
+- **Simultaneous Multi-Process Execution**: Multiple applications run at the same time without losing state or closing each other.
+- **Ring 3 Protected User Mode**: TSS and SYSCALL/SYSRET architecture isolating user apps from kernel space (`src/kernel/user.c`). Non-blocking `SYS_SLEEP`, `SYS_YIELD`, `SYS_SPAWN`, `SYS_KILL`, and `SYS_TASKLIST`.
+- **Multi-Tab Taskbar & Quick Switcher**: Dynamic taskbar with individual 3D tabs for all running processes. Press `Tab` to cycle between running windows (Alt-Tab style), `F1` or `Win` to open Start Menu from anywhere.
+- **Interactive Task Manager (`mem.maxP`)**: Switch between Memory Monitor and Live Process Table (press `t`). Displays real PIDs, process names, privilege levels (Ring 0 / Ring 3), CPU time, and supports terminating tasks (`k`).
 - **ATA Hard Disk Driver (`src/drivers/ata.c` / `ata.h`)**: Direct low-level sector reading & writing via ATA PIO (LBA28).
 - **maxFS 2.0 Persistent Filesystem (`src/fs/maxfs.c` / `maxfs.h`)**: Superblock, Inodes, Sector Allocation Bitmap, persistent storage for files.
 - **GUI System Setup & Installer v3.1 (`src/apps/installer.c` / `installer.h`)**: Install maxOS directly to hard disk with MBR bootloader and pre-seeded .maxP applications.
 - **Custom MBR Bootloader (`src/boot/boot_mbr.asm`)**: Boots maxOS directly from HDD (`./build.sh --boot-hdd`).
-- **Desktop Environment & Taskbar (`src/kernel/taskbar.c` / `taskbar.h`)**: 
-  - Desktop icons on left side.
-  - Start Menu popup with app launcher, themes, and shutdown.
-  - Bottom Taskbar with active app tab (click tab or press `F10` to minimize/restore).
-  - System Tray with `[x64]` badge, `[HDD]` mount indicator, `[R3]` ring badge, and real-time RTC clock.
 - **Modular Applications & `.maxP` Format (`src/apps/maxp.c` / `maxp.h`)**:
   - `notepad.maxP` (`src/apps/notepad.c`): GUI Text Editor 3.1 with color palette, custom filenames, file picker.
   - `explorer.maxP` (`src/apps/explorer.c`): Graphical file manager 3.1 with support for opening `.maxP` files and text files.
   - `calc.maxP` (`src/apps/calc.c`): 3D GUI Calculator 3.1 with floating-point arithmetic and LCD display.
   - `sysinfo.maxP` (`src/apps/sysinfo.c`): System hardware & CPU/RAM/VBE inspection.
-  - `mem.maxP` (`src/apps/mem.c`): Lightweight RAM and memory usage monitor with subsystem breakdown and cache optimization.
+  - `mem.maxP` (`src/apps/mem.c`): RAM usage monitor & interactive Preemptive Task Manager.
   - `pong.maxP` (`src/apps/pong.c`): Retro Pong arcade game with smooth paddle physics.
   - `install.maxP` (`src/apps/installer.c`): Disk setup and system installer.
 

@@ -9,6 +9,7 @@ global default_exception_entry
 global interrupt_stack_top
 
 extern timer_irq_handler
+extern schedule_tick
 extern gp_fault_handler
 extern page_fault_handler
 
@@ -34,33 +35,63 @@ load_idt:
 ; Hardware automatically pushes: SS, RSP, RFLAGS, CS, RIP
 ; ------------------------------------------------------------------------------
 irq0_timer_entry:
+    ; Push all 15 general-purpose registers (Complete CPU context)
     push rax
+    push rbx
     push rcx
     push rdx
     push rsi
     push rdi
+    push rbp
     push r8
     push r9
     push r10
     push r11
+    push r12
+    push r13
+    push r14
+    push r15
 
-    ; 16-byte stack alignment check
-    sub rsp, 8
-    call timer_irq_handler
-    add rsp, 8
+    ; 15 quadwords (120 bytes) + 5 hardware quadwords (40 bytes) = 160 bytes (16-byte aligned)
+    mov rdi, rsp                ; 1st param: current saved RSP
+    call schedule_tick          ; Schedule next task; RAX = new task RSP
+    mov rsp, rax                ; Switch stack to chosen task!
 
     ; Send End of Interrupt (EOI = 0x20) to Master PIC (0x20)
     mov al, 0x20
     out 0x20, al
 
+    ; Check if target task is Ring 3 (CS RPL == 3)
+    ; In trap_frame, CS is at [rsp + 15*8 + 8] = [rsp + 128]
+    test byte [rsp + 128], 3
+    jz .to_ring0
+    mov bx, 0x23                ; User Data Segment (0x20 | 3)
+    mov ds, bx
+    mov es, bx
+    mov fs, bx
+    mov gs, bx
+    jmp .pop_all
+.to_ring0:
+    mov bx, 0x10                ; Kernel Data Segment (0x10)
+    mov ds, bx
+    mov es, bx
+    mov fs, bx
+    mov gs, bx
+.pop_all:
+    pop r15
+    pop r14
+    pop r13
+    pop r12
     pop r11
     pop r10
     pop r9
     pop r8
+    pop rbp
     pop rdi
     pop rsi
     pop rdx
     pop rcx
+    pop rbx
     pop rax
     iretq
 

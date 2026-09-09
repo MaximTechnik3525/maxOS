@@ -180,51 +180,52 @@ void taskbar_draw(void) {
     print_string("m", 15, TASKBAR_Y + 14, 0xFFFF);
     print_string("maxOS", 34, TASKBAR_Y + 13, 0x0000);
 
-    // 3. Active Window Tab in taskbar
+    // 3. Running Applications Tabs in taskbar (Multitasking display)
+    int running_apps[MAXP_APP_COUNT];
+    int run_count = maxp_get_running_apps(running_apps, MAXP_APP_COUNT);
     int active_app = maxp_get_active_app();
-    int tab_x = 96;
-    int tab_w = 170;
-    int tab_h = 28;
-    int tab_y = TASKBAR_Y + 5;
 
-    const char* tab_title = "Desktop";
-    const char* tab_icon = "[D]";
-    unsigned short tab_col = 0x0000;
+    if (run_count == 0) {
+        int tab_x = 96;
+        int tab_w = 120;
+        int tab_h = 28;
+        int tab_y = TASKBAR_Y + 5;
+        draw_3d_box(tab_x, tab_y, tab_w, tab_h, 1, 0xEF59);
+        print_string("[D]", tab_x + 8, tab_y + 8, 0x0000);
+        print_string("Desktop", tab_x + 38, tab_y + 8, 0x0000);
+    } else {
+        int max_w = 125;
+        int tab_w = 640 / run_count;
+        if (tab_w > max_w) tab_w = max_w;
+        if (tab_w < 70) tab_w = 70;
+        int tab_h = 28;
+        int tab_y = TASKBAR_Y + 5;
 
-    if (active_app == MAXP_APP_NOTEPAD) {
-        tab_title = "Notepad.maxP";
-        tab_icon = "[NP]";
-        tab_col = 0x03EA;
-    } else if (active_app == MAXP_APP_EXPLORER) {
-        tab_title = "Explorer.maxP";
-        tab_icon = "[EXP]";
-        tab_col = 0x24EE;
-    } else if (active_app == MAXP_APP_CALC) {
-        tab_title = "Calc.maxP";
-        tab_icon = "[CAL]";
-        tab_col = 0xF621;
-    } else if (active_app == MAXP_APP_SYSINFO) {
-        tab_title = "SysInfo.maxP";
-        tab_icon = "[CPU]";
-        tab_col = 0x0DE5;
-    } else if (active_app == MAXP_APP_PONG) {
-        tab_title = "Pong.maxP";
-        tab_icon = "[PNG]";
-        tab_col = 0x7BEF;
-    } else if (active_app == MAXP_APP_INSTALLER) {
-        tab_title = "Install.maxP";
-        tab_icon = "[INS]";
-        tab_col = 0x92E0;
-    } else if (active_app == MAXP_APP_MEM) {
-        tab_title = "Mem.maxP";
-        tab_icon = "[MEM]";
-        tab_col = 0x05E0;
+        for (int i = 0; i < run_count; i++) {
+            int aid = running_apps[i];
+            int tab_x = 96 + i * (tab_w + 4);
+            if (tab_x + tab_w > 755) break;
+
+            const char* tab_title = "App";
+            const char* tab_icon = "[*]";
+            unsigned short tab_col = 0x0000;
+
+            if (aid == MAXP_APP_NOTEPAD) { tab_title = "Notepad"; tab_icon = "[NP]"; tab_col = 0x03EA; }
+            else if (aid == MAXP_APP_EXPLORER) { tab_title = "Explorer"; tab_icon = "[EXP]"; tab_col = 0x24EE; }
+            else if (aid == MAXP_APP_CALC) { tab_title = "Calc"; tab_icon = "[CAL]"; tab_col = 0xF621; }
+            else if (aid == MAXP_APP_SYSINFO) { tab_title = "SysInfo"; tab_icon = "[CPU]"; tab_col = 0x0DE5; }
+            else if (aid == MAXP_APP_PONG) { tab_title = "Pong"; tab_icon = "[PNG]"; tab_col = 0x7BEF; }
+            else if (aid == MAXP_APP_INSTALLER) { tab_title = "Install"; tab_icon = "[INS]"; tab_col = 0x92E0; }
+            else if (aid == MAXP_APP_MEM) { tab_title = "Mem"; tab_icon = "[MEM]"; tab_col = 0x05E0; }
+
+            int is_tab_active = (aid == active_app && !app_minimized);
+            draw_3d_box(tab_x, tab_y, tab_w, tab_h, is_tab_active, is_tab_active ? 0xEF59 : 0xCE79);
+            print_string((char*)tab_icon, tab_x + 6, tab_y + 8, tab_col);
+            if (tab_w >= 85) {
+                print_string((char*)tab_title, tab_x + 42, tab_y + 8, 0x0000);
+            }
+        }
     }
-
-    int is_tab_active = (active_app != MAXP_APP_NONE && !app_minimized);
-    draw_3d_box(tab_x, tab_y, tab_w, tab_h, is_tab_active, is_tab_active ? 0xEF59 : 0xCE79);
-    print_string((char*)tab_icon, tab_x + 8, tab_y + 8, tab_col);
-    print_string((char*)tab_title, tab_x + 48, tab_y + 8, 0x0000);
 
     // 4. System Tray on right (x = 760 .. 1018, y = 734, w = 258, h = 30)
     int tray_x = 760;
@@ -372,17 +373,41 @@ int taskbar_handle_click(int mouse_x, int mouse_y) {
         }
     }
 
-    // 3. Check Taskbar active window tab click (x = 96 .. 266, y = 735 .. 763)
-    int tab_x = 96;
-    int tab_w = 170;
-    if (mouse_x >= tab_x && mouse_x <= tab_x + tab_w && mouse_y >= TASKBAR_Y + 5 && mouse_y <= TASKBAR_Y + 33) {
-        int active_app = maxp_get_active_app();
-        if (active_app != MAXP_APP_NONE) {
-            app_minimized = !app_minimized;
-            play_sound(650); sleep(20); no_sound();
-            draw_window();
-            draw_cursor(pos_x, pos_y);
+    // 3. Check Taskbar tabs click (Multi-application switching)
+    int running_apps[MAXP_APP_COUNT];
+    int run_count = maxp_get_running_apps(running_apps, MAXP_APP_COUNT);
+    int active_app = maxp_get_active_app();
+
+    if (run_count == 0) {
+        int tab_x = 96;
+        int tab_w = 120;
+        if (mouse_x >= tab_x && mouse_x <= tab_x + tab_w && mouse_y >= TASKBAR_Y + 5 && mouse_y <= TASKBAR_Y + 33) {
             return 1;
+        }
+    } else {
+        int max_w = 125;
+        int tab_w = 640 / run_count;
+        if (tab_w > max_w) tab_w = max_w;
+        if (tab_w < 70) tab_w = 70;
+
+        for (int i = 0; i < run_count; i++) {
+            int aid = running_apps[i];
+            int tab_x = 96 + i * (tab_w + 4);
+            if (tab_x + tab_w > 755) break;
+
+            if (mouse_x >= tab_x && mouse_x <= tab_x + tab_w && mouse_y >= TASKBAR_Y + 5 && mouse_y <= TASKBAR_Y + 33) {
+                if (aid == active_app) {
+                    app_minimized = !app_minimized;
+                    play_sound(650); sleep(20); no_sound();
+                } else {
+                    maxp_set_active_app(aid);
+                    app_minimized = 0;
+                    play_sound(750); sleep(20); no_sound();
+                }
+                draw_window();
+                draw_cursor(pos_x, pos_y);
+                return 1;
+            }
         }
     }
 

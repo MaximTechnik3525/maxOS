@@ -63,11 +63,7 @@ void pong_open_window(void) {
 }
 
 void pong_close_window(void) {
-    pong_open = 0;
-    drag = 0;
-    maxp_set_active_app(MAXP_APP_NONE);
-    draw_window();
-    draw_cursor(pos_x, pos_y);
+    maxp_close_app(MAXP_APP_PONG);
 }
 
 void pong_draw(void) {

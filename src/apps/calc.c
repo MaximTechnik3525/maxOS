@@ -314,11 +314,7 @@ void calc_open_window(void) {
 }
 
 void calc_close_window(void) {
-    calc_open = 0;
-    drag = 0;
-    maxp_set_active_app(MAXP_APP_NONE);
-    draw_window();
-    draw_cursor(pos_x, pos_y);
+    maxp_close_app(MAXP_APP_CALC);
 }
 
 void calc_draw(void) {

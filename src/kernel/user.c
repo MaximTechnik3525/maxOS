@@ -1,6 +1,7 @@
 #include "user.h"
 #include "kernel.h"
 #include "idt.h"
+#include "task.h"
 #include "maxp.h"
 #include "notepad.h"
 #include "explorer.h"
@@ -101,12 +102,21 @@ void user_mode_init(void) {
     wrmsr(MSR_SFMASK, 0x00004702);
 }
 
+void tss_set_rsp0(unsigned long long rsp0) {
+    default_tss.rsp0 = rsp0;
+}
+
+unsigned long long tss_get_rsp0(void) {
+    return default_tss.rsp0;
+}
+
 /* -------------------------------------------------------------------------
  * Kernel Syscall Dispatcher (Called by syscall_entry_asm in Ring 0)
  * ------------------------------------------------------------------------- */
 long syscall_dispatcher(long num, long a1, long a2, long a3, long a4, long a5) {
     switch (num) {
         case SYS_YIELD:
+            task_yield();
             return 0;
 
         case SYS_EXIT:
@@ -127,15 +137,29 @@ long syscall_dispatcher(long num, long a1, long a2, long a3, long a4, long a5) {
             } else {
                 play_sound((unsigned int)a1);
                 if (a2 > 0) {
-                    sleep((unsigned int)a2);
+                    task_sleep((unsigned long long)a2);
                     no_sound();
                 }
             }
             return 0;
 
         case SYS_SLEEP:
-            sleep((unsigned int)a1);
+            task_sleep((unsigned long long)a1);
             return 0;
+
+        case SYS_SPAWN:
+            return task_create((const char*)a1, (void (*)(void))a2, (int)a3, 0);
+
+        case SYS_KILL:
+            return task_kill((int)a1);
+
+        case SYS_GETPID: {
+            task_t* cur = task_get_current();
+            return cur ? cur->pid : 0;
+        }
+
+        case SYS_TASKLIST:
+            return task_get_list((task_info_t*)a1, (int)a2);
 
         case SYS_GET_KEY:
             return 0;

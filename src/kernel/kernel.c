@@ -48,6 +48,7 @@ struct multiboot_info {
 #include "kernel.h"
 #include "user.h"
 #include "idt.h"
+#include "task.h"
 #include "debug.h"
 #include "user/syscall.h"
 
@@ -229,6 +230,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     // Initialize Ring 3 User Space, TSS, and SYSCALL MSRs
     user_mode_init();
 
+    // Initialize Preemptive Task Scheduler (Ring 0 & Ring 3 Multitasking)
+    task_init();
+
     // Splash screen
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
@@ -324,21 +328,55 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (taskbar_handle_key(ascii_char, scan_code)) {
                         continue;
                     }
+
+                    // Global hotkey: F1 (0x3B) or Win key (0x5B, 0x5C) toggles Start Menu
+                    if (scan_code == 0x3B || scan_code == 0x5B || scan_code == 0x5C) {
+                        taskbar_toggle_start_menu();
+                        continue;
+                    }
+
+                    // Global hotkey: Tab (0x0F) cycles through running apps (Alt-Tab style!)
+                    if (scan_code == 0x0F) {
+                        int running_apps[MAXP_APP_COUNT];
+                        int run_count = maxp_get_running_apps(running_apps, MAXP_APP_COUNT);
+                        int cur_app = maxp_get_active_app();
+                        if (run_count > 0) {
+                            int cur_idx = -1;
+                            for (int i = 0; i < run_count; i++) {
+                                if (running_apps[i] == cur_app) {
+                                    cur_idx = i;
+                                    break;
+                                }
+                            }
+                            int next_app = running_apps[(cur_idx + 1) % run_count];
+                            maxp_set_active_app(next_app);
+                            taskbar_set_app_minimized(0);
+                            play_sound(750); sleep(20); no_sound();
+                            draw_window();
+                            continue;
+                        }
+                    }
+
                     int active_app = maxp_get_active_app();
                     if (active_app != MAXP_APP_NONE) {
                         if (ring3_app_handle_key(active_app, ascii_char, scan_code)) continue;
                     }
 
-                    // Start Menu shortcut (Win key / M)
-                    if (ascii_char == 'm' || ascii_char == 'M' || scan_code == 0x5B || scan_code == 0x5C) {
+                    // Start Menu shortcut (M key on desktop)
+                    if (ascii_char == 'm' || ascii_char == 'M') {
                         taskbar_toggle_start_menu();
                         continue;
                     }
 
-                    // Close active window
+                    // Close active window (or all if desktop)
                     if (ascii_char == 'c' || ascii_char == 'C' || scan_code == 0x01) {
-                        maxp_close_all_windows();
-                        draw_window();
+                        int cur_app = maxp_get_active_app();
+                        if (cur_app != MAXP_APP_NONE) {
+                            maxp_close_app(cur_app);
+                        } else {
+                            maxp_close_all_windows();
+                            draw_window();
+                        }
                         continue;
                     }
 

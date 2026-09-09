@@ -9,6 +9,8 @@
 #include "mem.h"
 
 #include "kernel.h"
+#include "taskbar.h"
+#include "task.h"
 #include "debug.h"
 
 static int active_app_id = MAXP_APP_NONE;
@@ -49,10 +51,74 @@ void maxp_set_active_app(int app_id) {
     }
 }
 
+int maxp_is_app_running(int app_id) {
+    switch (app_id) {
+        case MAXP_APP_NOTEPAD: return notepad_open;
+        case MAXP_APP_EXPLORER: return explorer_open;
+        case MAXP_APP_CALC: return calc_open;
+        case MAXP_APP_SYSINFO: return sysinfo_open;
+        case MAXP_APP_PONG: return pong_open;
+        case MAXP_APP_INSTALLER: return installer_open;
+        case MAXP_APP_MEM: return mem_open;
+        default: return 0;
+    }
+}
+
+int maxp_get_running_apps(int* out_apps, int max_count) {
+    int count = 0;
+    for (int i = 1; i <= MAXP_APP_COUNT && count < max_count; i++) {
+        if (maxp_is_app_running(i)) {
+            out_apps[count++] = i;
+        }
+    }
+    return count;
+}
+
+int maxp_get_running_count(void) {
+    int count = 0;
+    for (int i = 1; i <= MAXP_APP_COUNT; i++) {
+        if (maxp_is_app_running(i)) count++;
+    }
+    return count;
+}
+
+void maxp_close_app(int app_id) {
+    const struct MaxPAppInfo* info = maxp_get_app_info(app_id);
+    if (info) {
+        debug_log_app_event(info->name, "Closing App Window", app_id);
+    }
+    switch (app_id) {
+        case MAXP_APP_NOTEPAD: notepad_open = 0; break;
+        case MAXP_APP_EXPLORER: explorer_open = 0; break;
+        case MAXP_APP_CALC: calc_open = 0; break;
+        case MAXP_APP_SYSINFO: sysinfo_open = 0; break;
+        case MAXP_APP_PONG: pong_open = 0; break;
+        case MAXP_APP_INSTALLER: installer_open = 0; break;
+        case MAXP_APP_MEM: mem_open = 0; break;
+    }
+    drag = 0;
+    for (int i = 1; i < MAX_TASKS; i++) {
+        task_t* t = task_get_by_pid(i);
+        if (t && t->app_id == app_id && t->state != TASK_UNUSED && t->state != TASK_DEAD) {
+            task_kill(i);
+        }
+    }
+    int next_app = MAXP_APP_NONE;
+    for (int i = 1; i <= MAXP_APP_COUNT; i++) {
+        if (maxp_is_app_running(i)) {
+            next_app = i;
+            break;
+        }
+    }
+    active_app_id = next_app;
+    taskbar_set_app_minimized(0);
+    draw_window();
+}
+
 void maxp_close_all_windows(void) {
     if (active_app_id != MAXP_APP_NONE) {
         const struct MaxPAppInfo* info = maxp_get_app_info(active_app_id);
-        debug_log_app_event(info ? info->name : "App", "Closing Application Window", active_app_id);
+        debug_log_app_event(info ? info->name : "App", "Closing All Windows", active_app_id);
     }
     if (notepad_open) notepad_close_window();
     if (explorer_open) explorer_close_window();
@@ -61,6 +127,12 @@ void maxp_close_all_windows(void) {
     if (sysinfo_open) sysinfo_close_window();
     if (pong_open) pong_close_window();
     if (mem_open) mem_close_window();
+    for (int i = 1; i < MAX_TASKS; i++) {
+        task_t* t = task_get_by_pid(i);
+        if (t && t->app_id != 0 && t->state != TASK_UNUSED && t->state != TASK_DEAD) {
+            task_kill(i);
+        }
+    }
     active_app_id = MAXP_APP_NONE;
 }
 
@@ -92,8 +164,15 @@ int maxp_launch_app(int app_id) {
     const struct MaxPAppInfo* info = maxp_get_app_info(app_id);
     debug_log_app_event(info ? info->name : "App", "Launching Application", app_id);
 
-    // Close current window if switching
-    maxp_close_all_windows();
+    // If already running, bring to focus
+    if (maxp_is_app_running(app_id)) {
+        active_app_id = app_id;
+        draw_window();
+        return 1;
+    }
+
+    // Register a process in the preemptive scheduler
+    task_create(info ? info->name : "App", 0, 1, app_id);
 
     active_app_id = app_id;
     play_sound(750); sleep(40); play_sound(1100); sleep(50); no_sound();

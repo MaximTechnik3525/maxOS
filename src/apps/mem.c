@@ -3,10 +3,13 @@
 #include "maxp.h"
 #include "maxfs.h"
 #include "user.h"
+#include "task.h"
 #include "debug.h"
 
 int mem_open = 0;
 static int optimize_flash = 0;
+static int mem_view_mode = 0; // 0 = RAM Monitor, 1 = Task Manager
+static int selected_task_idx = 0;
 
 /* Button helper with 3D bevel */
 static void draw_btn(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col) {
@@ -43,6 +46,8 @@ static void format_kb_to_mb(unsigned int kb, char* out) {
 void mem_init(void) {
     mem_open = 0;
     optimize_flash = 0;
+    mem_view_mode = 0;
+    selected_task_idx = 0;
 }
 
 void mem_open_window(void) {
@@ -54,19 +59,97 @@ void mem_open_window(void) {
 }
 
 void mem_close_window(void) {
-    mem_open = 0;
-    drag = 0;
     optimize_flash = 0;
-    maxp_set_active_app(MAXP_APP_NONE);
-    draw_window();
-    draw_cursor(pos_x, pos_y);
+    maxp_close_app(MAXP_APP_MEM);
+}
+
+static void draw_task_manager(int sx, int sy, int sw, int sh) {
+    task_info_t tlist[MAX_TASKS];
+    int tcount = task_get_list(tlist, MAX_TASKS);
+
+    // Header banner
+    draw_rect(sx + 14, sy + 34, sw - 28, 28, 0x03EA);
+    print_string("Preemptive Task Manager (Round-Robin 20ms Scheduler)", sx + 22, sy + 40, 0xFFFF);
+    print_string("All processes preemptively scheduled via PIT 1000Hz timer interrupt", sx + 22, sy + 52, 0xFFFF);
+
+    // Table Container Box
+    int table_x = sx + 20;
+    int table_y = sy + 68;
+    int table_w = sw - 40;
+    int table_h = sh - 110;
+
+    draw_rect(table_x, table_y, table_w, table_h, 0x0000);
+    draw_rect(table_x + 1, table_y + 1, table_w - 2, table_h - 2, 0xFFFF);
+
+    // Table Header Bar
+    draw_rect(table_x + 1, table_y + 1, table_w - 2, 22, 0xCE79);
+    print_string("PID", table_x + 10, table_y + 6, 0x0000);
+    print_string("PROCESS NAME", table_x + 60, table_y + 6, 0x0000);
+    print_string("PRIVILEGE", table_x + 215, table_y + 6, 0x0000);
+    print_string("STATE", table_x + 335, table_y + 6, 0x0000);
+    print_string("CPU TIME", table_x + 435, table_y + 6, 0x0000);
+    print_string("STATUS", table_x + 525, table_y + 6, 0x0000);
+
+    if (selected_task_idx >= tcount) selected_task_idx = tcount - 1;
+    if (selected_task_idx < 0) selected_task_idx = 0;
+
+    char num_buf[16];
+    for (int i = 0; i < tcount && i < 10; i++) {
+        int ry = table_y + 24 + (i * 20);
+        int is_sel = (i == selected_task_idx);
+
+        unsigned short row_bg = is_sel ? 0x041F : ((i % 2 == 0) ? 0xFFFF : 0xEF59);
+        unsigned short text_col = is_sel ? 0xFFFF : 0x0000;
+        draw_rect(table_x + 1, ry, table_w - 2, 19, row_bg);
+
+        // PID
+        int_str(tlist[i].pid, num_buf);
+        print_string(num_buf, table_x + 15, ry + 4, text_col);
+
+        // Name
+        print_string(tlist[i].name, table_x + 60, ry + 4, text_col);
+
+        // Privilege
+        if (tlist[i].is_user) {
+            print_string("Ring 3 (User)", table_x + 215, ry + 4, is_sel ? 0x07E0 : 0x03EA);
+        } else {
+            print_string("Ring 0 (Kernel)", table_x + 215, ry + 4, is_sel ? 0xCE79 : 0x11EB);
+        }
+
+        // State
+        const char* st = "UNKNOWN";
+        if (tlist[i].state == TASK_READY) st = "READY";
+        else if (tlist[i].state == TASK_RUNNING) st = "RUNNING";
+        else if (tlist[i].state == TASK_SLEEPING) st = "SLEEPING";
+        else if (tlist[i].state == TASK_DEAD) st = "DEAD";
+        print_string((char*)st, table_x + 335, ry + 4, text_col);
+
+        // CPU ticks
+        int_str((int)tlist[i].total_ticks, num_buf);
+        print_string(num_buf, table_x + 435, ry + 4, text_col);
+        print_string(" ms", table_x + 480, ry + 4, text_col);
+
+        // Status
+        if (tlist[i].state == TASK_RUNNING) {
+            print_string("Active", table_x + 525, ry + 4, 0x07E0);
+        } else if (tlist[i].state == TASK_READY) {
+            print_string("Queued", table_x + 525, ry + 4, text_col);
+        } else if (tlist[i].state == TASK_SLEEPING) {
+            print_string("Idle", table_x + 525, ry + 4, 0x8085);
+        } else {
+            print_string("Exited", table_x + 525, ry + 4, 0xF800);
+        }
+    }
+
+    // Bottom Action Buttons in Task Manager mode:
+    draw_btn(sx + 20, sy + sh - 34, 130, 22, "Memory View (m)", 0x24EE, 0xFFFF);
+    draw_btn(sx + 160, sy + sh - 34, 110, 22, "Refresh (r)", 0xC618, 0x0000);
+    draw_btn(sx + 280, sy + sh - 34, 120, 22, "Kill Task (k)", 0xF800, 0xFFFF);
+    draw_btn(sx + sw - 100, sy + sh - 34, 80, 22, "Close (c)", 0xF9A6, 0x0000);
 }
 
 void mem_draw(void) {
     prev_cursor();
-
-    struct SystemMemInfo mi;
-    get_system_mem_info(&mi);
 
     int sx = win_x + 20;
     int sy = win_y + 35;
@@ -79,7 +162,7 @@ void mem_draw(void) {
 
     // Titlebar
     draw_rect(sx + 2, sy + 2, sw - 4, 20, 0x041F); // Royal Cyan/Navy
-    print_string("maxOS RAM & Memory Monitor (mem.maxP)", sx + 8, sy + 6, 0xFFFF);
+    print_string("maxOS Memory & Task Manager (mem.maxP)", sx + 8, sy + 6, 0xFFFF);
 
     // Close button on titlebar
     draw_btn(sx + sw - 56, sy + 3, 50, 18, "Close", 0xF9A6, 0x0000);
@@ -90,6 +173,15 @@ void mem_draw(void) {
     draw_rect(sx + 10, sy + 28, 1, sh - 68, 0x7BEF);
     draw_rect(sx + sw - 11, sy + 28, 1, sh - 68, 0x7BEF);
     draw_rect(sx + 10, sy + sh - 41, sw - 20, 1, 0x7BEF);
+
+    if (mem_view_mode == 1) {
+        draw_task_manager(sx, sy, sw, sh);
+        draw_cursor(pos_x, pos_y);
+        return;
+    }
+
+    struct SystemMemInfo mi;
+    get_system_mem_info(&mi);
 
     // Header banner
     draw_rect(sx + 14, sy + 34, sw - 28, 28, 0x0DE5);
@@ -104,49 +196,55 @@ void mem_draw(void) {
 
     // Progress Bar Inset Border
     draw_rect(bar_x, bar_y, bar_w, bar_h, 0x0000);
-    draw_rect(bar_x + 1, bar_y + 1, bar_w - 2, bar_h - 2, 0x2124); // Dark background
+    draw_rect(bar_x + 1, bar_y + 1, bar_w - 2, bar_h - 2, 0x2124);
 
-    // Compute fill width
     int fill_w = 0;
     if (mi.total_kb > 0) {
         fill_w = (int)(((unsigned long long)mi.used_kb * (bar_w - 4)) / mi.total_kb);
     }
-    if (fill_w < 4) fill_w = 4;
+    if (fill_w < 4 && mi.used_kb > 0) fill_w = 4;
     if (fill_w > bar_w - 4) fill_w = bar_w - 4;
 
-    // Draw segmented / solid progress fill
-    unsigned short fill_color = optimize_flash ? 0x07E0 : 0x24EE; // Bright cyan or green
-    draw_rect(bar_x + 2, bar_y + 2, fill_w, bar_h - 4, fill_color);
+    unsigned short bar_fill_col = 0x05E0;
+    if (mi.usage_percent > 80) bar_fill_col = 0xF800;
+    else if (mi.usage_percent > 50) bar_fill_col = 0xFD20;
 
-    // Progress percentage & values text
-    char num_buf[32];
-    char used_mb[32];
+    if (fill_w > 0) {
+        draw_rect(bar_x + 2, bar_y + 2, fill_w, bar_h - 4, bar_fill_col);
+    }
+
+    // RAM summary string below gauge
     char total_mb[32];
-    format_kb_to_mb(mi.used_kb, used_mb);
+    char used_mb[32];
     format_kb_to_mb(mi.total_kb, total_mb);
+    format_kb_to_mb(mi.used_kb, used_mb);
 
-    print_string("RAM Usage: ", bar_x + 6, bar_y + bar_h + 8, 0x0000);
-    int_str((int)mi.usage_percent, num_buf);
-    print_string(num_buf, bar_x + 95, bar_y + bar_h + 8, 0x0200);
-    print_string("% (Used: ", bar_x + 115, bar_y + bar_h + 8, 0x0000);
-    print_string(used_mb, bar_x + 185, bar_y + bar_h + 8, 0x24EE);
-    print_string(" / Total: ", bar_x + 265, bar_y + bar_h + 8, 0x0000);
-    print_string(total_mb, bar_x + 355, bar_y + bar_h + 8, 0x03EA);
-    print_string(")", bar_x + 435, bar_y + bar_h + 8, 0x0000);
+    char pct_str[16];
+    int_str((int)mi.usage_percent, pct_str);
 
-    // Section 2: Detailed Statistics Grid
+    print_string("RAM Usage: ", bar_x, bar_y + 30, 0x0000);
+    print_string(pct_str, bar_x + 85, bar_y + 30, 0x0000);
+    print_string("% (Used: ", bar_x + 105, bar_y + 30, 0x0000);
+    print_string(used_mb, bar_x + 165, bar_y + 30, 0x03EA);
+    print_string("/ Total: ", bar_x + 245, bar_y + 30, 0x0000);
+    print_string(total_mb, bar_x + 315, bar_y + 30, 0x0200);
+    print_string(")", bar_x + 395, bar_y + 30, 0x0000);
+
+    // Section 2: Detailed Breakdown Panels
+    int stats_y = bar_y + 54;
     int col1_x = sx + 20;
     int col2_x = sx + (sw / 2) + 10;
-    int stats_y = bar_y + bar_h + 30;
 
-    // Column 1 Box: Memory Statistics
-    draw_rect(col1_x, stats_y, (sw / 2) - 20, 155, 0xF7BE);
-    draw_rect(col1_x, stats_y, (sw / 2) - 20, 18, 0xBDD7);
+    // Column 1 Box: System RAM Summary
+    draw_rect(col1_x, stats_y, (sw / 2) - 30, 155, 0xF7BE);
+    draw_rect(col1_x, stats_y, (sw / 2) - 30, 18, 0xBDD7);
     print_string("System RAM Summary", col1_x + 6, stats_y + 4, 0x0000);
 
     int row_y = stats_y + 24;
+    char num_buf[32];
+
     print_string("Total RAM: ", col1_x + 10, row_y, 0x0000);
-    print_string(total_mb, col1_x + 110, row_y, 0x11EB);
+    print_string(total_mb, col1_x + 110, row_y, 0x0000);
     row_y += 18;
 
     print_string("Used RAM:  ", col1_x + 10, row_y, 0x0000);
@@ -218,13 +316,14 @@ void mem_draw(void) {
     print_string(num_buf, col2_x + 195, row_y, 0x0000);
     print_string(" KB", col2_x + 235, row_y, 0x0000);
 
-    // Section 3: Bottom Action Buttons
+    // Bottom Action Buttons in Memory mode:
     draw_btn(sx + 20, sy + sh - 34, 110, 22, "Refresh (r)", 0xC618, 0x0000);
     draw_btn(sx + 140, sy + sh - 34, 145, 22, "Optimize RAM (o)", 0x03EA, 0xFFFF);
+    draw_btn(sx + 295, sy + sh - 34, 120, 22, "Tasks (t)", 0x24EE, 0xFFFF);
     draw_btn(sx + sw - 100, sy + sh - 34, 80, 22, "Close (c)", 0xF9A6, 0x0000);
 
     if (optimize_flash) {
-        print_string("[*] Cache Flushed!", sx + 300, sy + sh - 28, 0x03EA);
+        print_string("[*] Cache Flushed!", sx + 430, sy + sh - 28, 0x03EA);
         optimize_flash = 0;
     }
 
@@ -251,22 +350,77 @@ int mem_handle_click(int mouse_x, int mouse_y) {
         return 1;
     }
 
-    // Bottom refresh button
-    if (mouse_x >= sx + 20 && mouse_x <= sx + 130 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
-        mem_draw();
-        play_sound(750); sleep(30); no_sound();
-        return 1;
+    if (mem_view_mode == 1) {
+        // Task Manager Mode
+        // "Memory View (m)" button
+        if (mouse_x >= sx + 20 && mouse_x <= sx + 150 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            mem_view_mode = 0;
+            mem_draw();
+            play_sound(750); sleep(20); no_sound();
+            return 1;
+        }
+
+        // "Refresh (r)" button
+        if (mouse_x >= sx + 160 && mouse_x <= sx + 270 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            mem_draw();
+            play_sound(750); sleep(20); no_sound();
+            return 1;
+        }
+
+        // "Kill Task (k)" button
+        if (mouse_x >= sx + 280 && mouse_x <= sx + 400 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            task_info_t tlist[MAX_TASKS];
+            int tcount = task_get_list(tlist, MAX_TASKS);
+            if (selected_task_idx >= 0 && selected_task_idx < tcount) {
+                int pid_to_kill = tlist[selected_task_idx].pid;
+                if (pid_to_kill > 0) {
+                    task_kill(pid_to_kill);
+                    play_sound(400); sleep(40); play_sound(250); sleep(60); no_sound();
+                    mem_draw();
+                    return 1;
+                }
+            }
+        }
+
+        // Click row in table to select task
+        int table_y = sy + 68;
+        if (mouse_y >= table_y + 24 && mouse_y <= table_y + 24 + (10 * 20)) {
+            int clicked_idx = (mouse_y - (table_y + 24)) / 20;
+            task_info_t tlist[MAX_TASKS];
+            int tcount = task_get_list(tlist, MAX_TASKS);
+            if (clicked_idx >= 0 && clicked_idx < tcount) {
+                selected_task_idx = clicked_idx;
+                mem_draw();
+                play_sound(800); sleep(15); no_sound();
+                return 1;
+            }
+        }
+    } else {
+        // Memory Monitor Mode
+        // Bottom refresh button
+        if (mouse_x >= sx + 20 && mouse_x <= sx + 130 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            mem_draw();
+            play_sound(750); sleep(30); no_sound();
+            return 1;
+        }
+
+        // Bottom optimize RAM button
+        if (mouse_x >= sx + 140 && mouse_x <= sx + 285 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            optimize_flash = 1;
+            play_sound(500); sleep(30); play_sound(900); sleep(40); no_sound();
+            mem_draw();
+            return 1;
+        }
+
+        // "Tasks (t)" button
+        if (mouse_x >= sx + 295 && mouse_x <= sx + 415 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            mem_view_mode = 1;
+            mem_draw();
+            play_sound(850); sleep(30); no_sound();
+            return 1;
+        }
     }
 
-    // Bottom optimize RAM button
-    if (mouse_x >= sx + 140 && mouse_x <= sx + 290 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
-        optimize_flash = 1;
-        play_sound(500); sleep(30); play_sound(900); sleep(40); no_sound();
-        mem_draw();
-        return 1;
-    }
-
-    // Click inside window swallows event
     if (mouse_x >= sx && mouse_x <= sx + sw && mouse_y >= sy && mouse_y <= sy + sh) {
         return 1;
     }
@@ -283,6 +437,22 @@ int mem_handle_key(char ascii_char, unsigned char scan_code) {
         return 1;
     }
 
+    // 't' or 'T' switches to Task Manager
+    if (ascii_char == 't' || ascii_char == 'T') {
+        mem_view_mode = 1;
+        mem_draw();
+        play_sound(850); sleep(20); no_sound();
+        return 1;
+    }
+
+    // 'm' or 'M' switches to Memory Monitor
+    if (ascii_char == 'm' || ascii_char == 'M') {
+        mem_view_mode = 0;
+        mem_draw();
+        play_sound(750); sleep(20); no_sound();
+        return 1;
+    }
+
     // 'r' or 'R' refreshes
     if (ascii_char == 'r' || ascii_char == 'R') {
         mem_draw();
@@ -290,12 +460,45 @@ int mem_handle_key(char ascii_char, unsigned char scan_code) {
         return 1;
     }
 
-    // 'o' or 'O' optimizes
-    if (ascii_char == 'o' || ascii_char == 'O') {
+    // 'o' or 'O' optimizes in Memory mode
+    if (mem_view_mode == 0 && (ascii_char == 'o' || ascii_char == 'O')) {
         optimize_flash = 1;
         play_sound(500); sleep(30); play_sound(900); sleep(40); no_sound();
         mem_draw();
         return 1;
+    }
+
+    // 'k' or 'K' kills selected task in Task Manager mode
+    if (mem_view_mode == 1 && (ascii_char == 'k' || ascii_char == 'K')) {
+        task_info_t tlist[MAX_TASKS];
+        int tcount = task_get_list(tlist, MAX_TASKS);
+        if (selected_task_idx >= 0 && selected_task_idx < tcount) {
+            int pid_to_kill = tlist[selected_task_idx].pid;
+            if (pid_to_kill > 0) {
+                task_kill(pid_to_kill);
+                play_sound(400); sleep(40); play_sound(250); sleep(60); no_sound();
+                mem_draw();
+                return 1;
+            }
+        }
+    }
+
+    // Arrow keys or W/S to navigate task selection in Task Manager
+    if (mem_view_mode == 1) {
+        if (scan_code == 0x48 || ascii_char == 'w' || ascii_char == 'W') { // Up
+            if (selected_task_idx > 0) {
+                selected_task_idx--;
+                mem_draw();
+                play_sound(800); sleep(15); no_sound();
+            }
+            return 1;
+        }
+        if (scan_code == 0x50 || ascii_char == 's' || ascii_char == 'S') { // Down
+            selected_task_idx++;
+            mem_draw();
+            play_sound(800); sleep(15); no_sound();
+            return 1;
+        }
     }
 
     return 0;

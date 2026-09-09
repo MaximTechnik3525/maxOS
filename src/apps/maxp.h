@@ -28,6 +28,10 @@ int maxp_launch_app(int app_id);
 int maxp_get_active_app(void);
 void maxp_set_active_app(int app_id);
 void maxp_close_all_windows(void);
+void maxp_close_app(int app_id);
+int maxp_is_app_running(int app_id);
+int maxp_get_running_apps(int* out_apps, int max_count);
+int maxp_get_running_count(void);
 const struct MaxPAppInfo* maxp_get_app_info(int app_id);
 const struct MaxPAppInfo* maxp_get_app_by_index(int index);
 

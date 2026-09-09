@@ -203,11 +203,8 @@ void installer_open_window(void) {
 }
 
 void installer_close_window(void) {
-    installer_open = 0;
-    drag = 0;
-    maxp_set_active_app(MAXP_APP_NONE);
-    draw_window();
     play_sound(400); sleep(60); no_sound();
+    maxp_close_app(MAXP_APP_INSTALLER);
 }
 
 int installer_handle_click(int mouse_x, int mouse_y) {

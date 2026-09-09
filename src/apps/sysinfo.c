@@ -30,11 +30,7 @@ void sysinfo_open_window(void) {
 }
 
 void sysinfo_close_window(void) {
-    sysinfo_open = 0;
-    drag = 0;
-    maxp_set_active_app(MAXP_APP_NONE);
-    draw_window();
-    draw_cursor(pos_x, pos_y);
+    maxp_close_app(MAXP_APP_SYSINFO);
 }
 
 void sysinfo_draw(void) {

@@ -19,6 +19,10 @@
 #define SYS_ATA_FLUSH     14
 #define SYS_ATA_STATUS    15
 #define SYS_DEBUG_LOG     16
+#define SYS_SPAWN         17
+#define SYS_KILL          18
+#define SYS_GETPID        19
+#define SYS_TASKLIST      20
 
 // Low-level 64-bit SYSCALL wrappers (System V AMD64 ABI)
 static inline long syscall0(long num) {
@@ -145,6 +149,26 @@ static inline int u_ata_status(void) {
 
 static inline void u_debug_log(const char* tag, const char* msg) {
     syscall2(SYS_DEBUG_LOG, (long)tag, (long)msg);
+}
+
+static inline void u_yield(void) {
+    syscall0(SYS_YIELD);
+}
+
+static inline int u_spawn(const char* name, void (*entry)(void), int is_user) {
+    return (int)syscall3(SYS_SPAWN, (long)name, (long)entry, (long)is_user);
+}
+
+static inline int u_kill(int pid) {
+    return (int)syscall1(SYS_KILL, (long)pid);
+}
+
+static inline int u_getpid(void) {
+    return (int)syscall0(SYS_GETPID);
+}
+
+static inline int u_tasklist(void* buf, int max) {
+    return (int)syscall2(SYS_TASKLIST, (long)buf, (long)max);
 }
 
 #endif // USER_SYSCALL_H

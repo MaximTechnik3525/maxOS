@@ -213,11 +213,8 @@ void explorer_open_window(void) {
 }
 
 void explorer_close_window(void) {
-    explorer_open = 0;
-    drag = 0;
-    maxp_set_active_app(MAXP_APP_NONE);
-    draw_window();
     play_sound(350); sleep(60); no_sound();
+    maxp_close_app(MAXP_APP_EXPLORER);
 }
 
 int explorer_handle_click(int mouse_x, int mouse_y) {

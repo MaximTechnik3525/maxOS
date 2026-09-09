@@ -19,6 +19,10 @@
 #define SYS_ATA_FLUSH     14 // sys_ata_flush(void)
 #define SYS_ATA_STATUS    15 // sys_ata_status(void)
 #define SYS_DEBUG_LOG     16 // sys_debug_log(char* tag, char* msg)
+#define SYS_SPAWN         17 // sys_spawn(char* name, void* entry, int is_user) -> pid
+#define SYS_KILL          18 // sys_kill(int pid) -> status
+#define SYS_GETPID        19 // sys_getpid(void) -> pid
+#define SYS_TASKLIST      20 // sys_tasklist(void* buf, int max) -> count
 
 // Privilege Levels & GDT Selectors (x86_64 Long Mode)
 #define KERNEL_CS         0x08
@@ -30,6 +34,8 @@
 
 // Subsystem Lifecycle
 void user_mode_init(void);
+void tss_set_rsp0(unsigned long long rsp0);
+unsigned long long tss_get_rsp0(void);
 void enter_user_mode(void (*user_func)(void), void* user_stack);
 long syscall_dispatcher(long num, long a1, long a2, long a3, long a4, long a5);
 

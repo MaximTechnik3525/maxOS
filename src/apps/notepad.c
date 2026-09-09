@@ -405,12 +405,9 @@ void notepad_open_window(void) {
 }
 
 void notepad_close_window(void) {
-    notepad_open = 0;
     file_picker_open = 0;
-    drag = 0;
-    maxp_set_active_app(MAXP_APP_NONE);
-    draw_window();
     play_sound(350); sleep(60); no_sound();
+    maxp_close_app(MAXP_APP_NOTEPAD);
 }
 
 int notepad_handle_click(int mouse_x, int mouse_y) {
