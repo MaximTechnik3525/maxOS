@@ -311,7 +311,7 @@ void notepad_draw(void) {
     title[0] = 'm'; title[1] = 'a'; title[2] = 'x'; title[3] = 'O'; title[4] = 'S';
     title[5] = ' '; title[6] = 'N'; title[7] = 'o'; title[8] = 't'; title[9] = 'e';
     title[10] = 'p'; title[11] = 'a'; title[12] = 'd'; title[13] = ' ';
-    title[14] = '2'; title[15] = '.'; title[16] = '0'; title[17] = ' ';
+    title[14] = '3'; title[15] = '.'; title[16] = '0'; title[17] = ' ';
     title[18] = '-'; title[19] = ' ';
     title[20] = '[';
     int tp = 21;

@@ -1,0 +1,86 @@
+name: Build and Release maxOS
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    name: Build ISO & Publish Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Install Toolchain and Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y nasm gcc-multilib xorriso grub-pc-bin grub-common mtools qemu-utils
+
+      - name: Build maxOS (x86_64 Long Mode & ISO)
+        run: |
+          chmod +x build.sh
+          ./build.sh --no-run
+
+      - name: Verify Generated Artifacts
+        run: |
+          ls -lh maxos.iso
+          ls -lh build/mykernel.bin
+          ls -lh build/boot_mbr.bin
+
+      - name: Determine Release Tag
+        id: release_info
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            TAG="${{ github.ref_name }}"
+          else
+            TAG="v3.0"
+          fi
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release_info.outputs.tag }}
+          name: "maxOS RedCycle ${{ steps.release_info.outputs.tag }}"
+          body: |
+            # maxOS RedCycle ${{ steps.release_info.outputs.tag }} (x86_64 Long Mode)
+
+            Official release of **maxOS v3.0** with 64-bit Long Mode, Desktop & Taskbar, modular applications, and maxFS 2.0 filesystem.
+
+            ### 🚀 New Features & Enhancements:
+            - **64-bit Long Mode (x86_64)**: 4-level PML4 paging, 2MB huge pages, identity-mapped 4GB, AMD64 System V ABI.
+            - **Desktop & Taskbar**:
+              - 7 desktop application icons.
+              - Windows 95-style Start Menu (`[m maxOS]`) with app launcher and system controls.
+              - Bottom taskbar with active window tab (minimize/restore with `F10` or clicking tab).
+              - System tray with `[x64]` badge, `[HDD]` mount indicator, and RTC clock.
+            - **Modular Application Suite (`.maxP`)**:
+              - **Notepad 3.0**: Text editor with color palette, custom filenames, and file picker.
+              - **Explorer 3.0**: GUI file manager with `.maxP` executable launcher.
+              - **Calculator**: 3D GUI calculator with arithmetic operations.
+              - **SysInfo**: Hardware and system diagnostics.
+              - **Pong Arcade**: Classic Pong game.
+              - **Installer**: HDD setup and MBR bootloader writer.
+            - **Storage**: ATA PIO hard disk driver & maxFS 2.0 persistent disk storage.
+            - **Boot Modes**: Boots from Live CD-ROM (`maxos.iso`) or directly from HDD via MBR (`./build.sh --boot-hdd`).
+
+            ### 📦 Assets:
+            - `maxos.iso`: Bootable Live ISO image (QEMU, VirtualBox, or real hardware).
+            - `mykernel.bin`: Compiled 64-bit ELF kernel.
+          files: |
+            maxos.iso
+            build/mykernel.bin
+          make_latest: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

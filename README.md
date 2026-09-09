@@ -17,11 +17,11 @@ sleep - makes delay for 2s.
 errscr - running the error screen.
 trailon, trailoff - enables and disables cursor trail.
 
-### maxOS 2.0 New Features:
+### maxOS 3.0 (RedCycle) Features:
 - **64-Bit Long Mode (x86_64)**: 4-level PML4 paging with 2MB huge pages, AMD64 System V ABI, Long Mode GDT (`src/boot/entry.asm`).
 - **ATA Hard Disk Driver (`src/drivers/ata.c` / `ata.h`)**: Direct low-level sector reading & writing via ATA PIO (LBA28).
 - **maxFS 2.0 Persistent Filesystem (`src/fs/maxfs.c` / `maxfs.h`)**: Superblock, Inodes, Sector Allocation Bitmap, persistent storage for files.
-- **GUI System Setup & Installer v2.0 (`src/apps/installer.c` / `installer.h`)**: Install maxOS directly to hard disk with MBR bootloader and pre-seeded .maxP applications.
+- **GUI System Setup & Installer v3.0 (`src/apps/installer.c` / `installer.h`)**: Install maxOS directly to hard disk with MBR bootloader and pre-seeded .maxP applications.
 - **Custom MBR Bootloader (`src/boot/boot_mbr.asm`)**: Boots maxOS directly from HDD (`./build.sh --boot-hdd`).
 - **Desktop Environment & Taskbar (`src/kernel/taskbar.c` / `taskbar.h`)**: 
   - Desktop icons on left side.
@@ -29,8 +29,8 @@ trailon, trailoff - enables and disables cursor trail.
   - Bottom Taskbar with active app tab (click tab or press `F10` to minimize/restore).
   - System Tray with `[x64]` badge, `[HDD]` mount indicator, and real-time RTC clock.
 - **Modular Applications & `.maxP` Format (`src/apps/maxp.c` / `maxp.h`)**:
-  - `notepad.maxP` (`src/apps/notepad.c`): GUI Text Editor 2.0 with color palette, custom filenames, file picker.
-  - `explorer.maxP` (`src/apps/explorer.c`): Graphical file manager with support for opening `.maxP` files and text files.
+  - `notepad.maxP` (`src/apps/notepad.c`): GUI Text Editor 3.0 with color palette, custom filenames, file picker.
+  - `explorer.maxP` (`src/apps/explorer.c`): Graphical file manager 3.0 with support for opening `.maxP` files and text files.
   - `calc.maxP` (`src/apps/calc.c`): 3D GUI Calculator with arithmetic operations and LCD display.
   - `sysinfo.maxP` (`src/apps/sysinfo.c`): System hardware & CPU/RAM/VBE inspection.
   - `pong.maxP` (`src/apps/pong.c`): Retro Pong arcade game.

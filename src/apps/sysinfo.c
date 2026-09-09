@@ -88,7 +88,7 @@ void sysinfo_draw(void) {
 
     // Section 1: OS Banner
     draw_rect(sx + 15, sy + 38, sw - 30, 32, 0x0DE5);
-    print_string("maxOS RedCycle v2.0 (x86_64 Long Mode)", sx + 25, sy + 44, 0x0000);
+    print_string("maxOS RedCycle v3.0 (x86_64 Long Mode)", sx + 25, sy + 44, 0x0000);
     print_string("Kernel Architecture: 64-bit AMD64 / Intel 64", sx + 25, sy + 56, 0x0000);
 
     int row_y = sy + 82;

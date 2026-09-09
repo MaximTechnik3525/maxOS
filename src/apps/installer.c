@@ -87,7 +87,7 @@ void installer_draw(void) {
 
     // Titlebar
     draw_rect(inst_x + 2, inst_y + 2, inst_w - 4, 20, 0x11EB);
-    print_string("maxOS System Setup & Installer v2.0", inst_x + 8, inst_y + 6, 0xFFFF);
+    print_string("maxOS System Setup & Installer v3.0", inst_x + 8, inst_y + 6, 0xFFFF);
 
     // Content card
     draw_rect(inst_x + 10, inst_y + 28, inst_w - 20, inst_h - 60, 0xFFFF);
@@ -193,11 +193,11 @@ static void installer_run_install(void) {
     // Step 4: Write default configuration & documents
     installer_set_step(80, "4/5: Writing system configs and documents...");
     play_sound(950); sleep(100); no_sound();
-    maxfs_write_file("system.cfg", "theme=1\nresolution=1024x768x16\nos=maxOS RedCycle x86_64\n", 59);
-    maxfs_write_file("welcome.txt", "Welcome to maxOS x86_64!\nInstalled on your real Hard Disk with maxFS 2.0.", 74);
-    maxfs_write_file("readme.txt", "maxOS RedCycle 2.0 (x86_64 Long Mode)\nPrograms use .maxP extension!\nAll edits persist!", 88);
+    maxfs_write_file("system.cfg", "theme=1\nresolution=1024x768x16\nos=maxOS RedCycle v3.0 x86_64\n", 64);
+    maxfs_write_file("welcome.txt", "Welcome to maxOS v3.0 x86_64!\nInstalled on your real Hard Disk with maxFS 2.0.", 79);
+    maxfs_write_file("readme.txt", "maxOS RedCycle 3.0 (x86_64 Long Mode)\nPrograms use .maxP extension!\nAll edits persist!", 88);
     maxfs_write_file("notes.txt", "Sample document stored on hard drive sectors.\nOpen and edit in Notepad!", 71);
-    maxfs_write_file("notepad.maxP", "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 2.0 Text Editor\n", 73);
+    maxfs_write_file("notepad.maxP", "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 3.0 Text Editor\n", 73);
     maxfs_write_file("explorer.maxP", "MAXP\nNAME=Explorer\nEXEC=explorer\nICON=EXP\nDESC=File & Disk Manager\n", 67);
     maxfs_write_file("calc.maxP", "MAXP\nNAME=Calculator\nEXEC=calc\nICON=CALC\nDESC=Desktop GUI Calculator\n", 71);
     maxfs_write_file("sysinfo.maxP", "MAXP\nNAME=SysInfo\nEXEC=sysinfo\nICON=CPU\nDESC=x86_64 Long Mode System Info\n", 76);

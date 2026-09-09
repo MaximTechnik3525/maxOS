@@ -240,7 +240,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             }
         }
     }
-    print_string("maxOS RedCycle x86_64", 400, 420, 0x0DE5);
+    print_string("maxOS RedCycle v3.0 x86_64", 380, 420, 0x0DE5);
     print_string("by maxTech", 10, 10, 0x24EE);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(1500);
@@ -957,7 +957,7 @@ void draw_window() {
                 }
             }
         }
-        print_string("Welcome to maxOS RedCycle x86_64", card_x + 14, card_y + 6, 0xFFFF);
+        print_string("Welcome to maxOS RedCycle v3.0 x86_64", card_x + 14, card_y + 6, 0xFFFF);
         print_string("Desktop & Applications Environment", card_x + 25, card_y + 36, 0x11EB);
         print_string("Modular applications use .maxP executable files on maxFS 2.0", card_x + 25, card_y + 60, 0x0000);
         print_string("- Launch applications from Desktop icons on the left side", card_x + 25, card_y + 88, 0x0000);
@@ -968,7 +968,7 @@ void draw_window() {
         print_string("[SysInfo.maxP] [Pong.maxP]     [Install.maxP]", card_x + 35, card_y + 206, 0x24EE);
         print_string("Hotkeys: Keys 1-9 switch themes | Esc/c closes active app", card_x + 25, card_y + 242, 0x7BEF);
         print_string("System Status: 64-bit Long Mode | PML4 Paging | ATA Ready", card_x + 25, card_y + 270, 0x0000);
-        print_string("maxOS Desktop v2.0 - by maxTech", card_x + 25, card_y + 310, 0x8085);
+        print_string("maxOS Desktop v3.0 - by maxTech", card_x + 25, card_y + 310, 0x8085);
     } else {
         // Render active window
         if (notepad_open) { notepad_draw(); }
