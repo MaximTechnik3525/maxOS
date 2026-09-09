@@ -21,7 +21,7 @@ void debug_init(void) {
     serial_initialized = 1;
 
     debug_puts("\n========================================\n");
-    debug_puts(" maxOS RedCycle v3.0 x86_64 Debug Stream\n");
+    debug_puts(" maxOS RedCycle v3.1 x86_64 Debug Stream\n");
     debug_puts(" Diagnostic Logger active on COM1\n");
     debug_puts("========================================\n\n");
 }

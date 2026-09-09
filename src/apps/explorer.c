@@ -50,7 +50,7 @@ void explorer_draw(void) {
 
     // Titlebar
     draw_rect(exp_x + 2, exp_y + 2, exp_w - 4, 20, 0x0320); // Dark Teal
-    print_string("maxOS Explorer 3.0 - Filesystem & Disk Manager", exp_x + 8, exp_y + 6, 0xFFFF);
+    print_string("maxOS Explorer 3.1 - Filesystem & Disk Manager", exp_x + 8, exp_y + 6, 0xFFFF);
 
     // Toolbar (Row 1)
     draw_rect(exp_x + 2, exp_y + 22, exp_w - 4, 25, 0xDF17);

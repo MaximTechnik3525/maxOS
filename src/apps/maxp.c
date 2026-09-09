@@ -14,7 +14,7 @@
 static int active_app_id = MAXP_APP_NONE;
 
 static const struct MaxPAppInfo app_registry[MAXP_APP_COUNT] = {
-    { MAXP_APP_NOTEPAD,   "Notepad",     "notepad.maxP", "Text Editor v3.0",            "NP",   0x03EA },
+    { MAXP_APP_NOTEPAD,   "Notepad",     "notepad.maxP", "Text Editor v3.1",            "NP",   0x03EA },
     { MAXP_APP_EXPLORER,  "Explorer",    "explorer.maxP", "File & Disk Manager",         "EXP",  0x24EE },
     { MAXP_APP_CALC,      "Calculator",  "calc.maxP",     "GUI Calculator",             "CALC", 0xF621 },
     { MAXP_APP_SYSINFO,   "SysInfo",     "sysinfo.maxP",  "x86_64 Long Mode Info",      "CPU",  0x0DE5 },
@@ -180,7 +180,7 @@ int maxp_launch_file(const char* filename) {
 void maxp_init(void) {
     // Seed default .maxP program files if not present on filesystem
     if (maxfs_find_file("notepad.maxP") == -1) {
-        const char* np_content = "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 3.0 Text Editor\n";
+        const char* np_content = "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 3.1 Text Editor\n";
         maxfs_write_file("notepad.maxP", np_content, 73);
     }
     if (maxfs_find_file("explorer.maxP") == -1) {
@@ -208,7 +208,7 @@ void maxp_init(void) {
         maxfs_write_file("mem.maxP", mem_content, 66);
     }
     if (maxfs_find_file("readme.txt") == -1) {
-        const char* rm = "Welcome to maxOS RedCycle v3.0 x86_64!\nPrograms use .maxP extension.\nUse Taskbar or Desktop icons to run apps.\n";
+        const char* rm = "Welcome to maxOS RedCycle v3.1 x86_64!\nPrograms use .maxP extension.\nUse Taskbar or Desktop icons to run apps.\n";
         maxfs_write_file("readme.txt", rm, 112);
     }
 }

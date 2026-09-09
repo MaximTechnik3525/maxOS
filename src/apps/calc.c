@@ -337,7 +337,7 @@ void calc_draw(void) {
 
     // Titlebar
     draw_rect(cx + 3, cy + 3, cw - 6, 22, 0x11EB); // Navy Blue
-    print_string("Calculator 3.0 - [calc.maxP]", cx + 8, cy + 8, 0xFFFF);
+    print_string("Calculator 3.1 - [calc.maxP]", cx + 8, cy + 8, 0xFFFF);
 
     // [X] Close button
     draw_calc_btn(cx + cw - 24, cy + 4, 18, 18, "X", 0xF9A6, 0x0000);
