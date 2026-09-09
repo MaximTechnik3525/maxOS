@@ -983,7 +983,11 @@ void filew() {
         print_string(ftext, win_x + 30, help_col, 0x0000);
         while (1) {
             unsigned char status = inb(0x64);
-            if ((status & 0x01) && !(status & 0x20)) {
+            if (status & 0x01) {
+                if (status & 0x20) {
+                    inb(0x60);
+                    continue;
+                }
                 unsigned char scan_code = inb(0x60);
                 if (scan_code < 0x80 && w_mode == 1 && drag != 2) {
                     char ascii_char = scan_code_to_ascii(scan_code);
