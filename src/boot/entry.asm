@@ -45,36 +45,36 @@ _start:
     xor eax, eax
     rep stosd
 
-    ; Point PML4[0] to pdpt_table (Present | Writable = 0x03)
+    ; Point PML4[0] to pdpt_table (Present | Writable | User = 0x07)
     mov eax, pdpt_table
-    or eax, 0x03
+    or eax, 0x07
     mov dword [pml4_table], eax
 
-    ; Point PDPT[0..3] to pd_table_0 .. pd_table_3 (covers 0..4 GB)
+    ; Point PDPT[0..3] to pd_table_0 .. pd_table_3 (covers 0..4 GB, User accessible)
     mov eax, pd_table_0
-    or eax, 0x03
+    or eax, 0x07
     mov dword [pdpt_table + 0], eax
 
     mov eax, pd_table_1
-    or eax, 0x03
+    or eax, 0x07
     mov dword [pdpt_table + 8], eax
 
     mov eax, pd_table_2
-    or eax, 0x03
+    or eax, 0x07
     mov dword [pdpt_table + 16], eax
 
     mov eax, pd_table_3
-    or eax, 0x03
+    or eax, 0x07
     mov dword [pdpt_table + 24], eax
 
     ; Map 2048 2MB huge pages across the 4 PD tables:
     ; page_addr = ecx * 2MB
-    ; flags = 0x83 (Present | Writable | Huge 2MB)
+    ; flags = 0x87 (Present | Writable | User | Huge 2MB)
     mov ecx, 0
 .map_pages:
     mov eax, ecx
     shl eax, 21             ; eax = ecx * 2097152 (2MB)
-    or eax, 0x83            ; Present | Writable | Huge 2MB
+    or eax, 0x87            ; Present | Writable | User | Huge 2MB
     mov dword [pd_table_0 + ecx * 8], eax
     mov dword [pd_table_0 + ecx * 8 + 4], 0
     inc ecx
@@ -94,10 +94,10 @@ _start:
     or eax, (1 << 5) | (1 << 9) | (1 << 10)
     mov cr4, eax
 
-    ; Set LME (Long Mode Enable) in EFER MSR (0xC0000080)
+    ; Set LME (Long Mode Enable, bit 8) and SCE (System Call Enable, bit 0) in EFER MSR (0xC0000080)
     mov ecx, 0xC0000080
     rdmsr
-    or eax, 1 << 8
+    or eax, (1 << 8) | (1 << 0)
     wrmsr
 
     ; Enable Paging (bit 31), Protection (bit 0), MP (bit 1), clear EM (bit 2) in CR0
@@ -144,14 +144,23 @@ _start:
     jmp .halt
 
 ; ------------------------------------------------------------------------------
-; GDT Table for 64-bit Long Mode
+; GDT Table for 64-bit Long Mode with Ring 3 and TSS Descriptors
 ; ------------------------------------------------------------------------------
-section .rodata
+section .data
 align 16
+global gdt64
+global gdt64_desc
+global gdt64_tss_entry
 gdt64:
     dq 0x0000000000000000       ; 0x00: Null descriptor
-    dq 0x00209A0000000000       ; 0x08: 64-bit Code Segment (L=1, D=0, Ring 0, Exec/Read)
-    dq 0x0000920000000000       ; 0x10: 64-bit Data Segment (Ring 0, Read/Write)
+    dq 0x00209A0000000000       ; 0x08: 64-bit Kernel Code (DPL=0, L=1, Exec/Read)
+    dq 0x0000920000000000       ; 0x10: 64-bit Kernel Data (DPL=0, Read/Write)
+    dq 0x0000F20000000000       ; 0x18: 32-bit User Data / Compat (STAR user base)
+    dq 0x0000F20000000000       ; 0x20: 64-bit User Data (DPL=3, Read/Write)
+    dq 0x0020FA0000000000       ; 0x28: 64-bit User Code (DPL=3, L=1, Exec/Read)
+gdt64_tss_entry:
+    dq 0x0000000000000000       ; 0x30: 64-bit TSS Low Qword (filled at runtime)
+    dq 0x0000000000000000       ; 0x38: 64-bit TSS High Qword (filled at runtime)
 gdt64_end:
 
 gdt64_desc:
@@ -178,6 +187,8 @@ pd_table_3:
     resb 4096
 
 align 16
+global stack_bottom
+global stack_top
 stack_bottom:
     resb 65536                  ; 64 KB kernel stack
 stack_top:

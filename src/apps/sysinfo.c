@@ -2,8 +2,8 @@
 #include "maxfs.h"
 #include "ata.h"
 #include "maxp.h"
-
 #include "kernel.h"
+#include "user.h"
 
 void get_cpu(char* buffer);
 
@@ -14,7 +14,7 @@ static void draw_ui_btn(int bx, int by, int bw, int bh, const char* label, unsig
     draw_rect(bx + 1, by + 1, bw - 2, 1, 0xFFFF);
     draw_rect(bx + 1, by + 1, 1, bh - 2, 0xFFFF);
     draw_rect(bx + 2, by + 2, bw - 4, bh - 4, fill);
-    print_string((char*)label, bx + 8, by + 5, text_col);
+    print_string((char*)label, bx + 6, by + 4, text_col);
 }
 
 void sysinfo_init(void) {
@@ -49,10 +49,10 @@ void sysinfo_draw(void) {
     draw_rect(sx + 1, sy + 1, sw - 2, sh - 2, 0xEF59);
 
     // Titlebar
-    draw_rect(sx + 2, sy + 2, sw - 4, 22, 0x0320); // Dark teal title
-    print_string("System Information - [sysinfo.maxP]", sx + 8, sy + 6, 0xFFFF);
+    draw_rect(sx + 2, sy + 2, sw - 4, 20, 0x0DE5);
+    print_string("maxOS System Hardware & Kernel Information (SysInfo)", sx + 8, sy + 6, 0x0000);
 
-    // [Close] button on top-right
+    // Close button
     draw_ui_btn(sx + sw - 56, sy + 3, 50, 18, "Close", 0xF9A6, 0x0000);
 
     // Main Card
@@ -80,6 +80,8 @@ void sysinfo_draw(void) {
     print_string("Mode:  64-bit Long Mode | PML4 4-Level Paging (2MB Huge Pages)", sx + 25, row_y, 0x0000);
     row_y += 15;
     print_string("Features: PAE Enabled | SSE/SSE2 Capable | System V AMD64 ABI", sx + 25, row_y, 0x0000);
+    row_y += 15;
+    print_string("Privilege: Ring 3 User Mode Supported (TSS + Fast Syscall)", sx + 25, row_y, 0x03EA);
     row_y += 24;
 
     // Section 3: Video & Memory
@@ -103,6 +105,7 @@ void sysinfo_draw(void) {
 
     // Bottom action buttons
     draw_ui_btn(sx + 20, sy + sh - 34, 80, 22, "Refresh", 0xC618, 0x0000);
+    draw_ui_btn(sx + 110, sy + sh - 34, 130, 22, "Ring 3 Demo (u)", 0x03EA, 0xFFFF);
     draw_ui_btn(sx + sw - 100, sy + sh - 34, 80, 22, "Close (c)", 0xF9A6, 0x0000);
 
     draw_cursor(pos_x, pos_y);
@@ -135,6 +138,12 @@ int sysinfo_handle_click(int mouse_x, int mouse_y) {
         return 1;
     }
 
+    // Bottom Ring 3 Demo button
+    if (mouse_x >= sx + 110 && mouse_x <= sx + 240 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+        ring3_demo_launch();
+        return 1;
+    }
+
     // Click inside window
     if (mouse_x >= sx && mouse_x <= sx + sw && mouse_y >= sy && mouse_y <= sy + sh) {
         return 1;
@@ -145,6 +154,12 @@ int sysinfo_handle_click(int mouse_x, int mouse_y) {
 
 int sysinfo_handle_key(char ascii_char, unsigned char scan_code) {
     if (!sysinfo_open) return 0;
+
+    // 'u' or 'U' launches Ring 3 demo
+    if (ascii_char == 'u' || ascii_char == 'U') {
+        ring3_demo_launch();
+        return 1;
+    }
 
     // 'c', 'q', or Esc (0x01) or F2 (0x3C)
     if (ascii_char == 'c' || ascii_char == 'C' || ascii_char == 'q' || scan_code == 0x01 || scan_code == 0x3C) {

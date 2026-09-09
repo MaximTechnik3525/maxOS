@@ -45,6 +45,7 @@ struct multiboot_info {
 #include "sysinfo.h"
 #include "pong.h"
 #include "kernel.h"
+#include "user.h"
 
 unsigned short* _gfx_memory_backend;
 unsigned int REAL_PITCH = 1024;
@@ -224,6 +225,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(1500);
 
+    // Initialize Ring 3 User Space, TSS, and SYSCALL MSRs
+    user_mode_init();
+
     // Initialize all filesystem, application, and GUI subsystems
     maxfs_init();
     maxp_init();
@@ -347,6 +351,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (ascii_char == 'S' || ascii_char == 's') { maxp_launch_app(MAXP_APP_SYSINFO); continue; }
                     if (ascii_char == 'P' || ascii_char == 'p') { maxp_launch_app(MAXP_APP_PONG); continue; }
                     if (ascii_char == 'I' || ascii_char == 'i') { maxp_launch_app(MAXP_APP_INSTALLER); continue; }
+                    if (ascii_char == 'U' || ascii_char == 'u') { ring3_demo_launch(); continue; }
 
                     // Themes 1-9
                     if (ascii_char >= '1' && ascii_char <= '9') {
@@ -809,8 +814,8 @@ void draw_window() {
         print_string("Registered .maxP Programs:", card_x + 25, card_y + 162, 0x0200);
         print_string("[Notepad.maxP] [Explorer.maxP] [Calc.maxP]", card_x + 35, card_y + 184, 0x03EA);
         print_string("[SysInfo.maxP] [Pong.maxP]     [Install.maxP]", card_x + 35, card_y + 206, 0x24EE);
-        print_string("Hotkeys: Keys 1-9 switch themes | Esc/c closes active app", card_x + 25, card_y + 242, 0x7BEF);
-        print_string("System Status: 64-bit Long Mode | PML4 Paging | ATA Ready", card_x + 25, card_y + 270, 0x0000);
+        print_string("Hotkeys: Keys 1-9 switch themes | U: Ring 3 Demo | Esc/c closes", card_x + 25, card_y + 242, 0x7BEF);
+        print_string("System Status: 64-bit Long Mode | Ring 3 Ready | ATA Ready", card_x + 25, card_y + 270, 0x0000);
         print_string("maxOS Desktop v3.0 - by maxTech", card_x + 25, card_y + 310, 0x8085);
     } else {
         // Render active window

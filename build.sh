@@ -31,6 +31,8 @@ nasm -Ibuild/ -f elf64 src/boot/mbr_data.asm -o build/mbr_data.o
 
 echo "=== [2/5] Компиляция исходного кода MaxOS (x86_64) ==="
 nasm -f elf64 src/boot/entry.asm -o build/entry.o
+nasm -f elf64 src/kernel/syscall_asm.asm -o build/syscall_asm.o
+$CC -c src/kernel/user.c -o build/user.o $CFLAGS
 $CC -c src/drivers/ata.c -o build/ata.o $CFLAGS
 $CC -c src/fs/maxfs.c -o build/maxfs.o $CFLAGS
 $CC -c src/apps/maxp.c -o build/maxp.o $CFLAGS
@@ -45,7 +47,8 @@ $CC -c src/kernel/kernel.c -o build/kernel.o $CFLAGS
 
 echo "=== [3/5] Линковка 64-битного ядра (ELF64) ==="
 $LD --no-warn-rwx-segments -T src/linker.ld -o build/mykernel.bin \
-    build/entry.o build/mbr_data.o build/kernel.o build/ata.o build/maxfs.o \
+    build/entry.o build/mbr_data.o build/syscall_asm.o build/user.o \
+    build/kernel.o build/ata.o build/maxfs.o \
     build/maxp.o build/taskbar.o build/notepad.o build/installer.o \
     build/explorer.o build/calc.o build/sysinfo.o build/pong.o
 
