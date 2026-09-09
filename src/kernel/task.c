@@ -67,6 +67,10 @@ static void default_task_worker(void) {
 }
 
 int task_create(const char* name, void (*entry)(void), int is_user, int app_id) {
+    if (get_cpl() == 3) {
+        return u_spawn(name, entry, is_user, app_id);
+    }
+
     // Disable interrupts to prevent schedule_tick during task creation
     unsigned long long flags;
     __asm__ __volatile__("pushfq; pop %0; cli" : "=r"(flags));
@@ -171,6 +175,9 @@ void task_exit(void) {
 }
 
 int task_kill(int pid) {
+    if (get_cpl() == 3) {
+        return u_kill(pid);
+    }
     if (pid <= 0 || pid >= MAX_TASKS) return 0;
     if (tasks[pid].state == TASK_UNUSED || tasks[pid].state == TASK_DEAD) return 0;
 
@@ -233,6 +240,9 @@ int task_get_count(void) {
 }
 
 int task_get_list(task_info_t* list, int max_count) {
+    if (get_cpl() == 3) {
+        return u_tasklist(list, max_count);
+    }
     int out_count = 0;
     for (int i = 0; i < MAX_TASKS && out_count < max_count; i++) {
         if (tasks[i].state != TASK_UNUSED) {

@@ -155,8 +155,8 @@ static inline void u_yield(void) {
     syscall0(SYS_YIELD);
 }
 
-static inline int u_spawn(const char* name, void (*entry)(void), int is_user) {
-    return (int)syscall3(SYS_SPAWN, (long)name, (long)entry, (long)is_user);
+static inline int u_spawn(const char* name, void (*entry)(void), int is_user, int app_id) {
+    return (int)syscall4(SYS_SPAWN, (long)name, (long)entry, (long)is_user, (long)app_id);
 }
 
 static inline int u_kill(int pid) {

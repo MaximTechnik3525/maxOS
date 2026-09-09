@@ -8,7 +8,7 @@
 
 #define MAXFS_MAX_FILES 32
 #define MAXFS_NAME_LEN 32
-#define MAXFS_CONTENT_LEN 1024
+#define MAXFS_CONTENT_LEN 16384
 
 #define MAXFS_SUPERBLOCK_LBA 1
 #define MAXFS_INODE_LBA 2
@@ -62,6 +62,8 @@ int maxfs_mount(void);
 int maxfs_create_file(char* name, char* text);
 int maxfs_write_file(const char* name, const char* content, unsigned int len);
 int maxfs_read_file(const char* name, char* buffer, unsigned int max_len);
+int maxfs_read_binary(const char* name, void* buffer, unsigned int max_len);
+int maxfs_write_binary(const char* name, const void* buffer, unsigned int len);
 int maxfs_delete_file(const char* name);
 int maxfs_is_mounted(void);
 const char* maxfs_get_volume_label(void);

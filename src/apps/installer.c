@@ -21,7 +21,13 @@ static void draw_ui_btn(int bx, int by, int bw, int bh, const char* label, unsig
     draw_rect(bx + 1, by + 1, bw - 2, 1, 0xFFFF);
     draw_rect(bx + 1, by + 1, 1, bh - 2, 0xFFFF);
     draw_rect(bx + 2, by + 2, bw - 4, bh - 4, fill);
-    print_string((char*)label, bx + 8, by + 6, text_col);
+    int len = 0;
+    while (label[len] != '\0') len++;
+    int tx = bx + (bw - (len * 9)) / 2;
+    int ty = by + (bh - 8) / 2;
+    if (tx < bx + 2) tx = bx + 2;
+    if (ty < by + 1) ty = by + 1;
+    print_string((char*)label, tx, ty, text_col);
 }
 
 static void draw_progress_bar(int px, int py, int pw, int ph, int pct) {
@@ -64,6 +70,9 @@ void installer_draw(void) {
     draw_rect(inst_x + 2, inst_y + 2, inst_w - 4, 20, 0x11EB);
     print_string("maxOS System Setup & Installer v3.1", inst_x + 8, inst_y + 6, 0xFFFF);
 
+    // [X] Close button
+    draw_ui_btn(inst_x + inst_w - 22, inst_y + 4, 18, 16, "X", 0xF800, 0xFFFF);
+
     // Content card
     draw_rect(inst_x + 10, inst_y + 28, inst_w - 20, inst_h - 60, 0xFFFF);
     draw_rect(inst_x + 10, inst_y + 28, inst_w - 20, 1, 0x7BEF);
@@ -101,9 +110,6 @@ void installer_draw(void) {
 
     // [Format Only] button
     draw_ui_btn(inst_x + 180, inst_y + 140, 120, 24, "Format Only", 0x24EE, 0xFFFF);
-
-    // [Close] button
-    draw_ui_btn(inst_x + inst_w - 95, inst_y + 140, 75, 24, "Close", 0xF9A6, 0x0000);
 
     // Progress Bar
     draw_progress_bar(inst_x + 25, inst_y + 175, inst_w - 50, 22, install_progress);
@@ -179,6 +185,7 @@ static void installer_run_install(void) {
     maxfs_write_file("pong.maxP", "MAXP\nNAME=Pong\nEXEC=pong\nICON=PONG\nDESC=Retro Pong Arcade Game\n", 64);
     maxfs_write_file("install.maxP", "MAXP\nNAME=Installer\nEXEC=installer\nICON=INST\nDESC=maxOS System Setup & HDD Installer\n", 83);
     maxfs_write_file("mem.maxP", "MAXP\nNAME=Mem\nEXEC=mem\nICON=MEM\nDESC=maxOS RAM & Memory Monitor\n", 66);
+    maxfs_write_file("stress.maxP", "MAXP\nNAME=StressTest\nEXEC=stress\nICON=RAM\nDESC=RAM Hardware Stress Test & Benchmark\n", 79);
 
     // Step 5: Flush cache & verify
     installer_set_step(100, "5/5: Verifying & Flushing ATA cache...");
@@ -234,8 +241,8 @@ int installer_handle_click(int mouse_x, int mouse_y) {
         return 1;
     }
 
-    // Check [Close] button: inst_x + inst_w - 95 .. inst_x + inst_w - 20, inst_y + 140 .. inst_y + 164
-    if (mouse_x >= inst_x + inst_w - 95 && mouse_x <= inst_x + inst_w - 20 && mouse_y >= inst_y + 140 && mouse_y <= inst_y + 164) {
+    // Check [X] Close button (Titlebar)
+    if (mouse_x >= inst_x + inst_w - 26 && mouse_x <= inst_x + inst_w && mouse_y >= inst_y && mouse_y <= inst_y + 24) {
         installer_close_window();
         return 1;
     }

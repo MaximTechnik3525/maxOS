@@ -60,6 +60,7 @@ struct SystemMemInfo {
     unsigned int stacks_kb;
     unsigned int ramdisk_kb;
     unsigned int apps_dynamic_kb;
+    unsigned int stress_kb;
     unsigned int usage_percent;
 };
 

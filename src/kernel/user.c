@@ -148,7 +148,7 @@ long syscall_dispatcher(long num, long a1, long a2, long a3, long a4, long a5) {
             return 0;
 
         case SYS_SPAWN:
-            return task_create((const char*)a1, (void (*)(void))a2, (int)a3, 0);
+            return task_create((const char*)a1, (void (*)(void))a2, (int)a3, (int)a4);
 
         case SYS_KILL:
             return task_kill((int)a1);
@@ -219,36 +219,56 @@ static int r3_app_running = 0;
 
 static void ring3_app_worker(void) {
     r3_app_running = 1;
+    app_instance_t* inst = maxp_get_active_instance();
+
     if (r3_action == 0) {
         // Draw active application in Ring 3
-        if (r3_target_app == MAXP_APP_NOTEPAD) notepad_draw();
-        else if (r3_target_app == MAXP_APP_EXPLORER) explorer_draw();
-        else if (r3_target_app == MAXP_APP_CALC) calc_draw();
-        else if (r3_target_app == MAXP_APP_SYSINFO) sysinfo_draw();
-        else if (r3_target_app == MAXP_APP_PONG) pong_draw();
-        else if (r3_target_app == MAXP_APP_INSTALLER) installer_draw();
-        else if (r3_target_app == MAXP_APP_MEM) mem_draw();
+        if (maxp_get_instance_count() > 0) {
+            maxp_draw_all_instances();
+        } else {
+            if (r3_target_app == MAXP_APP_NOTEPAD) notepad_draw();
+            else if (r3_target_app == MAXP_APP_EXPLORER) explorer_draw();
+            else if (r3_target_app == MAXP_APP_CALC) calc_draw();
+            else if (r3_target_app == MAXP_APP_SYSINFO) sysinfo_draw();
+            else if (r3_target_app == MAXP_APP_PONG) pong_draw();
+            else if (r3_target_app == MAXP_APP_INSTALLER) installer_draw();
+            else if (r3_target_app == MAXP_APP_MEM) mem_draw();
+        }
     } else if (r3_action == 1) {
         // Click handler in Ring 3
-        if (r3_target_app == MAXP_APP_NOTEPAD) r3_result = notepad_handle_click(r3_arg_x, r3_arg_y);
-        else if (r3_target_app == MAXP_APP_EXPLORER) r3_result = explorer_handle_click(r3_arg_x, r3_arg_y);
-        else if (r3_target_app == MAXP_APP_CALC) r3_result = calc_handle_click(r3_arg_x, r3_arg_y);
-        else if (r3_target_app == MAXP_APP_SYSINFO) r3_result = sysinfo_handle_click(r3_arg_x, r3_arg_y);
-        else if (r3_target_app == MAXP_APP_PONG) r3_result = pong_handle_click(r3_arg_x, r3_arg_y);
-        else if (r3_target_app == MAXP_APP_INSTALLER) r3_result = installer_handle_click(r3_arg_x, r3_arg_y);
-        else if (r3_target_app == MAXP_APP_MEM) r3_result = mem_handle_click(r3_arg_x, r3_arg_y);
+        if (maxp_get_instance_count() > 0) {
+            r3_result = maxp_handle_click_active(r3_arg_x, r3_arg_y);
+        } else {
+            if (r3_target_app == MAXP_APP_NOTEPAD) r3_result = notepad_handle_click(r3_arg_x, r3_arg_y);
+            else if (r3_target_app == MAXP_APP_EXPLORER) r3_result = explorer_handle_click(r3_arg_x, r3_arg_y);
+            else if (r3_target_app == MAXP_APP_CALC) r3_result = calc_handle_click(r3_arg_x, r3_arg_y);
+            else if (r3_target_app == MAXP_APP_SYSINFO) r3_result = sysinfo_handle_click(r3_arg_x, r3_arg_y);
+            else if (r3_target_app == MAXP_APP_PONG) r3_result = pong_handle_click(r3_arg_x, r3_arg_y);
+            else if (r3_target_app == MAXP_APP_INSTALLER) r3_result = installer_handle_click(r3_arg_x, r3_arg_y);
+            else if (r3_target_app == MAXP_APP_MEM) r3_result = mem_handle_click(r3_arg_x, r3_arg_y);
+        }
     } else if (r3_action == 2) {
         // Keyboard handler in Ring 3
-        if (r3_target_app == MAXP_APP_NOTEPAD) r3_result = notepad_handle_key(r3_arg_ch, r3_arg_scan);
-        else if (r3_target_app == MAXP_APP_EXPLORER) r3_result = explorer_handle_key(r3_arg_ch, r3_arg_scan);
-        else if (r3_target_app == MAXP_APP_CALC) r3_result = calc_handle_key(r3_arg_ch, r3_arg_scan);
-        else if (r3_target_app == MAXP_APP_SYSINFO) r3_result = sysinfo_handle_key(r3_arg_ch, r3_arg_scan);
-        else if (r3_target_app == MAXP_APP_PONG) r3_result = pong_handle_key(r3_arg_ch, r3_arg_scan);
-        else if (r3_target_app == MAXP_APP_INSTALLER) r3_result = installer_handle_key(r3_arg_ch, r3_arg_scan);
-        else if (r3_target_app == MAXP_APP_MEM) r3_result = mem_handle_key(r3_arg_ch, r3_arg_scan);
+        if (inst && !inst->is_minimized && inst->handle_key) {
+            r3_result = inst->handle_key(inst->state, r3_arg_ch, r3_arg_scan);
+            if (r3_result == -1) {
+                maxp_close_instance(inst->instance_id);
+                r3_result = 1;
+            }
+        } else {
+            if (r3_target_app == MAXP_APP_NOTEPAD) r3_result = notepad_handle_key(r3_arg_ch, r3_arg_scan);
+            else if (r3_target_app == MAXP_APP_EXPLORER) r3_result = explorer_handle_key(r3_arg_ch, r3_arg_scan);
+            else if (r3_target_app == MAXP_APP_CALC) r3_result = calc_handle_key(r3_arg_ch, r3_arg_scan);
+            else if (r3_target_app == MAXP_APP_SYSINFO) r3_result = sysinfo_handle_key(r3_arg_ch, r3_arg_scan);
+            else if (r3_target_app == MAXP_APP_PONG) r3_result = pong_handle_key(r3_arg_ch, r3_arg_scan);
+            else if (r3_target_app == MAXP_APP_INSTALLER) r3_result = installer_handle_key(r3_arg_ch, r3_arg_scan);
+            else if (r3_target_app == MAXP_APP_MEM) r3_result = mem_handle_key(r3_arg_ch, r3_arg_scan);
+        }
     } else if (r3_action == 3) {
         // Step handler in Ring 3
+        maxp_tick_all_instances();
         if (r3_target_app == MAXP_APP_PONG) pong_tick();
+        else if (r3_target_app == MAXP_APP_MEM) mem_tick();
     }
     r3_app_running = 0;
     u_exit();

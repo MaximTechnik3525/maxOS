@@ -30,6 +30,8 @@ nasm -f bin src/boot/boot_mbr.asm -o build/boot_mbr.bin
 nasm -Ibuild/ -f elf64 src/boot/mbr_data.asm -o build/mbr_data.o
 
 echo "=== [2/5] Компиляция исходного кода MaxOS (x86_64) ==="
+python3 tools/build_apps.py
+nasm -f elf64 build/app_binaries.asm -o build/app_binaries.o
 nasm -f elf64 src/boot/entry.asm -o build/entry.o
 nasm -f elf64 src/kernel/syscall_asm.asm -o build/syscall_asm.o
 nasm -f elf64 src/kernel/idt_asm.asm -o build/idt_asm.o
@@ -55,7 +57,7 @@ $LD --no-warn-rwx-segments -T src/linker.ld -o build/mykernel.bin \
     build/entry.o build/mbr_data.o build/syscall_asm.o build/idt_asm.o \
     build/debug.o build/idt.o build/user.o build/task.o build/kernel.o build/ata.o \
     build/maxfs.o build/maxp.o build/taskbar.o build/notepad.o \
-    build/installer.o build/explorer.o build/calc.o build/sysinfo.o build/pong.o build/mem.o
+    build/installer.o build/explorer.o build/calc.o build/sysinfo.o build/pong.o build/mem.o     build/app_binaries.o
 
 echo "=== [4/5] Подготовка структуры ISO и сборка maxos.iso ==="
 mkdir -p iso/boot/grub

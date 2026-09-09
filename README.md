@@ -17,7 +17,20 @@ sleep - makes delay for 2s.
 errscr - running the error screen.
 trailon, trailoff - enables and disables cursor trail.
 
-### maxOS 3.1 (RedCycle) Features:
+### maxOS 3.2 (RedCycle Multi-Instance & Binary Executables) Features:
+- **Standalone Binary Application Format (`MAXB` / `.bin`)**:
+  - Executable binaries (`notepad.bin`, `calc.bin`, `pong.bin`, `explorer.bin`, `sysinfo.bin`, `mem.bin`, `stress.bin`, `installer.bin`) compiled into `build/*.bin` and embedded into maxFS (`src/apps/maxb.h`).
+  - Standardized 68-byte binary executable header with magic `MAXB` (`0x4258414D`), versioning, icon metadata, state size, and entry hook offsets.
+  - Automated binary builder tool (`tools/build_apps.py`).
+  - Native raw sector binary loader in maxFS (`maxfs_read_binary` / `maxfs_write_binary`).
+- **Multi-Instance Application Architecture**:
+  - Run multiple instances of the same application simultaneously (e.g. multiple Notepads, multiple Calculators, multiple Pong games).
+  - Per-instance isolated memory state pools (`instance_state_pool[16][4096]`) preventing variable collisions.
+  - Automatic window cascading / staggering with dynamic title assignment (`Notepad #1`, `Notepad #2`, `Calculator #1`, etc.).
+  - Real-time window z-ordering: active window rendered on top, clicking any background window brings it immediately to front.
+  - Dynamic multi-instance taskbar: each running instance has its own dedicated 3D tab with live focus indicator.
+  - Global `Tab` shortcut (Alt-Tab style) cycles through all open instances with instant focus transfer.
+- **64-Bit Long Mode (x86_64)**: 4-level PML4 paging with 2MB huge pages, AMD64 System V ABI, Long Mode GDT (`src/boot/entry.asm`).
 - **64-Bit Long Mode (x86_64)**: 4-level PML4 paging with 2MB huge pages, AMD64 System V ABI, Long Mode GDT (`src/boot/entry.asm`).
 - **Preemptive Task Scheduler (Путь B)**: Full hardware timer-driven preemptive multitasking (`src/kernel/task.c` / `task.h`). Round-Robin 20ms time slices, complete 15-register CPU trap frame preservation, SSE/FPU FXSAVE/FXRSTOR context switching, and per-process 32KB kernel & user stacks.
 - **Simultaneous Multi-Process Execution**: Multiple applications run at the same time without losing state or closing each other.
@@ -34,6 +47,7 @@ trailon, trailoff - enables and disables cursor trail.
   - `calc.maxP` (`src/apps/calc.c`): 3D GUI Calculator 3.1 with floating-point arithmetic and LCD display.
   - `sysinfo.maxP` (`src/apps/sysinfo.c`): System hardware & CPU/RAM/VBE inspection.
   - `mem.maxP` (`src/apps/mem.c`): RAM usage monitor & interactive Preemptive Task Manager.
+  - `stress.maxP` (`src/apps/mem.c`): RAM hardware stress test, memory cell integrity validation & live bandwidth benchmark.
   - `pong.maxP` (`src/apps/pong.c`): Retro Pong arcade game with smooth paddle physics.
   - `install.maxP` (`src/apps/installer.c`): Disk setup and system installer.
 

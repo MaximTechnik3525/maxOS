@@ -350,6 +350,41 @@ int maxfs_read_file(const char* name, char* buffer, unsigned int max_len) {
     return to_read;
 }
 
+int maxfs_read_binary(const char* name, void* buffer, unsigned int max_len) {
+    int slot = maxfs_find_file(name);
+    if (slot == -1) return -1;
+
+    unsigned int file_size = inode_cache[slot].size;
+    unsigned int to_read = (file_size < max_len) ? file_size : max_len;
+
+    if (maxfs_disk_mounted && inode_cache[slot].start_lba >= MAXFS_DATA_LBA) {
+        unsigned char sbuf[512];
+        unsigned char* out = (unsigned char*)buffer;
+        unsigned int read_bytes = 0;
+        for (unsigned int s = 0; s < inode_cache[slot].sectors && read_bytes < to_read; s++) {
+            if (ata_read_sector(inode_cache[slot].start_lba + s, sbuf) == 0) {
+                for (int b = 0; b < 512 && read_bytes < to_read; b++) {
+                    out[read_bytes++] = sbuf[b];
+                }
+            } else {
+                break;
+            }
+        }
+        return read_bytes;
+    } else {
+        unsigned char* out = (unsigned char*)buffer;
+        unsigned int read_bytes = (to_read < (unsigned int)ram_disk[slot].size) ? to_read : (unsigned int)ram_disk[slot].size;
+        for (unsigned int i = 0; i < read_bytes; i++) {
+            out[i] = (unsigned char)ram_disk[slot].content[i];
+        }
+        return read_bytes;
+    }
+}
+
+int maxfs_write_binary(const char* name, const void* buffer, unsigned int len) {
+    return maxfs_write_file(name, (const char*)buffer, len);
+}
+
 int maxfs_delete_file(const char* name) {
     int slot = maxfs_find_file(name);
     if (slot == -1) return -1;

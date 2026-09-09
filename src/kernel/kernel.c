@@ -335,21 +335,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         continue;
                     }
 
-                    // Global hotkey: Tab (0x0F) cycles through running apps (Alt-Tab style!)
+                    // Global hotkey: Tab (0x0F) cycles through running instances (Alt-Tab style!)
                     if (scan_code == 0x0F) {
-                        int running_apps[MAXP_APP_COUNT];
-                        int run_count = maxp_get_running_apps(running_apps, MAXP_APP_COUNT);
-                        int cur_app = maxp_get_active_app();
-                        if (run_count > 0) {
-                            int cur_idx = -1;
-                            for (int i = 0; i < run_count; i++) {
-                                if (running_apps[i] == cur_app) {
-                                    cur_idx = i;
-                                    break;
-                                }
-                            }
-                            int next_app = running_apps[(cur_idx + 1) % run_count];
-                            maxp_set_active_app(next_app);
+                        if (maxp_get_instance_count() > 0) {
+                            maxp_cycle_active_instance();
                             taskbar_set_app_minimized(0);
                             play_sound(750); sleep(20); no_sound();
                             draw_window();
@@ -368,11 +357,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         continue;
                     }
 
-                    // Close active window (or all if desktop)
+                    // Close active window instance (or all if desktop)
                     if (ascii_char == 'c' || ascii_char == 'C' || scan_code == 0x01) {
-                        int cur_app = maxp_get_active_app();
-                        if (cur_app != MAXP_APP_NONE) {
-                            maxp_close_app(cur_app);
+                        int act_id = maxp_get_active_instance_id();
+                        if (act_id > 0) {
+                            maxp_close_instance(act_id);
                         } else {
                             maxp_close_all_windows();
                             draw_window();
@@ -444,8 +433,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 }
             }
         } else {
-            if (pong_open) {
-                ring3_app_step(MAXP_APP_PONG);
+            if (maxp_get_instance_count() > 0) {
+                ring3_app_step(maxp_get_active_app());
                 sleep(16);
             } else {
                 clock_timer++;
@@ -536,9 +525,11 @@ void get_system_mem_info(struct SystemMemInfo* info) {
     if (mem_open) active_apps_count++;
 
     info->apps_dynamic_kb = 1024 + (active_apps_count * 256);
+    info->stress_kb = mem_get_stress_kb();
 
     info->used_kb = info->kernel_kb + info->vram_kb + info->paging_kb +
-                    info->stacks_kb + info->ramdisk_kb + info->apps_dynamic_kb;
+                    info->stacks_kb + info->ramdisk_kb + info->apps_dynamic_kb +
+                    info->stress_kb;
 
     if (info->used_kb > info->total_kb) {
         info->free_kb = 0;
@@ -1102,7 +1093,7 @@ void draw_window() {
 
     // 3. Desktop center widget if no app is active or if active app is minimized
     int active_app = maxp_get_active_app();
-    if (active_app == MAXP_APP_NONE || taskbar_is_app_minimized()) {
+    if (maxp_get_instance_count() == 0 || taskbar_is_app_minimized()) {
         int card_x = 220, card_y = 150, card_w = 640, card_h = 370;
         for (int y = card_y; y < card_y + card_h; y++) {
             for (int x = card_x; x < card_x + card_w; x++) {
@@ -1144,13 +1135,7 @@ void draw_window() {
     } else {
         // Render active window
         if (get_cpl() == 3) {
-            if (notepad_open) { notepad_draw(); }
-            else if (explorer_open) { explorer_draw(); }
-            else if (calc_open) { calc_draw(); }
-            else if (sysinfo_open) { sysinfo_draw(); }
-            else if (mem_open) { mem_draw(); }
-            else if (pong_open) { pong_draw(); }
-            else if (installer_open) { installer_draw(); }
+            maxp_draw_active_instance();
         } else {
             ring3_app_draw(active_app);
         }
