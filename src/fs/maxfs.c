@@ -1,5 +1,6 @@
 #include "maxfs.h"
 #include "ata.h"
+#include "string.h"
 
 struct VirtualFile ram_disk[MAXFS_MAX_FILES];
 int maxfs_disk_mounted = 0;
@@ -12,6 +13,8 @@ static void sync_ram_disk(void) {
     for (int i = 0; i < MAXFS_MAX_FILES; i++) {
         if (inode_cache[i].flags & 0x01) {
             ram_disk[i].exists = 1;
+            ram_disk[i].is_dir = (inode_cache[i].flags & MAXFS_FLAG_DIR) ? 1 : 0;
+            ram_disk[i].parent_inode = inode_cache[i].parent_inode;
             ram_disk[i].size = inode_cache[i].size;
             int n = 0;
             while (inode_cache[i].name[n] != '\0' && n < (MAXFS_NAME_LEN - 1)) {
@@ -20,21 +23,32 @@ static void sync_ram_disk(void) {
             }
             ram_disk[i].name[n] = '\0';
 
-            // Read content from disk if disk mounted
-            if (maxfs_disk_mounted && inode_cache[i].start_lba >= MAXFS_DATA_LBA) {
-                unsigned char sbuf[512];
-                unsigned int read_bytes = 0;
-                for (unsigned int s = 0; s < inode_cache[i].sectors && read_bytes < (MAXFS_CONTENT_LEN - 1); s++) {
-                    if (ata_read_sector(inode_cache[i].start_lba + s, sbuf) == 0) {
-                        for (int b = 0; b < 512 && read_bytes < (MAXFS_CONTENT_LEN - 1) && read_bytes < inode_cache[i].size; b++) {
-                            ram_disk[i].content[read_bytes++] = (char)sbuf[b];
+            // Read content from disk if disk mounted and regular file
+            if (!ram_disk[i].is_dir && maxfs_disk_mounted && inode_cache[i].start_lba >= MAXFS_DATA_LBA) {
+                if (inode_cache[i].start_lba + inode_cache[i].sectors > ata_primary_master.total_sectors ||
+                    inode_cache[i].sectors > ((MAXFS_CONTENT_LEN + 511) / 512)) {
+                    ram_disk[i].content[0] = '\0';
+                } else {
+                    unsigned char sbuf[512];
+                    unsigned int read_bytes = 0;
+                    for (unsigned int s = 0; s < inode_cache[i].sectors && read_bytes < (MAXFS_CONTENT_LEN - 1); s++) {
+                        if (ata_read_sector(inode_cache[i].start_lba + s, sbuf) == 0) {
+                            for (int b = 0; b < 512 && read_bytes < (MAXFS_CONTENT_LEN - 1) && read_bytes < inode_cache[i].size; b++) {
+                                ram_disk[i].content[read_bytes++] = (char)sbuf[b];
+                            }
+                        } else {
+                            break;
                         }
                     }
+                    ram_disk[i].content[read_bytes] = '\0';
                 }
-                ram_disk[i].content[read_bytes] = '\0';
+            } else if (ram_disk[i].is_dir) {
+                ram_disk[i].content[0] = '\0';
             }
         } else {
             ram_disk[i].exists = 0;
+            ram_disk[i].is_dir = 0;
+            ram_disk[i].parent_inode = 0;
             ram_disk[i].size = 0;
             ram_disk[i].name[0] = '\0';
             ram_disk[i].content[0] = '\0';
@@ -55,7 +69,8 @@ int maxfs_mount(void) {
     }
 
     struct DiskSuperblock* sb = (struct DiskSuperblock*)sbuf;
-    if (sb->magic != MAXFS_MAGIC) {
+    if (sb->magic != MAXFS_MAGIC || sb->version != MAXFS_VERSION ||
+        sb->inode_count != MAXFS_MAX_FILES || sb->inode_table_lba != MAXFS_INODE_LBA) {
         maxfs_disk_mounted = 0;
         return -1;
     }
@@ -75,6 +90,17 @@ int maxfs_mount(void) {
         }
     }
 
+    // Sanitize any inodes from older images where parent_inode was uninitialized
+    for (int i = 0; i < MAXFS_MAX_FILES; i++) {
+        if (inode_cache[i].flags & 0x01) {
+            if (inode_cache[i].parent_inode >= MAXFS_MAX_FILES) {
+                inode_cache[i].parent_inode = 0;
+            }
+        } else {
+            inode_cache[i].parent_inode = 0;
+        }
+    }
+
     // Read Bitmap
     for (int s = 0; s < MAXFS_BITMAP_SECTORS; s++) {
         if (ata_read_sector(MAXFS_BITMAP_LBA + s, &bitmap_cache[s * 512]) != 0) {
@@ -86,96 +112,6 @@ int maxfs_mount(void) {
     maxfs_disk_mounted = 1;
     sync_ram_disk();
     return 0;
-}
-
-int maxfs_format(const char* volume_label) {
-    if (!ata_is_available()) {
-        // Fallback: format RAM disk only
-        for (int i = 0; i < MAXFS_MAX_FILES; i++) {
-            ram_disk[i].exists = 0;
-            ram_disk[i].size = 0;
-            ram_disk[i].name[0] = '\0';
-            ram_disk[i].content[0] = '\0';
-        }
-        return 0;
-    }
-
-    // Prepare Superblock
-    struct DiskSuperblock sb;
-    for (int i = 0; i < 512; i++) ((unsigned char*)&sb)[i] = 0;
-    sb.magic = MAXFS_MAGIC;
-    sb.version = MAXFS_VERSION;
-    sb.block_size = 512;
-    sb.total_sectors = ata_primary_master.total_sectors;
-    sb.inode_count = MAXFS_MAX_FILES;
-    sb.inode_table_lba = MAXFS_INODE_LBA;
-    sb.bitmap_lba = MAXFS_BITMAP_LBA;
-    sb.bitmap_sectors = MAXFS_BITMAP_SECTORS;
-    sb.data_start_lba = MAXFS_DATA_LBA;
-    sb.free_sectors = ata_primary_master.total_sectors - MAXFS_DATA_LBA;
-    sb.free_inodes = MAXFS_MAX_FILES;
-
-    int p = 0;
-    while (volume_label[p] != '\0' && p < 31) {
-        sb.volume_name[p] = volume_label[p];
-        current_volume_label[p] = volume_label[p];
-        p++;
-    }
-    sb.volume_name[p] = '\0';
-    current_volume_label[p] = '\0';
-
-    // Write Superblock to LBA 1
-    if (ata_write_sector(MAXFS_SUPERBLOCK_LBA, (const unsigned char*)&sb) != 0) {
-        return -1;
-    }
-
-    // Clear Inode table
-    for (int i = 0; i < MAXFS_MAX_FILES; i++) {
-        for (int b = 0; b < 32; b++) inode_cache[i].name[b] = '\0';
-        inode_cache[i].size = 0;
-        inode_cache[i].start_lba = 0;
-        inode_cache[i].sectors = 0;
-        inode_cache[i].flags = 0;
-        inode_cache[i].created = 0;
-    }
-    for (int s = 0; s < MAXFS_INODE_SECTORS; s++) {
-        if (ata_write_sector(MAXFS_INODE_LBA + s, (const unsigned char*)&inode_cache[s * 8]) != 0) {
-            return -1;
-        }
-    }
-
-    // Clear Bitmap: mark first 256 sectors as reserved for system (used = 1)
-    for (int i = 0; i < MAXFS_BITMAP_SECTORS * 512; i++) {
-        bitmap_cache[i] = 0;
-    }
-    for (int i = 0; i < 32; i++) {
-        bitmap_cache[i] = 0xFF; // sectors 0..255 used (MBR, maxFS meta, Kernel)
-    }
-    for (int s = 0; s < MAXFS_BITMAP_SECTORS; s++) {
-        if (ata_write_sector(MAXFS_BITMAP_LBA + s, &bitmap_cache[s * 512]) != 0) {
-            return -1;
-        }
-    }
-
-    ata_flush();
-    maxfs_disk_mounted = 1;
-    sync_ram_disk();
-    return 0;
-}
-
-void maxfs_init(void) {
-    ata_init();
-    if (maxfs_mount() != 0) {
-        // Disk not formatted yet or not available; initialize empty in-memory structure
-        maxfs_disk_mounted = 0;
-        for (int i = 0; i < MAXFS_MAX_FILES; i++) {
-            ram_disk[i].exists = 0;
-            ram_disk[i].size = 0;
-            ram_disk[i].name[0] = '\0';
-            ram_disk[i].content[0] = '\0';
-            inode_cache[i].flags = 0;
-        }
-    }
 }
 
 static int alloc_sectors(unsigned int count) {
@@ -209,30 +145,350 @@ static void free_sectors(unsigned int start_lba, unsigned int count) {
     }
 }
 
-int maxfs_write_file(const char* name, const char* content, unsigned int len) {
-    if (len > (MAXFS_CONTENT_LEN - 1)) len = MAXFS_CONTENT_LEN - 1;
-
-    // Check if file already exists
-    int slot = -1;
+int maxfs_find_in_dir(unsigned int dir_inode, const char* name) {
+    if (!name || name[0] == '\0') return -1;
     for (int i = 0; i < MAXFS_MAX_FILES; i++) {
-        if (inode_cache[i].flags & 0x01) {
-            int match = 1, p = 0;
-            while (name[p] != '\0' || inode_cache[i].name[p] != '\0') {
-                if (name[p] != inode_cache[i].name[p]) { match = 0; break; }
-                p++;
-            }
-            if (match) {
-                slot = i;
-                break;
+        if ((inode_cache[i].flags & 0x01) && inode_cache[i].parent_inode == dir_inode) {
+            if (strcmp(inode_cache[i].name, name) == 0) {
+                return i;
             }
         }
     }
+    return -1;
+}
+
+int maxfs_resolve_path(const char* path, unsigned int* out_parent, char* out_name) {
+    if (!path || path[0] == '\0') {
+        if (out_parent) *out_parent = 0;
+        if (out_name) out_name[0] = '\0';
+        return 0;
+    }
+
+    const char* p = path;
+    while (*p == '/') p++;
+
+    if (*p == '\0') {
+        if (out_parent) *out_parent = 0;
+        if (out_name) out_name[0] = '\0';
+        return 0;
+    }
+
+    unsigned int current_dir = 0;
+    char seg[MAXFS_NAME_LEN];
+
+    while (*p != '\0') {
+        int sp = 0;
+        while (*p != '\0' && *p != '/' && sp < (MAXFS_NAME_LEN - 1)) {
+            seg[sp++] = *p++;
+        }
+        seg[sp] = '\0';
+
+        while (*p == '/') p++;
+
+        if (*p == '\0') {
+            if (out_parent) *out_parent = current_dir;
+            if (out_name) {
+                strncpy(out_name, seg, MAXFS_NAME_LEN - 1);
+                out_name[MAXFS_NAME_LEN - 1] = '\0';
+            }
+            return 0;
+        } else {
+            int found_slot = -1;
+            for (int i = 0; i < MAXFS_MAX_FILES; i++) {
+                if ((inode_cache[i].flags & 0x01) &&
+                    (inode_cache[i].flags & MAXFS_FLAG_DIR) &&
+                    inode_cache[i].parent_inode == current_dir) {
+                    if (strcmp(inode_cache[i].name, seg) == 0) {
+                        found_slot = i;
+                        break;
+                    }
+                }
+            }
+            if (found_slot == -1) {
+                return -1;
+            }
+            current_dir = (unsigned int)found_slot;
+        }
+    }
+
+    return -1;
+}
+
+int maxfs_create_dir(const char* name, unsigned int parent_inode) {
+    if (!name || name[0] == '\0') return -1;
+    for (int i = 0; name[i] != '\0'; i++) {
+        if (name[i] == '/') return -1;
+    }
+
+    if (maxfs_find_in_dir(parent_inode, name) != -1) {
+        return -1; // already exists
+    }
+
+    int slot = -1;
+    // Slots 1..31 for directories, reserving 0 for root
+    for (int i = 1; i < MAXFS_MAX_FILES; i++) {
+        if (!(inode_cache[i].flags & 0x01)) {
+            slot = i;
+            break;
+        }
+    }
+    if (slot == -1) return -1;
+
+    strncpy(inode_cache[slot].name, name, 31);
+    inode_cache[slot].name[31] = '\0';
+    inode_cache[slot].size = 0;
+    inode_cache[slot].start_lba = 0;
+    inode_cache[slot].sectors = 0;
+    inode_cache[slot].flags = MAXFS_FLAG_USED | MAXFS_FLAG_DIR;
+    inode_cache[slot].created = 0;
+    inode_cache[slot].parent_inode = parent_inode;
+    for (int b = 0; b < 12; b++) inode_cache[slot].reserved[b] = 0;
+
+    if (maxfs_disk_mounted) {
+        int sec = slot / 8;
+        ata_write_sector(MAXFS_INODE_LBA + sec, (const unsigned char*)&inode_cache[sec * 8]);
+        ata_flush();
+    }
+
+    sync_ram_disk();
+    return slot;
+}
+
+int maxfs_mkdir(const char* path) {
+    if (!path || path[0] == '\0') return -1;
+    unsigned int parent = 0;
+    char base_name[MAXFS_NAME_LEN];
+    if (maxfs_resolve_path(path, &parent, base_name) != 0) return -1;
+    if (base_name[0] == '\0') return -1;
+    return maxfs_create_dir(base_name, parent);
+}
+
+int maxfs_format(const char* volume_label) {
+    if (!ata_is_available()) {
+        for (int i = 0; i < MAXFS_MAX_FILES; i++) {
+            ram_disk[i].exists = 0;
+            ram_disk[i].is_dir = 0;
+            ram_disk[i].parent_inode = 0;
+            ram_disk[i].size = 0;
+            ram_disk[i].name[0] = '\0';
+            ram_disk[i].content[0] = '\0';
+            inode_cache[i].flags = 0;
+            inode_cache[i].parent_inode = 0;
+        }
+        maxfs_create_dir("system", 0);
+        maxfs_create_dir("docs", 0);
+        maxfs_create_dir("apps", 0);
+        return 0;
+    }
+
+    struct DiskSuperblock sb;
+    for (int i = 0; i < 512; i++) ((unsigned char*)&sb)[i] = 0;
+    sb.magic = MAXFS_MAGIC;
+    sb.version = MAXFS_VERSION;
+    sb.block_size = 512;
+    sb.total_sectors = ata_primary_master.total_sectors;
+    sb.inode_count = MAXFS_MAX_FILES;
+    sb.inode_table_lba = MAXFS_INODE_LBA;
+    sb.bitmap_lba = MAXFS_BITMAP_LBA;
+    sb.bitmap_sectors = MAXFS_BITMAP_SECTORS;
+    sb.data_start_lba = MAXFS_DATA_LBA;
+    sb.free_sectors = ata_primary_master.total_sectors - MAXFS_DATA_LBA;
+    sb.free_inodes = MAXFS_MAX_FILES;
+
+    int p = 0;
+    while (volume_label[p] != '\0' && p < 31) {
+        sb.volume_name[p] = volume_label[p];
+        current_volume_label[p] = volume_label[p];
+        p++;
+    }
+    sb.volume_name[p] = '\0';
+    current_volume_label[p] = '\0';
+
+    if (ata_write_sector(MAXFS_SUPERBLOCK_LBA, (const unsigned char*)&sb) != 0) {
+        return -1;
+    }
+
+    for (int i = 0; i < MAXFS_MAX_FILES; i++) {
+        for (int b = 0; b < 32; b++) inode_cache[i].name[b] = '\0';
+        inode_cache[i].size = 0;
+        inode_cache[i].start_lba = 0;
+        inode_cache[i].sectors = 0;
+        inode_cache[i].flags = 0;
+        inode_cache[i].created = 0;
+        inode_cache[i].parent_inode = 0;
+        for (int b = 0; b < 12; b++) inode_cache[i].reserved[b] = 0;
+    }
+    for (int s = 0; s < MAXFS_INODE_SECTORS; s++) {
+        if (ata_write_sector(MAXFS_INODE_LBA + s, (const unsigned char*)&inode_cache[s * 8]) != 0) {
+            return -1;
+        }
+    }
+
+    for (int i = 0; i < MAXFS_BITMAP_SECTORS * 512; i++) {
+        bitmap_cache[i] = 0;
+    }
+    for (int i = 0; i < (MAXFS_DATA_LBA / 8); i++) {
+        bitmap_cache[i] = 0xFF;
+    }
+    for (int s = 0; s < MAXFS_BITMAP_SECTORS; s++) {
+        if (ata_write_sector(MAXFS_BITMAP_LBA + s, &bitmap_cache[s * 512]) != 0) {
+            return -1;
+        }
+    }
+
+    ata_flush();
+    maxfs_disk_mounted = 1;
+    sync_ram_disk();
+
+    maxfs_create_dir("system", 0);
+    maxfs_create_dir("docs", 0);
+    maxfs_create_dir("apps", 0);
+
+    return 0;
+}
+
+void maxfs_init(void) {
+    ata_init();
+    if (maxfs_mount() != 0) {
+        if (ata_is_available()) {
+            maxfs_format("maxOS System Disk");
+        } else {
+            maxfs_disk_mounted = 0;
+            for (int i = 0; i < MAXFS_MAX_FILES; i++) {
+                ram_disk[i].exists = 0;
+                ram_disk[i].is_dir = 0;
+                ram_disk[i].parent_inode = 0;
+                ram_disk[i].size = 0;
+                ram_disk[i].name[0] = '\0';
+                ram_disk[i].content[0] = '\0';
+                inode_cache[i].flags = 0;
+                inode_cache[i].parent_inode = 0;
+            }
+            maxfs_create_dir("system", 0);
+            maxfs_create_dir("docs", 0);
+            maxfs_create_dir("apps", 0);
+        }
+    } else {
+        if (maxfs_find_in_dir(0, "system") == -1) maxfs_create_dir("system", 0);
+        if (maxfs_find_in_dir(0, "docs") == -1) maxfs_create_dir("docs", 0);
+        if (maxfs_find_in_dir(0, "apps") == -1) maxfs_create_dir("apps", 0);
+    }
+}
+
+int maxfs_is_dir(int index) {
+    if (index >= 0 && index < MAXFS_MAX_FILES && (inode_cache[index].flags & 0x01)) {
+        return (inode_cache[index].flags & MAXFS_FLAG_DIR) ? 1 : 0;
+    }
+    return 0;
+}
+
+unsigned int maxfs_get_parent(int index) {
+    if (index >= 0 && index < MAXFS_MAX_FILES && (inode_cache[index].flags & 0x01)) {
+        return inode_cache[index].parent_inode;
+    }
+    return 0;
+}
+
+int maxfs_list_dir(unsigned int dir_inode, int* out_indices, int max_entries) {
+    int count = 0;
+    for (int i = 0; i < MAXFS_MAX_FILES && count < max_entries; i++) {
+        if ((inode_cache[i].flags & 0x01) && inode_cache[i].parent_inode == dir_inode) {
+            out_indices[count++] = i;
+        }
+    }
+    return count;
+}
+
+void maxfs_get_dir_path(unsigned int dir_inode, char* out_buf, int max_len) {
+    if (!out_buf || max_len < 2) return;
+    if (dir_inode == 0) {
+        strcpy(out_buf, "/");
+        return;
+    }
+
+    int chain[MAXFS_MAX_FILES];
+    int depth = 0;
+    unsigned int cur = dir_inode;
+
+    while (cur != 0 && depth < MAXFS_MAX_FILES) {
+        if (cur >= MAXFS_MAX_FILES || !(inode_cache[cur].flags & 0x01)) break;
+        chain[depth++] = cur;
+        cur = inode_cache[cur].parent_inode;
+    }
+
+    out_buf[0] = '/';
+    int pos = 1;
+    for (int i = depth - 1; i >= 0; i--) {
+        int idx = chain[i];
+        for (int c = 0; inode_cache[idx].name[c] != '\0' && pos < max_len - 2; c++) {
+            out_buf[pos++] = inode_cache[idx].name[c];
+        }
+        if (pos < max_len - 2) out_buf[pos++] = '/';
+    }
+    out_buf[pos] = '\0';
+}
+
+int maxfs_delete_inode(int slot) {
+    if (slot < 0 || slot >= MAXFS_MAX_FILES) return -1;
+    if (!(inode_cache[slot].flags & 0x01)) return -1;
+
+    if (inode_cache[slot].flags & MAXFS_FLAG_DIR) {
+        for (int i = 0; i < MAXFS_MAX_FILES; i++) {
+            if ((inode_cache[i].flags & 0x01) && inode_cache[i].parent_inode == (unsigned int)slot) {
+                return -2; // Directory not empty!
+            }
+        }
+    } else {
+        if (maxfs_disk_mounted && inode_cache[slot].start_lba >= MAXFS_DATA_LBA) {
+            free_sectors(inode_cache[slot].start_lba, inode_cache[slot].sectors);
+            for (int s = 0; s < MAXFS_BITMAP_SECTORS; s++) {
+                ata_write_sector(MAXFS_BITMAP_LBA + s, &bitmap_cache[s * 512]);
+            }
+        }
+    }
+
+    inode_cache[slot].flags = 0;
+    inode_cache[slot].name[0] = '\0';
+    inode_cache[slot].size = 0;
+    inode_cache[slot].start_lba = 0;
+    inode_cache[slot].sectors = 0;
+    inode_cache[slot].parent_inode = 0;
+    for (int b = 0; b < 12; b++) inode_cache[slot].reserved[b] = 0;
+
+    if (maxfs_disk_mounted) {
+        int sec = slot / 8;
+        ata_write_sector(MAXFS_INODE_LBA + sec, (const unsigned char*)&inode_cache[sec * 8]);
+        ata_flush();
+    }
+
+    sync_ram_disk();
+    return 0;
+}
+
+int maxfs_delete_file(const char* name) {
+    int slot = maxfs_find_file(name);
+    if (slot == -1) return -1;
+    return maxfs_delete_inode(slot);
+}
+
+int maxfs_rmdir(const char* path) {
+    int slot = maxfs_find_file(path);
+    if (slot == -1) return -1;
+    if (!(inode_cache[slot].flags & MAXFS_FLAG_DIR)) return -1;
+    return maxfs_delete_inode(slot);
+}
+
+int maxfs_write_file_in(unsigned int parent_inode, const char* name, const char* content, unsigned int len) {
+    if (len > (MAXFS_CONTENT_LEN - 1)) len = MAXFS_CONTENT_LEN - 1;
+
+    int slot = maxfs_find_in_dir(parent_inode, name);
 
     unsigned int needed_sectors = (len + 511) / 512;
     if (needed_sectors == 0) needed_sectors = 1;
 
     if (slot != -1) {
-        // Update existing file
+        if (inode_cache[slot].flags & MAXFS_FLAG_DIR) return -1;
+
         if (maxfs_disk_mounted) {
             if (needed_sectors > inode_cache[slot].sectors) {
                 free_sectors(inode_cache[slot].start_lba, inode_cache[slot].sectors);
@@ -243,7 +499,6 @@ int maxfs_write_file(const char* name, const char* content, unsigned int len) {
             inode_cache[slot].sectors = needed_sectors;
             inode_cache[slot].size = len;
 
-            // Write content
             unsigned char sbuf[512];
             unsigned int written = 0;
             for (unsigned int s = 0; s < needed_sectors; s++) {
@@ -253,33 +508,28 @@ int maxfs_write_file(const char* name, const char* content, unsigned int len) {
                 ata_write_sector(inode_cache[slot].start_lba + s, sbuf);
             }
 
-            // Write updated inode sector
             int sec = slot / 8;
             ata_write_sector(MAXFS_INODE_LBA + sec, (const unsigned char*)&inode_cache[sec * 8]);
-            // Write bitmap
             for (int s = 0; s < MAXFS_BITMAP_SECTORS; s++) {
                 ata_write_sector(MAXFS_BITMAP_LBA + s, &bitmap_cache[s * 512]);
             }
             ata_flush();
         }
     } else {
-        // Find free inode slot
         for (int i = 0; i < MAXFS_MAX_FILES; i++) {
             if (!(inode_cache[i].flags & 0x01)) {
                 slot = i;
                 break;
             }
         }
-        if (slot == -1) return -1; // No free inode
+        if (slot == -1) return -1;
 
-        int n = 0;
-        while (name[n] != '\0' && n < 31) {
-            inode_cache[slot].name[n] = name[n];
-            n++;
-        }
-        inode_cache[slot].name[n] = '\0';
+        strncpy(inode_cache[slot].name, name, 31);
+        inode_cache[slot].name[31] = '\0';
         inode_cache[slot].size = len;
-        inode_cache[slot].flags = 0x01; // USED
+        inode_cache[slot].flags = MAXFS_FLAG_USED;
+        inode_cache[slot].parent_inode = parent_inode;
+        for (int b = 0; b < 12; b++) inode_cache[slot].reserved[b] = 0;
 
         if (maxfs_disk_mounted) {
             int lba = alloc_sectors(needed_sectors);
@@ -290,7 +540,6 @@ int maxfs_write_file(const char* name, const char* content, unsigned int len) {
             inode_cache[slot].start_lba = lba;
             inode_cache[slot].sectors = needed_sectors;
 
-            // Write content sectors
             unsigned char sbuf[512];
             unsigned int written = 0;
             for (unsigned int s = 0; s < needed_sectors; s++) {
@@ -300,10 +549,8 @@ int maxfs_write_file(const char* name, const char* content, unsigned int len) {
                 ata_write_sector(inode_cache[slot].start_lba + s, sbuf);
             }
 
-            // Write inode table sector
             int sec = slot / 8;
             ata_write_sector(MAXFS_INODE_LBA + sec, (const unsigned char*)&inode_cache[sec * 8]);
-            // Write bitmap sectors
             for (int s = 0; s < MAXFS_BITMAP_SECTORS; s++) {
                 ata_write_sector(MAXFS_BITMAP_LBA + s, &bitmap_cache[s * 512]);
             }
@@ -315,7 +562,6 @@ int maxfs_write_file(const char* name, const char* content, unsigned int len) {
     }
 
     sync_ram_disk();
-    // Copy content directly into ram_disk cache
     for (unsigned int i = 0; i < len; i++) {
         ram_disk[slot].content[i] = content[i];
     }
@@ -326,6 +572,25 @@ int maxfs_write_file(const char* name, const char* content, unsigned int len) {
     return slot;
 }
 
+int maxfs_write_file(const char* name, const char* content, unsigned int len) {
+    if (!name || name[0] == '\0') return -1;
+    int has_slash = 0;
+    for (int i = 0; name[i] != '\0'; i++) {
+        if (name[i] == '/') { has_slash = 1; break; }
+    }
+
+    if (has_slash) {
+        unsigned int parent = 0;
+        char base_name[MAXFS_NAME_LEN];
+        if (maxfs_resolve_path(name, &parent, base_name) == 0 && base_name[0] != '\0') {
+            return maxfs_write_file_in(parent, base_name, content, len);
+        }
+        return -1;
+    }
+
+    return maxfs_write_file_in(0, name, content, len);
+}
+
 int maxfs_create_file(char* name, char* text) {
     int len = 0;
     while (text[len] != '\0') len++;
@@ -334,6 +599,33 @@ int maxfs_create_file(char* name, char* text) {
 
 int create_file(char* name, char* text) {
     return maxfs_create_file(name, text);
+}
+
+int maxfs_find_file(const char* name) {
+    if (!name || name[0] == '\0') return -1;
+    int has_slash = 0;
+    for (int i = 0; name[i] != '\0'; i++) {
+        if (name[i] == '/') { has_slash = 1; break; }
+    }
+
+    if (has_slash) {
+        unsigned int parent = 0;
+        char base_name[MAXFS_NAME_LEN];
+        if (maxfs_resolve_path(name, &parent, base_name) == 0 && base_name[0] != '\0') {
+            return maxfs_find_in_dir(parent, base_name);
+        }
+        return -1;
+    }
+
+    int idx = maxfs_find_in_dir(0, name);
+    if (idx != -1) return idx;
+
+    for (int i = 0; i < MAXFS_MAX_FILES; i++) {
+        if (inode_cache[i].flags & 0x01) {
+            if (strcmp(inode_cache[i].name, name) == 0) return i;
+        }
+    }
+    return -1;
 }
 
 int maxfs_read_file(const char* name, char* buffer, unsigned int max_len) {
@@ -385,47 +677,6 @@ int maxfs_write_binary(const char* name, const void* buffer, unsigned int len) {
     return maxfs_write_file(name, (const char*)buffer, len);
 }
 
-int maxfs_delete_file(const char* name) {
-    int slot = maxfs_find_file(name);
-    if (slot == -1) return -1;
-
-    if (maxfs_disk_mounted && inode_cache[slot].start_lba >= MAXFS_DATA_LBA) {
-        free_sectors(inode_cache[slot].start_lba, inode_cache[slot].sectors);
-        for (int s = 0; s < MAXFS_BITMAP_SECTORS; s++) {
-            ata_write_sector(MAXFS_BITMAP_LBA + s, &bitmap_cache[s * 512]);
-        }
-    }
-
-    inode_cache[slot].flags = 0;
-    inode_cache[slot].name[0] = '\0';
-    inode_cache[slot].size = 0;
-    inode_cache[slot].start_lba = 0;
-    inode_cache[slot].sectors = 0;
-
-    if (maxfs_disk_mounted) {
-        int sec = slot / 8;
-        ata_write_sector(MAXFS_INODE_LBA + sec, (const unsigned char*)&inode_cache[sec * 8]);
-        ata_flush();
-    }
-
-    sync_ram_disk();
-    return 0;
-}
-
-int maxfs_find_file(const char* name) {
-    for (int i = 0; i < MAXFS_MAX_FILES; i++) {
-        if (ram_disk[i].exists) {
-            int match = 1, p = 0;
-            while (name[p] != '\0' || ram_disk[i].name[p] != '\0') {
-                if (name[p] != ram_disk[i].name[p]) { match = 0; break; }
-                p++;
-            }
-            if (match) return i;
-        }
-    }
-    return -1;
-}
-
 struct VirtualFile* maxfs_get_file(int index) {
     if (index >= 0 && index < MAXFS_MAX_FILES && ram_disk[index].exists) {
         return &ram_disk[index];
@@ -445,5 +696,30 @@ struct DiskInode* maxfs_get_inode(int index) {
     if (index >= 0 && index < MAXFS_MAX_FILES && (inode_cache[index].flags & 0x01)) {
         return &inode_cache[index];
     }
+    return 0;
+}
+
+int maxfs_rename(int index, const char* new_name) {
+    if (index < 0 || index >= MAXFS_MAX_FILES) return -1;
+    if (!(inode_cache[index].flags & 0x01)) return -1;
+    if (!new_name || new_name[0] == '\0') return -1;
+    for (int i = 0; new_name[i] != '\0'; i++) {
+        if (new_name[i] == '/') return -1;
+    }
+
+    unsigned int parent = inode_cache[index].parent_inode;
+    int existing = maxfs_find_in_dir(parent, new_name);
+    if (existing != -1 && existing != index) return -1;
+
+    strncpy(inode_cache[index].name, new_name, 31);
+    inode_cache[index].name[31] = '\0';
+
+    if (maxfs_disk_mounted) {
+        int sec = index / 8;
+        ata_write_sector(MAXFS_INODE_LBA + sec, (const unsigned char*)&inode_cache[sec * 8]);
+        ata_flush();
+    }
+
+    sync_ram_disk();
     return 0;
 }

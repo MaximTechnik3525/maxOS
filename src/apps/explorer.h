@@ -2,12 +2,22 @@
 #define EXPLORER_H
 
 #include "maxfs.h"
+#include "dialog.h"
+
+#define EXPLORER_MAX_VISIBLE 16
+
+#define EXPLORER_DLG_NEW_FILE 1
+#define EXPLORER_DLG_NEW_DIR  2
+#define EXPLORER_DLG_RENAME   3
 
 extern int explorer_open;
 
 typedef struct {
-    int selected_file;
-    char exp_status[64];
+    int current_dir_inode;    // 0 = root (/), or inode index of current directory
+    int selected_index;       // index in current directory item list (0..total_items-1), or -1
+    int scroll_offset;        // index of first visible row in table
+    char exp_status[80];      // status bar text
+    dialog_t dlg;             // dialog window for filename assignment and rename
 } explorer_state_t;
 
 void explorer_init(void);

@@ -260,7 +260,7 @@ static void notepad_instance_draw_file_picker(notepad_state_t* s, int np_x, int 
     int file_count = 0;
     for (int i = 0; i < MAXFS_MAX_FILES && file_count < 8; i++) {
         struct VirtualFile* vf = maxfs_get_file(i);
-        if (vf && vf->exists) {
+        if (vf && vf->exists && !vf->is_dir) {
             if (s->picker_selected == file_count) {
                 draw_rect(dlg_x + 16, row_y, dlg_w - 32, 20, 0x861F);
                 print_string(">", dlg_x + 8, row_y + 4, 0x0000);
@@ -359,7 +359,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
         int file_count = 0;
         for (int i = 0; i < MAXFS_MAX_FILES && file_count < 8; i++) {
             struct VirtualFile* vf = maxfs_get_file(i);
-            if (vf && vf->exists) {
+            if (vf && vf->exists && !vf->is_dir) {
                 if (mouse_x >= dlg_x + 16 && mouse_x <= dlg_x + dlg_w - 16 &&
                     mouse_y >= row_y && mouse_y <= row_y + 20) {
                     s->file_picker_open = 0;
@@ -478,7 +478,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
         int file_indices[MAXFS_MAX_FILES];
         for (int i = 0; i < MAXFS_MAX_FILES; i++) {
             struct VirtualFile* vf = maxfs_get_file(i);
-            if (vf && vf->exists) {
+            if (vf && vf->exists && !vf->is_dir) {
                 file_indices[total++] = i;
             }
         }

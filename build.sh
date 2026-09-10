@@ -36,6 +36,7 @@ nasm -f elf64 src/boot/entry.asm -o build/entry.o
 nasm -f elf64 src/kernel/syscall_asm.asm -o build/syscall_asm.o
 nasm -f elf64 src/kernel/idt_asm.asm -o build/idt_asm.o
 $CC -c src/kernel/string.c -o build/string.o $CFLAGS
+$CC -c src/kernel/dialog.c -o build/dialog.o $CFLAGS
 $CC -c src/kernel/debug.c -o build/debug.o $CFLAGS
 $CC -c src/kernel/idt.c -o build/idt.o $CFLAGS
 $CC -c src/kernel/user.c -o build/user.o $CFLAGS
@@ -56,7 +57,7 @@ $CC -c src/kernel/kernel.c -o build/kernel.o $CFLAGS
 echo "=== [3/5] Линковка 64-битного ядра (ELF64) ==="
 $LD --no-warn-rwx-segments -T src/linker.ld -o build/mykernel.bin \
     build/entry.o build/mbr_data.o build/syscall_asm.o build/idt_asm.o \
-    build/string.o build/debug.o build/idt.o build/user.o build/task.o build/kernel.o build/ata.o \
+    build/string.o build/dialog.o build/debug.o build/idt.o build/user.o build/task.o build/kernel.o build/ata.o \
     build/maxfs.o build/maxp.o build/taskbar.o build/notepad.o \
     build/installer.o build/explorer.o build/calc.o build/sysinfo.o build/pong.o build/mem.o \
     build/app_binaries.o
