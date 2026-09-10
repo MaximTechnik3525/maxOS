@@ -503,6 +503,15 @@ void outw(unsigned short port, unsigned short val) {
     if (get_cpl() == 3) return;
     __asm__ volatile("outw %0, %1" : : "a"(val), "Nd"(port));
 }
+void system_reboot() {
+    unsigned char temp;
+    do {
+        temp = inb(0x64);
+        if (temp & 1) inb(0x60);
+    } while (temp & 2);
+    outb(0x64, 0xFE);
+    while (1) { __asm__ volatile("hlt"); }
+}
 void shutdown() {
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {

@@ -31,22 +31,24 @@ start:
     cmp ax, 0x004F
     jne boot_fail
 
-    ; 3. Read Kernel (120 sectors = 60 KB) from LBA 32 to 0x1000:0000 (physical 0x10000)
-    mov si, dap
-    mov dl, [boot_drive]
-    mov ah, 0x42
-    int 0x13
-    jc boot_fail
-
-    ; Read second chunk (120 sectors = 60 KB) from LBA 152 to 0x1F00:0000 (physical 0x1F000)
+    ; 3. Read Kernel (960 sectors = 480 KB) from LBA 32 to 0x1000:0000 (physical 0x10000)
+    mov ax, 0x1000
+    mov dword [dap + 8], 32
+    mov cx, 8
+.read_loop:
     mov word [dap + 2], 120
-    mov word [dap + 6], 0x1F00
-    mov dword [dap + 8], 152
+    mov word [dap + 6], ax
     mov si, dap
     mov dl, [boot_drive]
+    push ax
     mov ah, 0x42
     int 0x13
+    pop ax
     jc boot_fail
+    add ax, 0x0F00
+    add dword [dap + 8], 120
+    dec cx
+    jnz .read_loop
 
     ; 4. Fast A20 gate
     in al, 0x92
@@ -88,10 +90,10 @@ pm_start:
     ; If raw binary, copy directly to 0x100000 and jump to 0x101000
     mov esi, 0x10000
     mov edi, 0x100000
-    mov ecx, (240 * 512) / 4
+    mov ecx, (960 * 512) / 4
     rep movsd
-    ; Clear BSS (from 0x100000 + 240*512 to 0x150000)
-    mov edi, 0x100000 + (240 * 512)
+    ; Clear BSS (from 0x100000 + 960*512 to 0x180000)
+    mov edi, 0x100000 + (960 * 512)
     mov ecx, (64 * 1024) / 4
     xor eax, eax
     rep stosd

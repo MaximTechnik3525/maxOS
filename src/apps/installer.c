@@ -170,10 +170,10 @@ static void installer_run_install(installer_state_t* s, int inst_x, int inst_y, 
     installer_set_step(s, inst_x, inst_y, inst_w, inst_h, 60, "3/5: Installing OS Kernel to LBA 32...");
     play_sound(800); sleep(100); no_sound();
     const unsigned char* kernel_mem = (const unsigned char*)0x100000;
-    for (unsigned int sec = 0; sec < 240; sec++) {
+    for (unsigned int sec = 0; sec < 960; sec++) {
         ata_write_sector(32 + sec, kernel_mem + (sec * 512));
     }
-    maxfs_write_file("kernel.bin", (const char*)kernel_mem, 1024);
+    maxfs_write_file("kernel.bin", (const char*)kernel_mem, 960 * 512);
 
     // Step 4: Write default configuration & documents
     installer_set_step(s, inst_x, inst_y, inst_w, inst_h, 80, "4/5: Writing system configs and documents...");
@@ -200,7 +200,10 @@ static void installer_run_install(installer_state_t* s, int inst_x, int inst_y, 
     ata_flush();
     play_sound(500); sleep(80); play_sound(750); sleep(80); play_sound(1000); sleep(120); no_sound();
 
-    installer_set_step(s, inst_x, inst_y, inst_w, inst_h, 100, "Installation Complete! System installed on HDD.");
+    installer_set_step(s, inst_x, inst_y, inst_w, inst_h, 100, "Installation Complete! Rebooting in 3 seconds...");
+    maxp_draw_active_instance();
+    sleep(3000);
+    system_reboot();
 }
 
 int installer_instance_click(installer_state_t* s, int inst_x, int inst_y, int inst_w, int inst_h, int mouse_x, int mouse_y) {

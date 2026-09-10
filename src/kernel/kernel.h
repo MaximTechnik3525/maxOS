@@ -35,6 +35,7 @@ void no_sound(void);
 
 // System control
 void shutdown(void);
+void system_reboot(void);
 void error(char* err);
 
 #include "string.h"
