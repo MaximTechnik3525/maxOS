@@ -131,7 +131,14 @@ static void installer_set_step(installer_state_t* s, int inst_x, int inst_y, int
         strncpy(s->install_status, msg, sizeof(s->install_status) - 1);
         s->install_status[sizeof(s->install_status) - 1] = '\0';
     }
-    installer_instance_draw(s, inst_x, inst_y, inst_w, inst_h);
+    prev_cursor();
+    
+    // Partial Redraw: Only Progress Bar and Status Text
+    draw_progress_bar(inst_x + 25, inst_y + 172, inst_w - 50, 22, s ? s->install_progress : 0);
+    draw_rect(inst_x + 25, inst_y + 104, inst_w - 50, 20, 0xEF59); // Clear background
+    print_string((char*)msg, inst_x + 25, inst_y + 104, 0x0200);
+
+    draw_cursor(pos_x, pos_y);
 }
 
 static void installer_run_install(installer_state_t* s, int inst_x, int inst_y, int inst_w, int inst_h) {

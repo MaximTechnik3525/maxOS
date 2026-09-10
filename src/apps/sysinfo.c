@@ -149,8 +149,7 @@ int sysinfo_instance_click(sysinfo_state_t* s, int sx, int sy, int sw, int sh, i
     // Ring 3 Demo button
     if (mouse_x >= sx + 130 && mouse_x <= sx + 310 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
         ui_btn_click_effect(sx + 130, sy + sh - 34, 180, 22, "Run Ring 3 Demo (u)", 0x03EA, 0xFFFF);
-        ring3_demo_launch();
-        return 1;
+        return -3;
     }
 
     if (mouse_x >= sx && mouse_x <= sx + sw && mouse_y >= sy && mouse_y <= sy + sh) {
@@ -163,8 +162,7 @@ int sysinfo_instance_click(sysinfo_state_t* s, int sx, int sy, int sw, int sh, i
 int sysinfo_instance_key(sysinfo_state_t* s, char ascii_char, unsigned char scan_code) {
     (void)s;
     if (ascii_char == 'u' || ascii_char == 'U') {
-        ring3_demo_launch();
-        return 1;
+        return -3;
     }
 
     if (ascii_char == 'c' || ascii_char == 'C' || ascii_char == 'q' || scan_code == 0x01 || scan_code == 0x3C) {

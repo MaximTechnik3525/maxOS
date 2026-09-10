@@ -147,6 +147,10 @@ static void handle_mouse_packet(unsigned char p0, unsigned char p1, unsigned cha
         int handled = 0;
         if (active_app != MAXP_APP_NONE) {
             handled = ring3_app_handle_click(active_app, pos_x, pos_y);
+            if (handled == -3) {
+                ring3_demo_launch();
+                handled = 1;
+            }
         }
         if (!handled) {
             handled = desktop_handle_click(pos_x, pos_y);
@@ -265,7 +269,13 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 
                     int active_app = maxp_get_active_app();
                     if (active_app != MAXP_APP_NONE) {
-                        if (ring3_app_handle_key(active_app, ascii_char, scan_code)) continue;
+                        int res = ring3_app_handle_key(active_app, ascii_char, scan_code);
+                        if (res == -3) {
+                            ring3_demo_launch();
+                            continue;
+                        } else if (res) {
+                            continue;
+                        }
                     }
 
                     // Start Menu shortcut (M key on desktop)
@@ -932,6 +942,10 @@ void ui_btn_click_effect(int bx, int by, int bw, int bh, const char* label, unsi
     play_sound(800);
     sleep(30);
     no_sound();
+    
+    prev_cursor();
+    draw_ui_btn_state(bx, by, bw, bh, label, fill, text_col, 0);
+    draw_cursor(pos_x, pos_y);
 }
 
 void draw_ui_button(int x, int y, int w, int h, const char* text, unsigned short bg_col, unsigned short text_col, int sunken) {
