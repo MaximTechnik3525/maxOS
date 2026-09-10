@@ -46,6 +46,7 @@ struct multiboot_info {
 #include "pong.h"
 #include "mem.h"
 #include "kernel.h"
+#include "mmu.h"
 #include "user.h"
 #include "idt.h"
 #include "task.h"
@@ -186,6 +187,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 
     // Initialize Diagnostic Serial Debugger (COM1 38400 baud)
     debug_init();
+    
+    // Initialize Memory Management Unit (4KB pages & Security)
+    mmu_init();
 
     init_mouse();
 
