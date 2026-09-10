@@ -189,6 +189,7 @@ const unsigned char max_font[] = {
     0x70,0x18,0x18,0x0C,0x18,0x18,0x70,0x00, // 125 }
     0x76,0xDC,0x00,0x00,0x00,0x00,0x00,0x00  // 126 ~
 };
+
 int win_x = 150;
 int win_y = 140;
 int win_w = 740;
@@ -1113,6 +1114,55 @@ void filew() {
                     if (ascii_char == '1' && shift_p == 1) {
                         if (textid < 76) {
                             ftext[textid] = '!';
+                            textid++;
+                            ftext[textid] = '\0';
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 1024 + x] = 0x0320;
+                                    }
+                                    else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
+                                    }
+                                    else {
+                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                    }
+                                }
+                            }
+                            int swin_x = win_x + 20;
+                            int swin_y = win_y + 22;
+                            int swin_w = win_w - 40;
+                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                            gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
+                            gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
+                            int right_edges = swin_x + swin_w - 1;
+                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                            gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
+                            gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+                            print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
+                            print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
+                            print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+                            print_string(ftext, win_x + 30, help_col, 0x0000);
+                            if (str_cmp(ftext, ram_disk[fid - 1].content)) {
+                                print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
+                                print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
+                            }
+                            else {
+                                print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
+                                print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
+                            }
+                            print_string(ftext, win_x + 30, help_col, 0x0000);
+                        }
+                    }
+                    if (ascii_char == '2' && shift_p == 1) {
+                        if (textid < 76) {
+                            ftext[textid] = '@';
                             textid++;
                             ftext[textid] = '\0';
                             for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
