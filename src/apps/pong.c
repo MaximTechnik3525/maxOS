@@ -181,8 +181,11 @@ int pong_instance_click(pong_state_t* s, int px, int py, int pw, int ph, int mou
 }
 
 int pong_instance_key(pong_state_t* s, char ascii_char, unsigned char scan_code) {
-    int px = win_x + 30;
-    int pw = win_w - 60;
+    app_instance_t* inst = maxp_get_active_instance();
+    int px = inst ? inst->win_x : (win_x + 30);
+    int py = inst ? inst->win_y : (win_y + 35);
+    int pw = inst ? inst->win_w : (win_w - 60);
+    int ph = inst ? inst->win_h : (win_h - 60);
     int court_x = px + 6;
     int court_w = pw - 12;
 
@@ -211,7 +214,7 @@ int pong_instance_key(pong_state_t* s, char ascii_char, unsigned char scan_code)
     // Restart
     if (ascii_char == 'r' || ascii_char == 'R') {
         s->pong_score = 0;
-        pong_instance_init(s, px, win_y + 35, pw, win_h - 60);
+        pong_instance_init(s, px, py, pw, ph);
         draw_window();
         return 1;
     }

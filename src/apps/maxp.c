@@ -488,7 +488,11 @@ int maxp_handle_key_active(char ch, unsigned char scan) {
 
 void maxp_tick_all_instances(void) {
     for (int i = 0; i < MAX_APP_INSTANCES; i++) {
-        if (instances[i].instance_id != 0 && instances[i].tick) {
+        if (instances[i].instance_id != 0 && !instances[i].is_minimized && instances[i].tick) {
+            // Games/visual animations like Pong should only tick/draw when active on top
+            if (instances[i].app_type == MAXP_APP_PONG && instances[i].instance_id != active_instance_id) {
+                continue;
+            }
             instances[i].tick(instances[i].state, instances[i].win_x, instances[i].win_y, instances[i].win_w, instances[i].win_h);
         }
     }
@@ -497,6 +501,9 @@ void maxp_tick_all_instances(void) {
 int maxp_has_ticking_instances(void) {
     for (int i = 0; i < MAX_APP_INSTANCES; i++) {
         if (instances[i].instance_id != 0 && !instances[i].is_minimized && instances[i].tick) {
+            if (instances[i].app_type == MAXP_APP_PONG && instances[i].instance_id != active_instance_id) {
+                continue;
+            }
             return 1;
         }
     }

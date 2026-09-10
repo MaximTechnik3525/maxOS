@@ -264,9 +264,12 @@ static void ring3_app_worker(void) {
         }
     } else if (r3_action == 3) {
         // Step handler in Ring 3
-        maxp_tick_all_instances();
-        if (r3_target_app == MAXP_APP_PONG) pong_tick();
-        else if (r3_target_app == MAXP_APP_MEM) mem_tick();
+        if (maxp_get_instance_count() > 0) {
+            maxp_tick_all_instances();
+        } else {
+            if (r3_target_app == MAXP_APP_PONG) pong_tick();
+            else if (r3_target_app == MAXP_APP_MEM) mem_tick();
+        }
     }
     r3_app_running = 0;
     u_exit();
