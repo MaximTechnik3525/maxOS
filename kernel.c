@@ -1272,12 +1272,12 @@ void cpu_win() {
 void progressbar(char* file_des, int xend) {
         for (int y = win_y + 410; y < win_y + 425; y++) {
             for (int x = win_x + 300; x < win_x + 450; x++) {
-                gfx_memory[y * 1024 + x] = 0x18C3;
+                gfx_memory[y * 1024 + x] = 0x3186;
             }
         }
         for (int y = win_y + 412; y < win_y + 423; y++) {
             for (int x = win_x + 302; x < xend; x++) {
-                gfx_memory[y * 1024 + x] = 0x2417;
+                gfx_memory[y * 1024 + x] = 0x0DE5;
             }
         }
         print_string(file_des, win_x + 290, win_y + 435, 0x0000);
@@ -1325,11 +1325,10 @@ void open_explorer() {
         gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
         gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
 
-        print_string("Explorer", win_x + 28, win_y + 28, 0x0000);
-        print_string("Explorer", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("Explorer: f to format, c to close", win_x + 28, win_y + 28, 0x0000);
+        print_string("Explorer: f to format, c to close", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Name:", win_x + 35, win_y + 45, 0x0000);
         print_string("Size:", (win_x + win_h) - 14, win_y + 45, 0x0000);
-        print_string("Press f to format virtual disk. Press c to close this window.", win_x + 30, win_y + 510, 0x0000);
 
         for (int i = 0; i < 5; i++) {
             print_string(ram_disk[i].name, win_x + 30, line, 0x0000);
@@ -1339,7 +1338,7 @@ void open_explorer() {
             print_string("b", (win_x + win_h) + 12, line, 0x0000);
             line += 15;
         }
-        if (fid == 0) { progressbar("5/5 can be created.", win_x + 303); }
+        if (fid == 0) { progressbar("5/5 can be created.", win_x + 305); }
         if (fid == 1) { progressbar("4/5 can be created.", win_x + 333); }
         if (fid == 2) { progressbar("3/5 can be created.", win_x + 363); }
         if (fid == 3) { progressbar("2/5 can be created.", win_x + 393); }
