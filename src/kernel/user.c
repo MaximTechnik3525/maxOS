@@ -1,5 +1,6 @@
 #include "user.h"
 #include "kernel.h"
+#include "malloc.h"
 #include "idt.h"
 #include "task.h"
 #include "maxp.h"
@@ -196,6 +197,13 @@ long syscall_dispatcher(long num, long a1, long a2, long a3, long a4, long a5) {
 
         case SYS_DEBUG_LOG:
             debug_log((const char*)a1, (const char*)a2);
+            return 0;
+
+        case 21: // SYS_MALLOC
+            return (long)kmalloc((unsigned int)a1);
+
+        case 22: // SYS_FREE
+            kfree((void*)a1);
             return 0;
 
         default:

@@ -58,6 +58,7 @@ typedef struct {
     task_state_t state;
     task_priority_t priority;
     unsigned long long rsp;              // Saved RSP pointing to trap_frame
+    unsigned long cr3;                   // PML4 Page Table base address
     unsigned long long kstack_top;       // Top of kernel stack for TSS.rsp0
     unsigned char kstack[TASK_STACK_SIZE] __attribute__((aligned(16)));
     unsigned char ustack[TASK_STACK_SIZE] __attribute__((aligned(16)));

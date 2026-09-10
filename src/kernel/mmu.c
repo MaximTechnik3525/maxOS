@@ -62,3 +62,51 @@ void mmu_init(void) {
     
     debug_log("MMU", "CR3 loaded. Null pointer protection active.\n");
 }
+
+#include "pmm.h"
+
+unsigned long mmu_create_address_space(void) {
+    unsigned long* new_pml4 = (unsigned long*)pmm_alloc_page();
+    if (!new_pml4) return 0;
+    
+    // Copy kernel mappings (from the statically initialized pml4)
+    for (int i = 0; i < 512; i++) {
+        new_pml4[i] = pml4[i];
+    }
+    
+    return (unsigned long)new_pml4;
+}
+
+void mmu_map_page(unsigned long cr3_addr, unsigned long virt, unsigned long phys, int user) {
+    unsigned long* pml4_tbl = (unsigned long*)cr3_addr;
+    
+    int pml4_idx = (virt >> 39) & 0x1FF;
+    int pdpt_idx = (virt >> 30) & 0x1FF;
+    int pd_idx   = (virt >> 21) & 0x1FF;
+    int pt_idx   = (virt >> 12) & 0x1FF;
+    
+    int flags = 0x03; // Present, RW
+    if (user) flags |= 0x04;
+    
+    if ((pml4_tbl[pml4_idx] & 1) == 0) {
+        unsigned long* new_pdpt = (unsigned long*)pmm_alloc_page();
+        pml4_tbl[pml4_idx] = ((unsigned long)new_pdpt) | flags;
+    }
+    
+    unsigned long* pdpt_tbl = (unsigned long*)(pml4_tbl[pml4_idx] & ~0xFFF);
+    if ((pdpt_tbl[pdpt_idx] & 1) == 0) {
+        unsigned long* new_pd = (unsigned long*)pmm_alloc_page();
+        pdpt_tbl[pdpt_idx] = ((unsigned long)new_pd) | flags;
+    }
+    
+    unsigned long* pd_tbl = (unsigned long*)(pdpt_tbl[pdpt_idx] & ~0xFFF);
+    if ((pd_tbl[pd_idx] & 1) == 0) {
+        // If it's a huge page (0x80 bit set), we can't map 4KB inside it!
+        // But we only use huge pages in the kernel space. User space is empty.
+        unsigned long* new_pt = (unsigned long*)pmm_alloc_page();
+        pd_tbl[pd_idx] = ((unsigned long)new_pt) | flags;
+    }
+    
+    unsigned long* pt_tbl = (unsigned long*)(pd_tbl[pd_idx] & ~0xFFF);
+    pt_tbl[pt_idx] = (phys & ~0xFFF) | flags;
+}

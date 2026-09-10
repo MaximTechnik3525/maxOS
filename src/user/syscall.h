@@ -171,4 +171,12 @@ static inline int u_tasklist(void* buf, int max) {
     return (int)syscall2(SYS_TASKLIST, (long)buf, (long)max);
 }
 
+static inline void* u_malloc(unsigned int size) {
+    return (void*)syscall1(21, (long)size);
+}
+
+static inline void u_free(void* ptr) {
+    syscall1(22, (long)ptr);
+}
+
 #endif // USER_SYSCALL_H

@@ -1,5 +1,6 @@
 #include "task.h"
 #include "kernel.h"
+#include "mmu.h"
 #include "user.h"
 #include "idt.h"
 #include "debug.h"
@@ -91,6 +92,12 @@ int task_create(const char* name, void (*entry)(void), int is_user, int app_id) 
     t->time_slice = sched_get_quantum(TASK_PRIORITY_NORMAL);
     t->total_ticks = 0;
     t->sleep_until = 0;
+    
+    t->cr3 = mmu_create_address_space();
+    if (t->cr3 == 0) {
+        __asm__ __volatile__("push %0; popfq" : : "r"(flags));
+        return -1;
+    }
 
     strncpy(t->name, name ? name : "task", sizeof(t->name) - 1);
     memcpy(t->fpu_state, default_fpu, sizeof(default_fpu));
@@ -336,6 +343,9 @@ unsigned long long schedule_tick(unsigned long long current_rsp) {
             tasks[0].time_slice = sched_get_quantum(tasks[0].priority);
             current_task = &tasks[0];
             tss_set_rsp0(tasks[0].kstack_top);
+            if (tasks[0].cr3) {
+                __asm__ __volatile__("mov %0, %%cr3" : : "r" (tasks[0].cr3));
+            }
             return (tasks[0].rsp != 0) ? tasks[0].rsp : current_rsp;
         }
         return current_rsp;
@@ -351,6 +361,11 @@ unsigned long long schedule_tick(unsigned long long current_rsp) {
 
     // Load next task's kernel stack top into TSS.rsp0 for privilege transitions
     tss_set_rsp0(next->kstack_top);
+    
+    // Switch address space (MMU isolation) if the task has a dedicated CR3
+    if (next->cr3) {
+        __asm__ __volatile__("mov %0, %%cr3" : : "r" (next->cr3));
+    }
 
     return next->rsp;
 }

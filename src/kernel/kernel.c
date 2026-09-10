@@ -47,6 +47,8 @@ struct multiboot_info {
 #include "mem.h"
 #include "kernel.h"
 #include "mmu.h"
+#include "pmm.h"
+#include "malloc.h"
 #include "user.h"
 #include "idt.h"
 #include "task.h"
@@ -190,6 +192,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     
     // Initialize Memory Management Unit (4KB pages & Security)
     mmu_init();
+    
+    // Initialize Physical Memory Manager and Kernel Heap
+    pmm_init(mb_mem_upper);
+    malloc_init();
 
     init_mouse();
 
