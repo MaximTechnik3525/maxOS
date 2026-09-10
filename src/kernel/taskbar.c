@@ -186,7 +186,7 @@ void taskbar_draw(void) {
             int tab_x = 96 + i * (tab_w + 4);
             if (tab_x + tab_w > 755) break;
 
-            int is_tab_active = (inst->instance_id == active_id && !app_minimized);
+            int is_tab_active = (inst->instance_id == active_id && !inst->is_minimized && !app_minimized);
             draw_3d_box(tab_x, tab_y, tab_w, tab_h, is_tab_active, is_tab_active ? 0xEF59 : 0xCE79);
 
             int tab_off = is_tab_active ? 1 : 0;
@@ -248,7 +248,7 @@ void taskbar_draw(void) {
 
         // Header
         draw_rect(sm_x + 28, sm_y + 4, sm_w - 32, 22, 0x2417);
-        print_string("maxOS v3.2 Multi-App", sm_x + 34, sm_y + 8, 0xFFFF);
+        print_string("maxOS v3.5 MaxRing", sm_x + 34, sm_y + 8, 0xFFFF);
 
         // Menu Items
         const char* sm_items[7] = {
@@ -391,9 +391,9 @@ int taskbar_handle_click(int mouse_x, int mouse_y) {
                 draw_cursor(pos_x, pos_y);
                 play_sound(750); sleep(35); no_sound();
 
-                if (inst->instance_id == active_id) {
-                    app_minimized = !app_minimized;
-                    inst->is_minimized = app_minimized;
+                if (inst->instance_id == active_id && !inst->is_minimized) {
+                    app_minimized = 1;
+                    inst->is_minimized = 1;
                 } else {
                     maxp_set_active_instance(inst->instance_id);
                     app_minimized = 0;

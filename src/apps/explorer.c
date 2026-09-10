@@ -34,9 +34,10 @@ void explorer_instance_draw(explorer_state_t* s, int exp_x, int exp_y, int exp_w
 
     // Titlebar
     draw_rect(exp_x + 2, exp_y + 2, exp_w - 4, 20, 0x0320);
-    print_string("maxOS Explorer 3.2 - Filesystem & Disk Manager", exp_x + 8, exp_y + 6, 0xFFFF);
+    print_string("maxOS Explorer 3.5 - Filesystem & Disk Manager", exp_x + 8, exp_y + 6, 0xFFFF);
 
-    // [X] Close button (Titlebar)
+    // [_] Minimize & [X] Close button (Titlebar)
+    draw_ui_btn(exp_x + exp_w - 44, exp_y + 4, 18, 16, "_", 0xCE79, 0x0000);
     draw_ui_btn(exp_x + exp_w - 22, exp_y + 4, 18, 16, "X", 0xF800, 0xFFFF);
 
     // Toolbar (Row 1)
@@ -234,6 +235,12 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
         s->selected_file = -1;
         draw_window();
         return 1;
+    }
+
+    // Check [_] Minimize button (Titlebar)
+    if (mouse_x >= exp_x + exp_w - 48 && mouse_x <= exp_x + exp_w - 26 && mouse_y >= exp_y && mouse_y <= exp_y + 24) {
+        ui_btn_click_effect(exp_x + exp_w - 44, exp_y + 4, 18, 16, "_", 0xCE79, 0x0000);
+        return -2; // Request minimize
     }
 
     // Check [X] Close button (Titlebar)

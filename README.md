@@ -17,7 +17,12 @@ sleep - makes delay for 2s.
 errscr - running the error screen.
 trailon, trailoff - enables and disables cursor trail.
 
-### maxOS 3.2 (RedCycle Multi-Instance & Binary Executables) Features:
+### maxOS 3.5 (MaxRing Multi-Instance & Window Management) Features:
+- **Window Minimize `[_]` Support & Titlebar Controls**:
+  - Dedicated `[_]` minimize button across all application windows (`Notepad`, `Explorer`, `Calculator`, `SysInfo`, `Pong`, `Installer`, `Mem / Tasks`).
+  - Tactile 3D button depression animation with audio feedback (`ui_btn_click_effect`).
+  - Seamless background minimize, instant focus handoff to next unminimized window, or clean fallback to desktop welcome card.
+  - One-click restoration via dedicated taskbar tabs.
 - **Standalone Binary Application Format (`MAXB` / `.bin`)**:
   - Executable binaries (`notepad.bin`, `calc.bin`, `pong.bin`, `explorer.bin`, `sysinfo.bin`, `mem.bin`, `stress.bin`, `installer.bin`) compiled into `build/*.bin` and embedded into maxFS (`src/apps/maxb.h`).
   - Standardized 68-byte binary executable header with magic `MAXB` (`0x4258414D`), versioning, icon metadata, state size, and entry hook offsets.
@@ -38,12 +43,12 @@ trailon, trailoff - enables and disables cursor trail.
 - **Interactive Task Manager (`mem.maxP`)**: Switch between Memory Monitor and Live Process Table (press `t`). Displays real PIDs, process names, privilege levels (Ring 0 / Ring 3), CPU time, and supports terminating tasks (`k`).
 - **ATA Hard Disk Driver (`src/drivers/ata.c` / `ata.h`)**: Direct low-level sector reading & writing via ATA PIO (LBA28).
 - **maxFS 2.0 Persistent Filesystem (`src/fs/maxfs.c` / `maxfs.h`)**: Superblock, Inodes, Sector Allocation Bitmap, persistent storage for files.
-- **GUI System Setup & Installer v3.1 (`src/apps/installer.c` / `installer.h`)**: Install maxOS directly to hard disk with MBR bootloader and pre-seeded .maxP applications.
+- **GUI System Setup & Installer v3.5 (`src/apps/installer.c` / `installer.h`)**: Install maxOS directly to hard disk with MBR bootloader and pre-seeded .maxP applications.
 - **Custom MBR Bootloader (`src/boot/boot_mbr.asm`)**: Boots maxOS directly from HDD (`./build.sh --boot-hdd`).
 - **Modular Applications & `.maxP` Format (`src/apps/maxp.c` / `maxp.h`)**:
-  - `notepad.maxP` (`src/apps/notepad.c`): GUI Text Editor 3.1 with color palette, custom filenames, file picker.
-  - `explorer.maxP` (`src/apps/explorer.c`): Graphical file manager 3.1 with support for opening `.maxP` files and text files.
-  - `calc.maxP` (`src/apps/calc.c`): 3D GUI Calculator 3.1 with floating-point arithmetic and LCD display.
+  - `notepad.maxP` (`src/apps/notepad.c`): GUI Text Editor 3.5 with color palette, custom filenames, file picker.
+  - `explorer.maxP` (`src/apps/explorer.c`): Graphical file manager 3.5 with support for opening `.maxP` files and text files.
+  - `calc.maxP` (`src/apps/calc.c`): 3D GUI Calculator 3.5 with floating-point arithmetic and LCD display.
   - `sysinfo.maxP` (`src/apps/sysinfo.c`): System hardware & CPU/RAM/VBE inspection.
   - `mem.maxP` (`src/apps/mem.c`): RAM usage monitor & interactive Preemptive Task Manager.
   - `stress.maxP` (`src/apps/mem.c`): RAM hardware stress test, memory cell integrity validation & live bandwidth benchmark.

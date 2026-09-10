@@ -433,7 +433,8 @@ void mem_draw(void) {
         print_string("maxOS Memory & Task Manager (mem.maxP)", sx + 8, sy + 6, 0xFFFF);
     }
 
-    // [X] Close button on titlebar
+    // [_] Minimize & [X] Close button on titlebar
+    draw_btn(sx + sw - 44, sy + 3, 18, 16, "_", 0xCE79, 0x0000);
     draw_btn(sx + sw - 22, sy + 3, 18, 16, "X", 0xF800, 0xFFFF);
 
     // Main Card background
@@ -610,6 +611,12 @@ int mem_handle_click(int mouse_x, int mouse_y) {
     int sy = win_y + 35;
     int sw = win_w - 40;
     int sh = win_h - 45;
+
+    // [_] Titlebar minimize button
+    if (mouse_x >= sx + sw - 48 && mouse_x <= sx + sw - 26 && mouse_y >= sy && mouse_y <= sy + 24) {
+        ui_btn_click_effect(sx + sw - 44, sy + 3, 18, 16, "_", 0xCE79, 0x0000);
+        return -2;
+    }
 
     // [X] Titlebar close button
     if (mouse_x >= sx + sw - 26 && mouse_x <= sx + sw && mouse_y >= sy && mouse_y <= sy + 24) {
@@ -893,10 +900,15 @@ int mem_instance_click(mem_state_t* s, int sx, int sy, int sw, int sh, int mouse
         selected_task_idx = s->selected_task_idx;
         optimize_flash = s->optimize_flash;
     }
-    // Check [X] close button explicitly
+    // Check [_] minimize button explicitly
     int wx = win_x + 20;
     int wy = win_y + 35;
     int ww = win_w - 40;
+    if (mouse_x >= wx + ww - 48 && mouse_x <= wx + ww - 26 && mouse_y >= wy && mouse_y <= wy + 24) {
+        ui_btn_click_effect(wx + ww - 44, wy + 3, 18, 16, "_", 0xCE79, 0x0000);
+        return -2;
+    }
+    // Check [X] close button explicitly
     if (mouse_x >= wx + ww - 26 && mouse_x <= wx + ww && mouse_y >= wy && mouse_y <= wy + 24) {
         ui_btn_click_effect(wx + ww - 22, wy + 3, 18, 16, "X", 0xF800, 0xFFFF);
         return -1;

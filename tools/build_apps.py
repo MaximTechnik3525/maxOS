@@ -30,7 +30,7 @@ APPS = [
         "icon": "NP",
         "color": 0x03EA,
         "flags": 0,
-        "desc": "maxOS Text Editor v3.2 (Multi-instance)"
+        "desc": "maxOS Text Editor v3.5 (Multi-instance)"
     },
     {
         "filename": "explorer.bin",
@@ -48,7 +48,7 @@ APPS = [
         "icon": "CAL",
         "color": 0xF621,
         "flags": 0,
-        "desc": "GUI Calculator 3.2 (Floating-Point)"
+        "desc": "GUI Calculator 3.5 (Floating-Point)"
     },
     {
         "filename": "sysinfo.bin",

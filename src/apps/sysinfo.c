@@ -28,7 +28,8 @@ void sysinfo_instance_draw(sysinfo_state_t* s, int sx, int sy, int sw, int sh) {
     draw_rect(sx + 2, sy + 2, sw - 4, 20, 0x0DE5);
     print_string("maxOS System Hardware & Kernel Information (sysinfo.bin)", sx + 8, sy + 6, 0x0000);
 
-    // [X] Close button
+    // [_] Minimize & [X] Close button
+    draw_ui_btn(sx + sw - 44, sy + 3, 18, 16, "_", 0xCE79, 0x0000);
     draw_ui_btn(sx + sw - 22, sy + 3, 18, 16, "X", 0xF800, 0xFFFF);
 
     // Main Card
@@ -40,7 +41,7 @@ void sysinfo_instance_draw(sysinfo_state_t* s, int sx, int sy, int sw, int sh) {
 
     // Section 1: OS Banner
     draw_rect(sx + 15, sy + 38, sw - 30, 32, 0x0DE5);
-    print_string("maxOS RedCycle v3.2 (x86_64 Long Mode)", sx + 25, sy + 44, 0x0000);
+    print_string("maxOS MaxRing v3.5 (x86_64 Long Mode)", sx + 25, sy + 44, 0x0000);
     print_string("Kernel Architecture: 64-bit AMD64 / Intel 64", sx + 25, sy + 56, 0x0000);
 
     int row_y = sy + 82;
@@ -126,6 +127,12 @@ void sysinfo_instance_draw(sysinfo_state_t* s, int sx, int sy, int sw, int sh) {
 
 int sysinfo_instance_click(sysinfo_state_t* s, int sx, int sy, int sw, int sh, int mouse_x, int mouse_y) {
     (void)s;
+    // [_] Minimize button (Titlebar)
+    if (mouse_x >= sx + sw - 48 && mouse_x <= sx + sw - 26 && mouse_y >= sy && mouse_y <= sy + 24) {
+        ui_btn_click_effect(sx + sw - 44, sy + 3, 18, 16, "_", 0xCE79, 0x0000);
+        return -2;
+    }
+
     // [X] Close button (Titlebar)
     if (mouse_x >= sx + sw - 26 && mouse_x <= sx + sw && mouse_y >= sy && mouse_y <= sy + 24) {
         ui_btn_click_effect(sx + sw - 22, sy + 3, 18, 16, "X", 0xF800, 0xFFFF);

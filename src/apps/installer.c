@@ -52,9 +52,10 @@ void installer_instance_draw(installer_state_t* s, int inst_x, int inst_y, int i
 
     // Titlebar
     draw_rect(inst_x + 2, inst_y + 2, inst_w - 4, 20, 0x11EB);
-    print_string("maxOS System Setup & Installer v3.2", inst_x + 8, inst_y + 6, 0xFFFF);
+    print_string("maxOS System Setup & Installer v3.5", inst_x + 8, inst_y + 6, 0xFFFF);
 
-    // [X] Close button
+    // [_] Minimize & [X] Close button
+    draw_ui_btn(inst_x + inst_w - 44, inst_y + 4, 18, 16, "_", 0xCE79, 0x0000);
     draw_ui_btn(inst_x + inst_w - 22, inst_y + 4, 18, 16, "X", 0xF800, 0xFFFF);
 
     // Content card
@@ -170,11 +171,15 @@ static void installer_run_install(installer_state_t* s, int inst_x, int inst_y, 
     // Step 4: Write default configuration & documents
     installer_set_step(s, inst_x, inst_y, inst_w, inst_h, 80, "4/5: Writing system configs and documents...");
     play_sound(950); sleep(100); no_sound();
-    maxfs_write_file("system.cfg", "theme=1\nresolution=1024x768x16\nos=maxOS RedCycle v3.2 x86_64\n", 64);
-    maxfs_write_file("welcome.txt", "Welcome to maxOS v3.2 x86_64!\nInstalled on your real Hard Disk with maxFS 2.0.", 79);
-    maxfs_write_file("readme.txt", "maxOS RedCycle 3.2 (x86_64 Long Mode)\nPrograms use .maxP extension!\nAll edits persist!", 88);
+    const char* sys_cfg = "theme=1\nresolution=1024x768x16\nos=maxOS MaxRing v3.5 x86_64\n";
+    maxfs_write_file("system.cfg", sys_cfg, (unsigned int)strlen(sys_cfg));
+    const char* wel_txt = "Welcome to maxOS v3.5 MaxRing x86_64!\nInstalled on your real Hard Disk with maxFS 2.0.";
+    maxfs_write_file("welcome.txt", wel_txt, (unsigned int)strlen(wel_txt));
+    const char* rdm_txt = "maxOS MaxRing 3.5 (x86_64 Long Mode)\nPrograms use .maxP extension!\nAll edits persist!";
+    maxfs_write_file("readme.txt", rdm_txt, (unsigned int)strlen(rdm_txt));
     maxfs_write_file("notes.txt", "Sample document stored on hard drive sectors.\nOpen and edit in Notepad!", 71);
-    maxfs_write_file("notepad.maxP", "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 3.2 Text Editor\n", 73);
+    const char* np_desc = "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 3.5 Text Editor\n";
+    maxfs_write_file("notepad.maxP", np_desc, (unsigned int)strlen(np_desc));
     maxfs_write_file("explorer.maxP", "MAXP\nNAME=Explorer\nEXEC=explorer\nICON=EXP\nDESC=File & Disk Manager\n", 67);
     maxfs_write_file("calc.maxP", "MAXP\nNAME=Calculator\nEXEC=calc\nICON=CALC\nDESC=Desktop GUI Calculator\n", 71);
     maxfs_write_file("sysinfo.maxP", "MAXP\nNAME=SysInfo\nEXEC=sysinfo\nICON=CPU\nDESC=x86_64 Long Mode System Info\n", 76);
@@ -211,6 +216,12 @@ int installer_instance_click(installer_state_t* s, int inst_x, int inst_y, int i
             play_sound(200); sleep(200); no_sound();
         }
         return 1;
+    }
+
+    // Check [_] Minimize button (Titlebar)
+    if (mouse_x >= inst_x + inst_w - 48 && mouse_x <= inst_x + inst_w - 26 && mouse_y >= inst_y && mouse_y <= inst_y + 24) {
+        ui_btn_click_effect(inst_x + inst_w - 44, inst_y + 4, 18, 16, "_", 0xCE79, 0x0000);
+        return -2;
     }
 
     // Check [X] Close button (Titlebar): inst_x + inst_w - 26 .. inst_x + inst_w, inst_y .. inst_y + 24

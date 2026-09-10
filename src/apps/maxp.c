@@ -20,7 +20,7 @@ static app_instance_t instances[MAX_APP_INSTANCES];
 static unsigned char instance_state_pool[MAX_APP_INSTANCES][4096];
 
 static const struct MaxPAppInfo app_registry[MAXP_APP_COUNT] = {
-    { MAXP_APP_NOTEPAD,   "Notepad",     "notepad.maxP", "Text Editor v3.2",            "NP",   0x03EA },
+    { MAXP_APP_NOTEPAD,   "Notepad",     "notepad.maxP", "Text Editor v3.5",            "NP",   0x03EA },
     { MAXP_APP_EXPLORER,  "Explorer",    "explorer.maxP", "File & Disk Manager",         "EXP",  0x24EE },
     { MAXP_APP_CALC,      "Calculator",  "calc.maxP",     "GUI Calculator",             "CALC", 0xF621 },
     { MAXP_APP_SYSINFO,   "SysInfo",     "sysinfo.maxP",  "x86_64 Long Mode Info",      "CPU",  0x0DE5 },
@@ -397,6 +397,33 @@ int maxp_close_instance(int instance_id) {
     return 1;
 }
 
+int maxp_minimize_instance(int instance_id) {
+    app_instance_t* inst = maxp_get_instance(instance_id);
+    if (!inst) return 0;
+
+    inst->is_minimized = 1;
+
+    int next_id = 0;
+    for (int i = 0; i < MAX_APP_INSTANCES; i++) {
+        if (instances[i].instance_id != 0 && instances[i].instance_id != instance_id && !instances[i].is_minimized) {
+            next_id = instances[i].instance_id;
+            break;
+        }
+    }
+
+    if (next_id > 0) {
+        maxp_set_active_instance(next_id);
+        taskbar_set_app_minimized(0);
+    } else {
+        taskbar_set_app_minimized(1);
+    }
+
+    play_sound(600); sleep(25); no_sound();
+    draw_window();
+    draw_cursor(pos_x, pos_y);
+    return 1;
+}
+
 void maxp_close_app(int app_id) {
     for (int i = 0; i < MAX_APP_INSTANCES; i++) {
         if (instances[i].instance_id != 0 && instances[i].app_type == app_id) {
@@ -442,6 +469,10 @@ int maxp_handle_click_active(int mx, int my) {
         int res = inst->handle_click(inst->state, inst->win_x, inst->win_y, inst->win_w, inst->win_h, mx, my);
         if (res == -1) {
             maxp_close_instance(inst->instance_id);
+            return 1;
+        }
+        if (res == -2) {
+            maxp_minimize_instance(inst->instance_id);
             return 1;
         }
         if (res != 0) return res;
@@ -626,8 +657,8 @@ void maxp_init(void) {
 
     // Seed default .maxP program files if not present
     if (maxfs_find_file("notepad.maxP") == -1) {
-        const char* np_content = "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 3.2 Text Editor\n";
-        maxfs_write_file("notepad.maxP", np_content, 73);
+        const char* np_content = "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 3.5 Text Editor\n";
+        maxfs_write_file("notepad.maxP", np_content, (unsigned int)strlen(np_content));
     }
     if (maxfs_find_file("explorer.maxP") == -1) {
         const char* exp_content = "MAXP\nNAME=Explorer\nEXEC=explorer\nICON=EXP\nDESC=File & Disk Manager\n";
@@ -658,7 +689,7 @@ void maxp_init(void) {
         maxfs_write_file("stress.maxP", stress_content, 79);
     }
     if (maxfs_find_file("readme.txt") == -1) {
-        const char* rm = "Welcome to maxOS RedCycle v3.2 x86_64!\nStandalone binaries: .bin (MAXB format)\nMulti-instance enabled: run multiple Notepads, Calcs, etc!\n";
-        maxfs_write_file("readme.txt", rm, 137);
+        const char* rm = "Welcome to maxOS MaxRing v3.5 x86_64!\nStandalone binaries: .bin (MAXB format)\nMulti-instance enabled: run multiple Notepads, Calcs, etc!\n";
+        maxfs_write_file("readme.txt", rm, (unsigned int)strlen(rm));
     }
 }

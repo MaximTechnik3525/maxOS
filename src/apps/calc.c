@@ -297,9 +297,10 @@ void calc_instance_draw(calc_state_t* s, int cx, int cy, int cw, int ch) {
 
     // Titlebar
     draw_rect(cx + 3, cy + 3, cw - 6, 22, 0x11EB);
-    print_string("Calculator 3.1 - [calc.bin]", cx + 8, cy + 8, 0xFFFF);
+    print_string("Calculator 3.5 - [calc.bin]", cx + 8, cy + 8, 0xFFFF);
 
-    // [X] Close button
+    // [_] Minimize & [X] Close buttons
+    draw_ui_btn(cx + cw - 44, cy + 4, 18, 16, "_", 0xCE79, 0x0000);
     draw_ui_btn(cx + cw - 22, cy + 4, 18, 16, "X", 0xF800, 0xFFFF);
 
     // Display LCD Screen (Recessed 3D Box)
@@ -343,6 +344,12 @@ void calc_instance_draw(calc_state_t* s, int cx, int cy, int cw, int ch) {
 }
 
 int calc_instance_click(calc_state_t* s, int cx, int cy, int cw, int ch, int mouse_x, int mouse_y) {
+    // [_] Titlebar Minimize Button
+    if (mouse_x >= cx + cw - 48 && mouse_x <= cx + cw - 26 && mouse_y >= cy && mouse_y <= cy + 24) {
+        ui_btn_click_effect(cx + cw - 44, cy + 4, 18, 16, "_", 0xCE79, 0x0000);
+        return -2; // Request minimize
+    }
+
     // [X] Titlebar Close Button
     if (mouse_x >= cx + cw - 26 && mouse_x <= cx + cw && mouse_y >= cy && mouse_y <= cy + 24) {
         ui_btn_click_effect(cx + cw - 22, cy + 4, 18, 16, "X", 0xF800, 0xFFFF);

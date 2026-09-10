@@ -314,7 +314,8 @@ void notepad_instance_draw(notepad_state_t* s, int np_x, int np_y, int np_w, int
     title[tp] = '\0';
     print_string(title, np_x + 8, np_y + 6, 0xFFFF);
 
-    // [X] Close button (Titlebar)
+    // [_] Minimize & [X] Close button (Titlebar)
+    draw_ui_btn(np_x + np_w - 44, np_y + 4, 18, 16, "_", 0xCE79, 0x0000);
     draw_ui_btn(np_x + np_w - 22, np_y + 4, 18, 16, "X", 0xF800, 0xFFFF);
 
     // Toolbar
@@ -426,6 +427,12 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
             play_sound(800 + i * 50); sleep(35); no_sound();
             return 1;
         }
+    }
+
+    // Check [_] Minimize button (Titlebar)
+    if (mouse_x >= np_x + np_w - 48 && mouse_x <= np_x + np_w - 26 && mouse_y >= np_y && mouse_y <= np_y + 24) {
+        ui_btn_click_effect(np_x + np_w - 44, np_y + 4, 18, 16, "_", 0xCE79, 0x0000);
+        return -2; // Request minimize
     }
 
     // Check [X] Close button (Titlebar)

@@ -62,6 +62,7 @@ int maxp_launch_file(const char* filename);
 int maxp_spawn_instance(int app_type, const char* custom_title, const char* file_arg);
 int maxp_launch_app(int app_type); // Spawns new instance
 int maxp_close_instance(int instance_id);
+int maxp_minimize_instance(int instance_id);
 void maxp_close_app(int app_id);
 void maxp_close_all_windows(void);
 

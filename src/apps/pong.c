@@ -32,7 +32,8 @@ void pong_instance_draw(pong_state_t* s, int px, int py, int pw, int ph) {
     draw_rect(px + 2, py + 2, pw - 4, 22, 0x11EB);
     print_string("Pong Arcade - [pong.bin]", px + 8, py + 6, 0xFFFF);
 
-    // [X] Close button
+    // [_] Minimize & [X] Close button
+    draw_ui_btn(px + pw - 44, py + 4, 18, 16, "_", 0xCE79, 0x0000);
     draw_ui_btn(px + pw - 22, py + 4, 18, 16, "X", 0xF800, 0xFFFF);
 
     // Score & Info Bar
@@ -146,6 +147,12 @@ void pong_instance_tick(pong_state_t* s, int px, int py, int pw, int ph) {
 }
 
 int pong_instance_click(pong_state_t* s, int px, int py, int pw, int ph, int mouse_x, int mouse_y) {
+    // [_] Minimize button (Titlebar)
+    if (mouse_x >= px + pw - 48 && mouse_x <= px + pw - 26 && mouse_y >= py && mouse_y <= py + 24) {
+        ui_btn_click_effect(px + pw - 44, py + 4, 18, 16, "_", 0xCE79, 0x0000);
+        return -2; // Request minimize
+    }
+
     // [X] Close button (Titlebar)
     if (mouse_x >= px + pw - 26 && mouse_x <= px + pw && mouse_y >= py && mouse_y <= py + 24) {
         ui_btn_click_effect(px + pw - 22, py + 4, 18, 16, "X", 0xF800, 0xFFFF);

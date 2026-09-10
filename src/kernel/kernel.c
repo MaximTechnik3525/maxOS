@@ -208,7 +208,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             }
         }
     }
-    print_string("maxOS RedCycle v3.1 x86_64", 380, 420, 0x0DE5);
+    print_string("maxOS MaxRing v3.5 x86_64", 380, 420, 0x0DE5);
     print_string("by maxTech", 10, 10, 0x24EE);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(1500);
@@ -1121,7 +1121,7 @@ void draw_window() {
                 }
             }
         }
-        print_string("Welcome to maxOS RedCycle v3.1 x86_64", card_x + 14, card_y + 6, 0xFFFF);
+        print_string("Welcome to maxOS MaxRing v3.5 x86_64", card_x + 14, card_y + 6, 0xFFFF);
         print_string("Desktop & Applications Environment", card_x + 25, card_y + 36, 0x11EB);
         print_string("Modular applications use .maxP executable files on maxFS 2.0", card_x + 25, card_y + 58, 0x0000);
         print_string("- Launch applications from Desktop icons on the left side", card_x + 25, card_y + 78, 0x0000);
@@ -1146,7 +1146,7 @@ void draw_window() {
         print_string("Security: Ring 3 CPL=3 Protected User Space (All Apps)", card_x + 25, card_y + 254, 0x0200);
         print_string("Hardware: 64-bit IDT Interrupts | PIT 1000Hz (Non-blocking)", card_x + 25, card_y + 274, 0x11EB);
         print_string("Hotkeys: Keys 1-9 switch themes | U: Ring 3 Demo | Esc/c: Close", card_x + 25, card_y + 296, 0x7BEF);
-        print_string("maxOS Desktop v3.1 x86_64 - by maxTech", card_x + 25, card_y + 326, 0x8085);
+        print_string("maxOS Desktop v3.5 MaxRing x86_64 - by maxTech", card_x + 25, card_y + 326, 0x8085);
     } else {
         // Render active window
         if (get_cpl() == 3) {
