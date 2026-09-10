@@ -517,6 +517,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         play_sound(800);
                         sleep(100);
                         no_sound();
+                        open_explorer();
                     }
                 }
             }
@@ -722,7 +723,8 @@ void pong() {
 }
 void save_open() {
     if (str_in(ftext, ".mapp")) { 
-        create_file("App.mapp", ftext); 
+        create_file("App.mapp", ftext);
+        drag = 0; 
     }
     else { 
         create_file("Unnamed.txt", ftext);
@@ -760,7 +762,7 @@ void save_open() {
                 print_string(ram_disk[fid].content, win_x + 30, win_y + 45, 0x0000);
                 print_string("Press c to close this window.", win_x + 30, win_y + 60, 0x0000);
     }
-    if (fid < 4) {
+    if (fid < 5) {
         fid ++;
     }
     repeats = 1;
@@ -956,6 +958,7 @@ int str_cmp(char* str1, char* str2) {
     if (str1[i] != str2[i]) { return 0; }
     return 1;
 }
+int shift_p = 0;
 void filew() {
     if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) {
         int help_col = win_y + 45;
@@ -1007,9 +1010,11 @@ void filew() {
                     continue;
                 }
                 unsigned char scan_code = inb(0x60);
-                if (scan_code < 0x80 && w_mode == 1 && drag != 2) {
+                if (scan_code == 0x2A || scan_code == 0x36) { shift_p = 1; }
+                else if (scan_code == 0xAA || scan_code == 0xB6) { shift_p = 0; }
+                if (scan_code < 0x80 && w_mode == 1 && drag != 2 && scan_code != 0x2A && scan_code != 0x36 && scan_code != 0xAA && scan_code != 0xB6) {
                     char ascii_char = scan_code_to_ascii(scan_code);
-                    if (ascii_char != 'F' && ascii_char != 'B' && ascii_char != 'S' && ascii_char != 'U' && ascii_char != 'D' && ascii_char != 'L' && ascii_char != 'R' && ascii_char != 'T' && ascii_char != 'G' && ascii_char != 'C' && ascii_char != 'O' && ascii_char != 'M' && ascii_char != 'N') {
+                    if (shift_p == 0 && ascii_char != 'F' && ascii_char != 'B' && ascii_char != 'S' && ascii_char != 'U' && ascii_char != 'D' && ascii_char != 'L' && ascii_char != 'R' && ascii_char != 'T' && ascii_char != 'G' && ascii_char != 'C' && ascii_char != 'O' && ascii_char != 'M' && ascii_char != 'N') {
                         if (textid < 76) {
                             ftext[textid] = ascii_char;
                             textid++;
@@ -1105,7 +1110,57 @@ void filew() {
                             }
                         }
                     }
+                    if (ascii_char == '1' && shift_p == 1) {
+                        if (textid < 76) {
+                            ftext[textid] = '!';
+                            textid++;
+                            ftext[textid] = '\0';
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 1024 + x] = 0x0320;
+                                    }
+                                    else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
+                                    }
+                                    else {
+                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                    }
+                                }
+                            }
+                            int swin_x = win_x + 20;
+                            int swin_y = win_y + 22;
+                            int swin_w = win_w - 40;
+                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                            gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
+                            gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
+                            int right_edges = swin_x + swin_w - 1;
+                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                            gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
+                            gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+                            print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
+                            print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
+                            print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+                            print_string(ftext, win_x + 30, help_col, 0x0000);
+                            if (str_cmp(ftext, ram_disk[fid - 1].content)) {
+                                print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
+                                print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
+                            }
+                            else {
+                                print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
+                                print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
+                            }
+                            print_string(ftext, win_x + 30, help_col, 0x0000);
+                        }
+                    }
                     else if (ascii_char == 'F') {
+                        drag = 1;
                         play_sound(800); sleep(100); no_sound();
                         draw_window();
                         save_open();
@@ -1162,11 +1217,11 @@ void help() {
         print_string("Help", win_x + 28, win_y + 28, 0x0000);
         print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Arrows to move window.", win_x + 30, help_col, 0x0000);
-        print_string("C to clear screen and close windows.", win_x + 30, help_col + 15, 0x0000);
+        print_string("C to redraw desktop and close windows.", win_x + 30, help_col + 15, 0x0000);
         print_string("1-9 to change system theme.", win_x + 30, help_col + 30, 0x0000);
-        print_string("F1/F2 to enable and disable write mode.", win_x + 30, help_col + 45, 0x0000);
-        print_string("F to format virtual disk.", win_x + 30, help_col + 60, 0x0000);
-        print_string("F3/F4 to enable and disable key-mouse mode.", win_x + 30, help_col + 75, 0x0000);
+        print_string("F1/F2 to save and run or exit without saving in notepad.", win_x + 30, help_col + 45, 0x0000);
+        print_string("F to format maxFS virtual disk in explorer.", win_x + 30, help_col + 60, 0x0000);
+        print_string("F3/F4 to enable and disable keyboard mouse mode.", win_x + 30, help_col + 75, 0x0000);
         print_string("F5/F6 to enable and disable mouse trail.", win_x + 30, help_col + 90, 0x0000);
         print_string("F7/F8 to enable and disable main window corner.", win_x + 30, help_col + 105, 0x0000);
     }
@@ -1213,6 +1268,19 @@ void cpu_win() {
         print_string(cpu_name, win_x + 120, help_col, 0x0000);
         print_string("Press c to close this window.", win_x + 30, help_col + 15, 0x0000);
     }
+}
+void progressbar(char* file_des, int xend) {
+        for (int y = win_y + 410; y < win_y + 425; y++) {
+            for (int x = win_x + 300; x < win_x + 450; x++) {
+                gfx_memory[y * 1024 + x] = 0x18C3;
+            }
+        }
+        for (int y = win_y + 412; y < win_y + 423; y++) {
+            for (int x = win_x + 302; x < xend; x++) {
+                gfx_memory[y * 1024 + x] = 0x2417;
+            }
+        }
+        print_string(file_des, win_x + 290, win_y + 435, 0x0000);
 }
 void open_explorer() {
     if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
@@ -1271,6 +1339,12 @@ void open_explorer() {
             print_string("b", (win_x + win_h) + 12, line, 0x0000);
             line += 15;
         }
+        if (fid == 0) { progressbar("5/5 can be created.", win_x + 303); }
+        if (fid == 1) { progressbar("4/5 can be created.", win_x + 333); }
+        if (fid == 2) { progressbar("3/5 can be created.", win_x + 363); }
+        if (fid == 3) { progressbar("2/5 can be created.", win_x + 393); }
+        if (fid == 4) { progressbar("1/5 can be created.", win_x + 423); }
+        if (fid == 5) { progressbar("0/5 can be created.", win_x + 448); }
     }
 }
 
