@@ -37,13 +37,20 @@ void no_sound(void);
 void shutdown(void);
 void error(char* err);
 
+#include "string.h"
+
 // Utilities
 void int_str(int num, char* str);
 int str_in(char* main_string, char* substring);
 char scan_code_to_ascii(unsigned char scan_code);
 
-// Desktop and Non-blocking event pump
+// UI Primitives
+void draw_3d_box(int bx, int by, int bw, int bh, int sunken, unsigned short fill);
+void draw_ui_btn_state(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col, int pressed);
+void draw_ui_btn(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col);
+void ui_btn_click_effect(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col);
 void draw_ui_button(int x, int y, int w, int h, const char* text, unsigned short bg_col, unsigned short text_col, int sunken);
+void ui_button_click_effect(int x, int y, int w, int h, const char* text, unsigned short bg_col, unsigned short text_col);
 int desktop_handle_click(int mouse_x, int mouse_y);
 void pump_events_nonblocking(void);
 

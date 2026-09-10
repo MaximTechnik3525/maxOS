@@ -1,9 +1,15 @@
 #ifndef TASK_H
 #define TASK_H
 
+#include "string.h"
+
 #define MAX_TASKS 16
 #define TASK_STACK_SIZE 32768  // 32 KB per task
 #define DEFAULT_TIME_SLICE 20  // 20 ms per quantum at 1000 Hz PIT
+
+#define TIME_SLICE_LOW    10
+#define TIME_SLICE_NORMAL 20
+#define TIME_SLICE_HIGH   30
 
 typedef enum {
     TASK_UNUSED = 0,
@@ -12,6 +18,12 @@ typedef enum {
     TASK_SLEEPING,
     TASK_DEAD
 } task_state_t;
+
+typedef enum {
+    TASK_PRIORITY_LOW    = 0,
+    TASK_PRIORITY_NORMAL = 1,
+    TASK_PRIORITY_HIGH   = 2
+} task_priority_t;
 
 // Complete CPU state saved on stack during interrupt / context switch
 struct __attribute__((packed)) trap_frame {
@@ -44,6 +56,7 @@ typedef struct {
     int pid;
     char name[32];
     task_state_t state;
+    task_priority_t priority;
     unsigned long long rsp;              // Saved RSP pointing to trap_frame
     unsigned long long kstack_top;       // Top of kernel stack for TSS.rsp0
     unsigned char kstack[TASK_STACK_SIZE] __attribute__((aligned(16)));
@@ -64,21 +77,25 @@ typedef struct {
     int is_user;
     int app_id;
     unsigned long long total_ticks;
+    int priority;
 } task_info_t;
 
 // Core Task Lifecycle
 void task_init(void);
-int task_create(const char* name, void (*entry)(void), int is_user, int app_id);
+int  task_create(const char* name, void (*entry)(void), int is_user, int app_id);
 void task_exit(void);
-int task_kill(int pid);
+int  task_kill(int pid);
 void task_sleep(unsigned long long ms);
 void task_yield(void);
 
-task_t* task_get_current(void);
-task_t* task_get_by_pid(int pid);
-int task_get_count(void);
-int task_get_list(task_info_t* list, int max_count);
-int task_is_scheduler_active(void);
+// Task Attributes & Queries
+void            task_set_priority(int pid, task_priority_t prio);
+task_priority_t task_get_priority(int pid);
+task_t*         task_get_current(void);
+task_t*         task_get_by_pid(int pid);
+int             task_get_count(void);
+int             task_get_list(task_info_t* list, int max_count);
+int             task_is_scheduler_active(void);
 
 // Called by irq0_timer_entry assembly
 unsigned long long schedule_tick(unsigned long long current_rsp);

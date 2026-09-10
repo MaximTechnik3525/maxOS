@@ -1,6 +1,7 @@
 #include "debug.h"
 #include "kernel.h"
 #include "idt.h"
+#include "string.h"
 
 #define COM1_PORT 0x3F8
 
@@ -62,15 +63,6 @@ void debug_print_num(unsigned long long num, int base) {
     }
 }
 
-static void str_copy_limit(char* dst, const char* src, int max_len) {
-    int i = 0;
-    while (src[i] && i < max_len - 1) {
-        dst[i] = src[i];
-        i++;
-    }
-    dst[i] = '\0';
-}
-
 void debug_log(const char* tag, const char* msg) {
     unsigned long long ms = system_ticks;
     unsigned int sec = (unsigned int)(ms / 1000);
@@ -95,8 +87,10 @@ void debug_log(const char* tag, const char* msg) {
     // 2. Store in circular buffer for UI display
     struct DebugLogEntry* entry = &debug_history[debug_history_head];
     entry->timestamp_ms = ms;
-    str_copy_limit(entry->tag, tag, sizeof(entry->tag));
-    str_copy_limit(entry->msg, msg, sizeof(entry->msg));
+    strncpy(entry->tag, tag, sizeof(entry->tag) - 1);
+    entry->tag[sizeof(entry->tag) - 1] = '\0';
+    strncpy(entry->msg, msg, sizeof(entry->msg) - 1);
+    entry->msg[sizeof(entry->msg) - 1] = '\0';
 
     debug_history_head = (debug_history_head + 1) % DEBUG_HISTORY_COUNT;
     if (debug_history_total < DEBUG_HISTORY_COUNT) debug_history_total++;

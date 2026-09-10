@@ -6,22 +6,8 @@ int calc_open = 0;
 static calc_state_t primary_calc_state;
 
 /* -------------------------------------------------------------------------
- * Internal String & Floating Point Helpers (freestanding x86_64)
+ * Internal Floating Point Helpers (freestanding x86_64)
  * ------------------------------------------------------------------------- */
-static int calc_strlen(const char* s) {
-    int len = 0;
-    while (s[len] != '\0') len++;
-    return len;
-}
-
-static void calc_strcpy(char* dest, const char* src) {
-    int i = 0;
-    while (src[i] != '\0') {
-        dest[i] = src[i];
-        i++;
-    }
-    dest[i] = '\0';
-}
 
 static double str_to_double(const char* s) {
     double res = 0.0;
@@ -57,11 +43,11 @@ static double str_to_double(const char* s) {
 
 static void double_to_str(double val, char* buf, int max_decimals) {
     if (val != val) {
-        calc_strcpy(buf, "Error");
+        strcpy(buf, "Error");
         return;
     }
     if (val > 1e12 || val < -1e12) {
-        calc_strcpy(buf, "Overflow");
+        strcpy(buf, "Overflow");
         return;
     }
 
@@ -161,7 +147,7 @@ static void calc_backspace(calc_state_t* s) {
     }
     if (s->is_new_entry) return;
 
-    int len = calc_strlen(s->entry_buf);
+    int len = strlen(s->entry_buf);
     if (len > 0) {
         s->entry_buf[len - 1] = '\0';
     }
@@ -177,12 +163,12 @@ static void calc_negate(calc_state_t* s) {
     if (s->entry_buf[0] == '0' && s->entry_buf[1] == '\0') return;
 
     if (s->entry_buf[0] == '-') {
-        int len = calc_strlen(s->entry_buf);
+        int len = strlen(s->entry_buf);
         for (int i = 0; i < len; i++) {
             s->entry_buf[i] = s->entry_buf[i + 1];
         }
     } else {
-        int len = calc_strlen(s->entry_buf);
+        int len = strlen(s->entry_buf);
         if (len < 15) {
             for (int i = len; i >= 0; i--) {
                 s->entry_buf[i + 1] = s->entry_buf[i];
@@ -201,7 +187,7 @@ static void calc_input_digit(calc_state_t* s, int digit) {
         s->entry_buf[1] = '\0';
         s->is_new_entry = 0;
     } else {
-        int len = calc_strlen(s->entry_buf);
+        int len = strlen(s->entry_buf);
         if (len < 14) {
             if (len == 1 && s->entry_buf[0] == '0') {
                 s->entry_buf[0] = (char)('0' + digit);
@@ -227,7 +213,7 @@ static void calc_input_dot(calc_state_t* s) {
     for (int i = 0; s->entry_buf[i] != '\0'; i++) {
         if (s->entry_buf[i] == '.') return;
     }
-    int len = calc_strlen(s->entry_buf);
+    int len = strlen(s->entry_buf);
     if (len < 14) {
         s->entry_buf[len] = '.';
         s->entry_buf[len + 1] = '\0';
@@ -247,7 +233,7 @@ static void calc_execute_pending(calc_state_t* s) {
         s->stored_val *= cur;
     } else if (s->pending_op == '/') {
         if (cur == 0.0) {
-            calc_strcpy(s->entry_buf, "Cannot divide by 0");
+            strcpy(s->entry_buf, "Cannot divide by 0");
             s->is_error = 1;
             s->is_new_entry = 1;
             s->pending_op = 0;
@@ -280,18 +266,24 @@ static void calc_input_equals(calc_state_t* s) {
 /* -------------------------------------------------------------------------
  * UI Drawing
  * ------------------------------------------------------------------------- */
-static void draw_calc_btn(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col) {
-    draw_rect(bx, by, bw, bh, 0x0000);
-    draw_rect(bx + 1, by + 1, bw - 2, 1, 0xFFFF);
-    draw_rect(bx + 1, by + 1, 1, bh - 2, 0xFFFF);
-    draw_rect(bx + bw - 2, by + 1, 1, bh - 2, 0x7BEF);
-    draw_rect(bx + 1, by + bh - 2, bw - 2, 1, 0x7BEF);
-    draw_rect(bx + 2, by + 2, bw - 4, bh - 4, fill);
+static const char* calc_labels[5][4] = {
+    { "C",   "CE",  "<-",  "/" },
+    { "7",   "8",   "9",   "*" },
+    { "4",   "5",   "6",   "-" },
+    { "1",   "2",   "3",   "+" },
+    { "+/-", "0",   ".",   "=" }
+};
 
-    int len = calc_strlen(label);
-    int tx = bx + (bw - (len * 9)) / 2;
-    int ty = by + (bh - 10) / 2;
-    print_string((char*)label, tx, ty, text_col);
+static const unsigned short calc_fills[5][4] = {
+    { 0xCE79, 0xCE79, 0xCE79, 0xF621 },
+    { 0xFFFF, 0xFFFF, 0xFFFF, 0xF621 },
+    { 0xFFFF, 0xFFFF, 0xFFFF, 0xF621 },
+    { 0xFFFF, 0xFFFF, 0xFFFF, 0xF621 },
+    { 0xCE79, 0xFFFF, 0xCE79, 0x03EA }
+};
+
+static void draw_calc_btn(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col) {
+    draw_ui_btn(bx, by, bw, bh, label, fill, text_col);
 }
 
 void calc_instance_draw(calc_state_t* s, int cx, int cy, int cw, int ch) {
@@ -308,48 +300,28 @@ void calc_instance_draw(calc_state_t* s, int cx, int cy, int cw, int ch) {
     print_string("Calculator 3.1 - [calc.bin]", cx + 8, cy + 8, 0xFFFF);
 
     // [X] Close button
-    draw_calc_btn(cx + cw - 24, cy + 4, 18, 18, "X", 0xF800, 0xFFFF);
+    draw_ui_btn(cx + cw - 22, cy + 4, 18, 16, "X", 0xF800, 0xFFFF);
 
-    // LCD Display Container
+    // Display LCD Screen (Recessed 3D Box)
     int disp_x = cx + 16;
-    int disp_y = cy + 34;
+    int disp_y = cy + 32;
     int disp_w = cw - 32;
-    int disp_h = 44;
+    int disp_h = 48;
+    draw_3d_box(disp_x, disp_y, disp_w, disp_h, 1, 0x0000);
 
-    draw_rect(disp_x, disp_y, disp_w, disp_h, 0x7BEF);
-    draw_rect(disp_x, disp_y, disp_w, 1, 0x0000);
-    draw_rect(disp_x, disp_y, 1, disp_h, 0x0000);
-    draw_rect(disp_x + 1, disp_y + 1, disp_w - 2, disp_h - 2, 0xFFFF);
-    draw_rect(disp_x + 2, disp_y + 2, disp_w - 4, disp_h - 4, 0x0124);
-
-    if (s->pending_op != 0) {
+    // Operator indicator
+    if (s->pending_op) {
         char op_str[4];
         op_str[0] = s->pending_op;
         op_str[1] = '\0';
         print_string(op_str, disp_x + 8, disp_y + 16, 0x07E0);
     }
 
-    int txt_len = calc_strlen(s->entry_buf);
-    int txt_x = disp_x + disp_w - (txt_len * 9) - 10;
+    // Number output right-aligned
+    int txt_len = (int)strlen(s->entry_buf);
+    int txt_x = (disp_x + disp_w - 18) - (txt_len * 9);
     if (txt_x < disp_x + 26) txt_x = disp_x + 26;
     print_string(s->entry_buf, txt_x, disp_y + 16, 0xFFFF);
-
-    // Button Grid: 5 rows x 4 columns
-    const char* labels[5][4] = {
-        { "C",   "CE",  "<-",  "/" },
-        { "7",   "8",   "9",   "*" },
-        { "4",   "5",   "6",   "-" },
-        { "1",   "2",   "3",   "+" },
-        { "+/-", "0",   ".",   "=" }
-    };
-
-    unsigned short fills[5][4] = {
-        { 0xCE79, 0xCE79, 0xCE79, 0xF621 },
-        { 0xFFFF, 0xFFFF, 0xFFFF, 0xF621 },
-        { 0xFFFF, 0xFFFF, 0xFFFF, 0xF621 },
-        { 0xFFFF, 0xFFFF, 0xFFFF, 0xF621 },
-        { 0xCE79, 0xFFFF, 0xCE79, 0x03EA }
-    };
 
     int start_gx = cx + 16;
     int start_gy = cy + 90;
@@ -363,7 +335,7 @@ void calc_instance_draw(calc_state_t* s, int cx, int cy, int cw, int ch) {
             int bx = start_gx + c * (btn_w + gap_x);
             int by = start_gy + r * (btn_h + gap_y);
             unsigned short text_col = (r == 4 && c == 3) ? 0xFFFF : 0x0000;
-            draw_calc_btn(bx, by, btn_w, btn_h, labels[r][c], fills[r][c], text_col);
+            draw_calc_btn(bx, by, btn_w, btn_h, calc_labels[r][c], calc_fills[r][c], text_col);
         }
     }
 
@@ -373,6 +345,7 @@ void calc_instance_draw(calc_state_t* s, int cx, int cy, int cw, int ch) {
 int calc_instance_click(calc_state_t* s, int cx, int cy, int cw, int ch, int mouse_x, int mouse_y) {
     // [X] Titlebar Close Button
     if (mouse_x >= cx + cw - 26 && mouse_x <= cx + cw && mouse_y >= cy && mouse_y <= cy + 24) {
+        ui_btn_click_effect(cx + cw - 22, cy + 4, 18, 16, "X", 0xF800, 0xFFFF);
         return -1; // Request close
     }
 
@@ -389,7 +362,8 @@ int calc_instance_click(calc_state_t* s, int cx, int cy, int cw, int ch, int mou
             int by = start_gy + r * (btn_h + gap_y);
 
             if (mouse_x >= bx && mouse_x <= bx + btn_w && mouse_y >= by && mouse_y <= by + btn_h) {
-                play_sound(750); sleep(20); no_sound();
+                unsigned short text_col = (r == 4 && c == 3) ? 0xFFFF : 0x0000;
+                ui_btn_click_effect(bx, by, btn_w, btn_h, calc_labels[r][c], calc_fills[r][c], text_col);
 
                 if (r == 0) {
                     if (c == 0) calc_clear_all(s);

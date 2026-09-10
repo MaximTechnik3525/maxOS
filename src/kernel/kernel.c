@@ -51,6 +51,8 @@ struct multiboot_info {
 #include "task.h"
 #include "debug.h"
 #include "user/syscall.h"
+#include "font.h"
+#include "string.h"
 
 extern char _kernel_start[];
 extern char _kernel_end[];
@@ -70,117 +72,7 @@ void help(void);
 void cpu_win(void);
 void filew(void);
 unsigned short bg_col = 0x18C3;
-unsigned char mouse_arrow[12][12] = {
-    {1,1,3,0,0,0,0,0,0,0,0,0},
-    {1,2,1,3,0,0,0,0,0,0,0,0},
-    {1,2,2,1,3,0,0,0,0,0,0,0},
-    {1,2,2,2,1,3,0,0,0,0,0,0},
-    {1,2,2,2,2,1,3,0,0,0,0,0},
-    {1,2,2,2,2,2,1,3,0,0,0,0},
-    {1,2,2,2,2,2,2,1,3,0,0,0},
-    {1,2,2,2,2,1,1,1,1,3,0,0},
-    {1,2,1,1,2,1,3,3,3,3,0,0},
-    {1,1,3,3,1,2,1,3,0,0,0,0},
-    {0,0,3,0,0,1,1,1,3,0,0,0},
-    {0,0,0,0,0,0,3,3,3,0,0,0}
-};
-const unsigned char max_font[] = {
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 32 (пробел)
-    0x18,0x18,0x18,0x18,0x18,0x00,0x18,0x00, // 33 !
-    0x24,0x24,0x24,0x00,0x00,0x00,0x00,0x00, // 34 "
-    0x24,0x24,0x7E,0x24,0x7E,0x24,0x24,0x00, // 35 #
-    0x08,0x3E,0x68,0x3C,0x16,0x7C,0x10,0x00, // 36 $
-    0x63,0x64,0x08,0x10,0x20,0x4C,0x66,0x00, // 37 %
-    0x3C,0x66,0x3C,0x38,0x67,0x66,0x3F,0x00, // 38 &
-    0x06,0x0C,0x18,0x00,0x00,0x00,0x00,0x00, // 39 '
-    0x0C,0x18,0x30,0x30,0x30,0x18,0x0C,0x00, // 40 (
-    0x30,0x18,0x0C,0x0C,0x0C,0x18,0x30,0x00, // 41 )
-    0x00,0x66,0x3C,0xFF,0x3C,0x66,0x00,0x00, // 42 *
-    0x00,0x18,0x18,0x7E,0x18,0x18,0x00,0x00, // 43 +
-    0x00,0x00,0x00,0x00,0x00,0x18,0x18,0x30, // 44 ,
-    0x00,0x00,0x00,0x7E,0x00,0x00,0x00,0x00, // 45 -
-    0x00,0x00,0x00,0x00,0x00,0x18,0x18,0x00, // 46 .
-    0x03,0x06,0x0C,0x18,0x30,0x60,0x40,0x00, // 47 /
-    0x3E,0x61,0x65,0x69,0x6D,0x43,0x3E,0x00, // 48 0
-    0x0C,0x1C,0x0C,0x0C,0x0C,0x0C,0x3E,0x00, // 49 1
-    0x3E,0x63,0x06,0x1C,0x30,0x60,0x7F,0x00, // 50 2
-    0x7F,0x06,0x0C,0x1C,0x06,0x63,0x3E,0x00, // 51 3
-    0x1C,0x3C,0x6C,0x6C,0x7F,0x0C,0x1E,0x00, // 52 4
-    0x7F,0x60,0x7E,0x03,0x03,0x63,0x3E,0x00, // 53 5
-    0x1E,0x30,0x60,0x7E,0x63,0x63,0x3E,0x00, // 54 6
-    0x7F,0x43,0x06,0x0C,0x18,0x18,0x18,0x00, // 55 7
-    0x3E,0x63,0x63,0x3E,0x63,0x63,0x3E,0x00, // 56 8
-    0x3E,0x63,0x63,0x7F,0x03,0x06,0x3C,0x00, // 57 9
-    0x00,0x18,0x18,0x00,0x18,0x18,0x00,0x00, // 58 :
-    0x00,0x18,0x18,0x00,0x18,0x18,0x30,0x00, // 59 ;
-    0x0C,0x18,0x30,0x60,0x30,0x18,0x0C,0x00, // 60 <
-    0x00,0x00,0x7E,0x00,0x7E,0x00,0x00,0x00, // 61 =
-    0x30,0x18,0x0C,0x06,0x0C,0x18,0x30,0x00, // 62 >
-    0x3E,0x63,0x06,0x0C,0x18,0x00,0x18,0x00, // 63 ?
-    0x3E,0x63,0x6F,0x6B,0x6B,0x60,0x3E,0x00, // 64 @
-    0x18,0x3C,0x66,0x66,0x7F,0x66,0x66,0x00, // 65 A
-    0x7E,0x63,0x63,0x7C,0x63,0x63,0x7E,0x00, // 66 B
-    0x3E,0x63,0x60,0x60,0x60,0x63,0x3E,0x00, // 67 C
-    0x7C,0x66,0x63,0x63,0x63,0x66,0x7C,0x00, // 68 D
-    0x7F,0x60,0x60,0x7C,0x60,0x60,0x7F,0x00, // 69 E
-    0x7F,0x60,0x60,0x7C,0x60,0x60,0x60,0x00, // 70 F
-    0x3E,0x63,0x60,0x6F,0x63,0x63,0x3E,0x00, // 71 G
-    0x66,0x66,0x66,0x7F,0x66,0x66,0x66,0x00, // 72 H
-    0x7E,0x18,0x18,0x18,0x18,0x18,0x7E,0x00, // 73 I
-    0x1F,0x0C,0x0C,0x0C,0x0C,0x6C,0x38,0x00, // 74 J
-    0x66,0x6C,0x78,0x70,0x78,0x6C,0x66,0x00, // 75 K
-    0x60,0x60,0x60,0x60,0x60,0x60,0x7F,0x00, // 76 L
-    0x63,0x77,0x7F,0x6B,0x63,0x63,0x63,0x00, // 77 M
-    0x63,0x67,0x6F,0x7B,0x73,0x63,0x63,0x00, // 78 N
-    0x3E,0x63,0x63,0x63,0x63,0x63,0x3E,0x00, // 79 O
-    0x7E,0x63,0x63,0x7E,0x60,0x60,0x60,0x00, // 80 P
-    0x3E,0x63,0x63,0x63,0x6B,0x66,0x3D,0x00, // 81 Q
-    0x7E,0x63,0x63,0x7E,0x70,0x6C,0x66,0x00, // 82 R
-    0x3E,0x63,0x60,0x3E,0x03,0x63,0x3E,0x00, // 83 S
-    0x7F,0x18,0x18,0x18,0x18,0x18,0x18,0x00, // 84 T
-    0x66,0x66,0x66,0x66,0x66,0x66,0x3E,0x00, // 85 U
-    0x66,0x66,0x66,0x66,0x66,0x3C,0x18,0x00, // 86 V
-    0x63,0x63,0x63,0x6B,0x7F,0x77,0x63,0x00, // 87 W
-    0x63,0x63,0x34,0x1C,0x34,0x63,0x63,0x00, // 88 X
-    0x66,0x66,0x66,0x3C,0x18,0x18,0x18,0x00, // 89 Y
-    0x7F,0x03,0x06,0x0C,0x18,0x30,0x7F,0x00, // 90 Z
-    0x3C,0x30,0x30,0x30,0x30,0x30,0x3C,0x00, // 91 [
-    0x00,0x40,0x20,0x10,0x08,0x04,0x02,0x00, // 92 backslash
-    0x3C,0x0C,0x0C,0x0C,0x0C,0x0C,0x3C,0x00, // 93 ]
-    0x14,0x22,0x00,0x00,0x00,0x00,0x00,0x00, // 94 ^
-    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0xFF, // 95 _
-    0x18,0x18,0x0C,0x00,0x00,0x00,0x00,0x00, // 96 `
-    0x00,0x00,0x3E,0x03,0x3F,0x63,0x3D,0x00, // 97 a
-    0x60,0x60,0x7C,0x66,0x63,0x66,0x7C,0x00, // 98 b
-    0x00,0x00,0x3E,0x60,0x60,0x63,0x3E,0x00, // 99 c
-    0x03,0x03,0x3F,0x63,0x63,0x63,0x3D,0x00, // 100 d
-    0x00,0x00,0x3E,0x63,0x7F,0x60,0x3E,0x00, // 101 e
-    0x1C,0x36,0x30,0x78,0x30,0x30,0x78,0x00, // 102 f
-    0x00,0x00,0x3D,0x63,0x63,0x3F,0x03,0x3E, // 103 g
-    0x60,0x60,0x7C,0x66,0x63,0x66,0x66,0x00, // 104 h
-    0x18,0x00,0x38,0x18,0x18,0x18,0x3C,0x00, // 105 i
-    0x06,0x00,0x0E,0x06,0x06,0x06,0x06,0x3C, // 106 j
-    0x60,0x60,0x66,0x6C,0x78,0x6C,0x66,0x00, // 107 k
-    0x38,0x18,0x18,0x18,0x18,0x18,0x3C,0x00, // 108 l
-    0x00,0x00,0x66,0x7F,0x6B,0x63,0x63,0x00, // 109 m
-    0x00,0x00,0x7C,0x66,0x63,0x66,0x66,0x00, // 110 n
-    0x00,0x00,0x3E,0x63,0x63,0x63,0x3E,0x00, // 111 o
-    0x00,0x00,0x7C,0x66,0x63,0x7C,0x60,0x60, // 112 p
-    0x00,0x00,0x3D,0x63,0x63,0x3F,0x03,0x03, // 113 q
-    0x00,0x00,0x7C,0x66,0x60,0x60,0x60,0x00, // 114 r
-    0x00,0x00,0x3E,0x60,0x3E,0x03,0x3E,0x00, // 115 s
-    0x30,0x30,0x7C,0x30,0x30,0x34,0x18,0x00, // 116 t
-    0x00,0x00,0x63,0x63,0x63,0x66,0x3D,0x00, // 117 u
-    0x00,0x00,0x63,0x63,0x63,0x3C,0x18,0x00, // 118 v
-    0x00,0x00,0x63,0x63,0x6B,0x7F,0x36,0x00, // 119 w
-    0x00,0x00,0x63,0x34,0x1C,0x34,0x63,0x00, // 120 x
-    0x00,0x00,0x63,0x63,0x63,0x3F,0x03,0x3E, // 121 y
-    0x00,0x00,0x7F,0x0C,0x18,0x30,0x7F,0x00, // 122 z
-    0x0E,0x18,0x18,0x30,0x18,0x18,0x0E,0x00, // 123 {
-    0x18,0x18,0x18,0x18,0x18,0x18,0x18,0x00, // 124 |
-    0x70,0x18,0x18,0x0C,0x18,0x18,0x70,0x00, // 125 }
-    0x76,0xDC,0x00,0x00,0x00,0x00,0x00,0x00  // 126 ~
-};
+
 int win_x = 150;
 int win_y = 140;
 int win_w = 740;
@@ -194,21 +86,90 @@ int cursor_saved_y = -1;
 int theme = 5;
 int w_mode = 0;
 int km_mode = 0;
-// PONG
-int pad_x = 0;
-int pad_y = 0;
-int pad_w = 60, pad_h = 20;
-int ball_x = 500, ball_y = 360;
-int ball_dx = 3;
-int ball_dy = 3;
-int ball_size = 8;
-int game = 0;
-int collisions = 0;
 int drag = 2;
-int fid = 0;
 int tail = 0;
-int repeats = 1;
 int corners = 0;
+
+static int mouse_cycle = 0;
+static unsigned char mouse_packet[3];
+static int mouse_accum_x = 0;
+static int mouse_accum_y = 0;
+static int prev_mouse_click = 0;
+static int in_sleep_poll = 0;
+
+static void handle_mouse_packet(unsigned char p0, unsigned char p1, unsigned char p2) {
+    int sign_x = p0 & 0x10;
+    int sign_y = p0 & 0x20;
+    int click = p0 & 0x01;
+    int delta_x = p1;
+    int delta_y = p2;
+    if (sign_x) delta_x |= 0xFFFFFF00;
+    if (sign_y) delta_y |= 0xFFFFFF00;
+
+    if (delta_x < -250 || delta_x > 250 || delta_y < -250 || delta_y > 250) {
+        return;
+    }
+
+    // Accumulator ensures smooth 1:1 mouse movement without dropping slow movements
+    mouse_accum_x += delta_x;
+    mouse_accum_y -= delta_y;
+
+    int move_x = mouse_accum_x / 2;
+    int move_y = mouse_accum_y / 2;
+
+    if (move_x != 0 || move_y != 0) {
+        mouse_accum_x %= 2;
+        mouse_accum_y %= 2;
+
+        prev_cursor();
+        pos_x += move_x;
+        pos_y += move_y;
+        if (pos_x > 1024 - 12) pos_x = 1024 - 12;
+        if (pos_x < 0) pos_x = 0;
+        if (pos_y > 768 - 12) pos_y = 768 - 12;
+        if (pos_y < 0) pos_y = 0;
+        draw_cursor(pos_x, pos_y);
+    }
+
+    // Edge-triggered click: fires once when button transitions from unpressed to pressed
+    int mouse_down = (click == 1 && prev_mouse_click == 0);
+    prev_mouse_click = click;
+
+    if (in_sleep_poll) {
+        return;
+    }
+
+    if (mouse_down) {
+        if (taskbar_handle_click(pos_x, pos_y)) {
+            return;
+        }
+        int active_app = maxp_get_active_app();
+        int handled = 0;
+        if (active_app != MAXP_APP_NONE) {
+            handled = ring3_app_handle_click(active_app, pos_x, pos_y);
+        }
+        if (!handled) {
+            handled = desktop_handle_click(pos_x, pos_y);
+        }
+    }
+}
+
+static inline void process_mouse_byte(unsigned char b) {
+    if (mouse_cycle == 0) {
+        if ((b & 0x08) && !(b & 0xC0)) {
+            mouse_packet[0] = b;
+            mouse_cycle = 1;
+        }
+    } else if (mouse_cycle == 1) {
+        mouse_packet[1] = b;
+        mouse_cycle = 2;
+    } else if (mouse_cycle == 2) {
+        mouse_packet[2] = b;
+        mouse_cycle = 0;
+        handle_mouse_packet(mouse_packet[0], mouse_packet[1], mouse_packet[2]);
+    }
+}
+
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     (void)magic;
     struct multiboot_info* mbi = (struct multiboot_info*) multiboot_info_address;
@@ -267,58 +228,14 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     drag = 0;
     draw_window();
 
-    unsigned char packet[3];
     int clock_timer = 0;
 
     while (1) {
         unsigned char status = inb(0x64);
         if (status & 0x01) {
             if ((status & 0x20) && w_mode == 0 && drag != 2) {
-                // PS/2 Mouse packet
-                packet[0] = inb(0x60);
-                if ((packet[0] & 0x08) == 0) { continue; }
-                int timeout = 100000;
-                while (!(inb(0x64) & 0x01) && timeout--);
-                packet[1] = inb(0x60);
-                timeout = 100000;
-                while (!(inb(0x64) & 0x01) && timeout--);
-                packet[2] = inb(0x60);
-
-                int sign_x = packet[0] & 0x10;
-                int sign_y = packet[0] & 0x20;
-                int click = packet[0] & 0x01;
-                int delta_x = packet[1];
-                int delta_y = packet[2];
-                if (sign_x) delta_x |= 0xFFFFFF00;
-                if (sign_y) delta_y |= 0xFFFFFF00;
-
-                if ((delta_x > -250 && delta_x < 250) && (delta_y > -250 && delta_y < 250)) {
-                    if (delta_x != 0 || delta_y != 0) {
-                        prev_cursor();
-                        pos_x += delta_x / 3;
-                        pos_y -= delta_y / 3;
-                        if (pos_x > 1024 - 12) pos_x = 1024 - 12;
-                        if (pos_x < 0) pos_x = 0;
-                        if (pos_y > 768 - 12) pos_y = 768 - 12;
-                        if (pos_y < 0) pos_y = 0;
-                        draw_cursor(pos_x, pos_y);
-                    }
-
-                    if (click == 1) {
-                        if (taskbar_handle_click(pos_x, pos_y)) {
-                            continue;
-                        }
-                        int active_app = maxp_get_active_app();
-                        int handled = 0;
-                        if (active_app != MAXP_APP_NONE) {
-                            handled = ring3_app_handle_click(active_app, pos_x, pos_y);
-                        }
-                        if (!handled) {
-                            handled = desktop_handle_click(pos_x, pos_y);
-                        }
-                        if (handled) continue;
-                    }
-                }
+                // PS/2 Mouse byte (completely non-blocking, zero timeouts)
+                process_mouse_byte(inb(0x60));
             } else {
                 // PS/2 Keyboard scancode
                 unsigned char scan_code = inb(0x60);
@@ -369,31 +286,33 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         continue;
                     }
 
-                    // Quick app launchers
-                    if (ascii_char == 'F' || ascii_char == 'f') { maxp_launch_app(MAXP_APP_NOTEPAD); continue; }
-                    if (ascii_char == 'E' || ascii_char == 'e') { maxp_launch_app(MAXP_APP_EXPLORER); continue; }
-                    if (ascii_char == 'K' || ascii_char == 'k') { maxp_launch_app(MAXP_APP_CALC); continue; }
-                    if (ascii_char == 'S' || ascii_char == 's') { maxp_launch_app(MAXP_APP_SYSINFO); continue; }
-                    if (ascii_char == 'R' || ascii_char == 'r') { maxp_launch_app(MAXP_APP_MEM); continue; }
-                    if (ascii_char == 'P' || ascii_char == 'p') { maxp_launch_app(MAXP_APP_PONG); continue; }
-                    if (ascii_char == 'I' || ascii_char == 'i') { maxp_launch_app(MAXP_APP_INSTALLER); continue; }
-                    if (ascii_char == 'U' || ascii_char == 'u') { ring3_demo_launch(); continue; }
+                    // Hotkeys ONLY when no application window is active (prevents accidental launches & theme switches!)
+                    if (maxp_get_instance_count() == 0 || taskbar_is_app_minimized()) {
+                        if (ascii_char == 'F' || ascii_char == 'f') { maxp_launch_app(MAXP_APP_NOTEPAD); continue; }
+                        if (ascii_char == 'E' || ascii_char == 'e') { maxp_launch_app(MAXP_APP_EXPLORER); continue; }
+                        if (ascii_char == 'K' || ascii_char == 'k') { maxp_launch_app(MAXP_APP_CALC); continue; }
+                        if (ascii_char == 'S' || ascii_char == 's') { maxp_launch_app(MAXP_APP_SYSINFO); continue; }
+                        if (ascii_char == 'R' || ascii_char == 'r') { maxp_launch_app(MAXP_APP_MEM); continue; }
+                        if (ascii_char == 'P' || ascii_char == 'p') { maxp_launch_app(MAXP_APP_PONG); continue; }
+                        if (ascii_char == 'I' || ascii_char == 'i') { maxp_launch_app(MAXP_APP_INSTALLER); continue; }
+                        if (ascii_char == 'U' || ascii_char == 'u') { ring3_demo_launch(); continue; }
 
-                    // Themes 1-9
-                    if (ascii_char >= '1' && ascii_char <= '9') {
-                        theme = ascii_char - '0';
-                        if (theme == 1) bg_col = 0x18C3;
-                        else if (theme == 2) bg_col = 0x2000;
-                        else if (theme == 3) bg_col = 0x1041;
-                        else if (theme == 4) bg_col = 0x10A2;
-                        else if (theme == 5) bg_col = 0x01C8;
-                        else if (theme == 6) bg_col = 0x00A1;
-                        else if (theme == 7) bg_col = 0x4083;
-                        else if (theme == 8) bg_col = 0x7BE0;
-                        else if (theme == 9) bg_col = 0x0110;
-                        draw_window();
-                        play_sound(700); sleep(30); no_sound();
-                        continue;
+                        // Themes 1-9 on desktop
+                        if (ascii_char >= '1' && ascii_char <= '9') {
+                            theme = ascii_char - '0';
+                            if (theme == 1) bg_col = 0x18C3;
+                            else if (theme == 2) bg_col = 0x2000;
+                            else if (theme == 3) bg_col = 0x1041;
+                            else if (theme == 4) bg_col = 0x10A2;
+                            else if (theme == 5) bg_col = 0x01C8;
+                            else if (theme == 6) bg_col = 0x00A1;
+                            else if (theme == 7) bg_col = 0x4083;
+                            else if (theme == 8) bg_col = 0x7BE0;
+                            else if (theme == 9) bg_col = 0x0110;
+                            draw_window();
+                            play_sound(700); sleep(30); no_sound();
+                            continue;
+                        }
                     }
 
                     // Rounded corners toggle
@@ -433,21 +352,25 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 }
             }
         } else {
-            if (maxp_get_instance_count() > 0) {
-                ring3_app_step(maxp_get_active_app());
-                sleep(16);
-            } else {
-                clock_timer++;
-                if (clock_timer >= 100000) {
-                    clock_timer = 0;
-                    taskbar_draw_clock();
+            // Non-blocking tick dispatch for animated apps (Pong, Mem stress)
+            static unsigned long long last_step_tick = 0;
+            if (maxp_has_ticking_instances()) {
+                if (system_ticks - last_step_tick >= 20) {
+                    last_step_tick = system_ticks;
+                    ring3_app_step(maxp_get_active_app());
                 }
             }
+
+            clock_timer++;
+            if (clock_timer >= 100000) {
+                clock_timer = 0;
+                taskbar_draw_clock();
+            }
+            __asm__ __volatile__("pause");
         }
     }
 }
 
-int score = 0;
 void pong(void) {
     maxp_launch_app(MAXP_APP_PONG);
 }
@@ -466,23 +389,7 @@ void cpu_win(void) {
 }
 
 void int_str(int num, char* str) {
-    int i = 0;
-    if (num == 0) {
-        str[i++] = '0';
-        str[i] = '\0';
-        return;
-    }
-    while (num > 0) {
-        str[i++] = (num % 10) + '0';
-        num /= 10;
-    }
-    str[i] = '\0';
-    int len = i;
-    for (int j = 0; j < len / 2; j++) {
-        char temp = str[j];
-        str[j] = str[len - 1 - j];
-        str[len - 1 - j] = temp;
-    }
+    int_to_str(num, str);
 }
 
 void get_system_mem_info(struct SystemMemInfo* info) {
@@ -541,38 +448,12 @@ void get_system_mem_info(struct SystemMemInfo* info) {
     }
 }
 void pump_events_nonblocking(void) {
-    unsigned char status = inb(0x64);
-    if (status & 0x01) {
+    while (inb(0x64) & 0x01) {
+        unsigned char status = inb(0x64);
         if ((status & 0x20) && w_mode == 0 && drag != 2) {
-            unsigned char p0 = inb(0x60);
-            if (p0 & 0x08) {
-                int timeout = 1000;
-                while (!(inb(0x64) & 0x01) && timeout--);
-                unsigned char p1 = inb(0x60);
-                timeout = 1000;
-                while (!(inb(0x64) & 0x01) && timeout--);
-                unsigned char p2 = inb(0x60);
-
-                int sign_x = p0 & 0x10;
-                int sign_y = p0 & 0x20;
-                int delta_x = p1;
-                int delta_y = p2;
-                if (sign_x) delta_x |= 0xFFFFFF00;
-                if (sign_y) delta_y |= 0xFFFFFF00;
-
-                if ((delta_x > -250 && delta_x < 250) && (delta_y > -250 && delta_y < 250)) {
-                    if (delta_x != 0 || delta_y != 0) {
-                        prev_cursor();
-                        pos_x += delta_x / 3;
-                        pos_y -= delta_y / 3;
-                        if (pos_x > 1024 - 12) pos_x = 1024 - 12;
-                        if (pos_x < 0) pos_x = 0;
-                        if (pos_y > 768 - 12) pos_y = 768 - 12;
-                        if (pos_y < 0) pos_y = 0;
-                        draw_cursor(pos_x, pos_y);
-                    }
-                }
-            }
+            process_mouse_byte(inb(0x60));
+        } else {
+            break; // Leave keyboard scancodes for main event loop
         }
     }
 }
@@ -585,10 +466,12 @@ void sleep(unsigned int ms) {
     unsigned long long start_ticks = system_ticks;
     unsigned long long target = start_ticks + ms;
     int safety = 5000000;
+    in_sleep_poll = 1;
     while (system_ticks < target && safety--) {
         pump_events_nonblocking();
         __asm__ __volatile__("pause");
     }
+    in_sleep_poll = 0;
     if (system_ticks == start_ticks) {
         for (unsigned int i = 0; i < ms; i++) {
             outb(0x43, 0x30);
@@ -957,22 +840,146 @@ unsigned char read_rtc_register(unsigned char reg) {
     outb(0x70, reg);
     return inb(0x71);
 }
+void draw_3d_box(int bx, int by, int bw, int bh, int sunken, unsigned short fill) {
+    draw_rect(bx, by, bw, bh, 0x0000);
+    if (!sunken) {
+        draw_rect(bx + 1, by + 1, bw - 2, 1, 0xFFFF);
+        draw_rect(bx + 1, by + 1, 1, bh - 2, 0xFFFF);
+        draw_rect(bx + bw - 2, by + 1, 1, bh - 2, 0x7BEF);
+        draw_rect(bx + 1, by + bh - 2, bw - 2, 1, 0x7BEF);
+        draw_rect(bx + 2, by + 2, bw - 4, bh - 4, fill);
+    } else {
+        // Sunken / Pressed 3D Box
+        draw_rect(bx + 1, by + 1, bw - 2, 1, 0x39E7);
+        draw_rect(bx + 1, by + 1, 1, bh - 2, 0x39E7);
+        draw_rect(bx + 2, by + 2, bw - 4, 1, 0x7BEF);
+        draw_rect(bx + 2, by + 2, 1, bh - 4, 0x7BEF);
+        draw_rect(bx + bw - 2, by + 1, 1, bh - 2, 0xFFFF);
+        draw_rect(bx + 1, by + bh - 2, bw - 2, 1, 0xFFFF);
+        draw_rect(bx + 3, by + 3, bw - 5, bh - 5, fill);
+    }
+}
+
+void draw_ui_btn_state(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col, int pressed) {
+    draw_rect(bx, by, bw, bh, 0x0000);
+    if (!pressed) {
+        // Normal raised state
+        draw_rect(bx + 1, by + 1, bw - 2, 1, 0xFFFF);
+        draw_rect(bx + 1, by + 1, 1, bh - 2, 0xFFFF);
+        draw_rect(bx + bw - 2, by + 1, 1, bh - 2, 0x7BEF);
+        draw_rect(bx + 1, by + bh - 2, bw - 2, 1, 0x7BEF);
+        draw_rect(bx + 2, by + 2, bw - 4, bh - 4, fill);
+
+        int len = (int)strlen(label);
+        int tx = bx + (bw - (len * 9)) / 2;
+        int ty = by + (bh - 8) / 2;
+        if (tx < bx + 2) tx = bx + 2;
+        if (ty < by + 1) ty = by + 1;
+        print_string((char*)label, tx, ty, text_col);
+    } else {
+        // Pressed (sunken) state: inverted 3D borders, darkened fill, and (+1, +1) text shift!
+        draw_rect(bx + 1, by + 1, bw - 2, 1, 0x39E7);
+        draw_rect(bx + 1, by + 1, 1, bh - 2, 0x39E7);
+        draw_rect(bx + 2, by + 2, bw - 4, 1, 0x7BEF);
+        draw_rect(bx + 2, by + 2, 1, bh - 4, 0x7BEF);
+        draw_rect(bx + bw - 2, by + 1, 1, bh - 2, 0xFFFF);
+        draw_rect(bx + 1, by + bh - 2, bw - 2, 1, 0xFFFF);
+
+        unsigned short pressed_fill = fill;
+        if (fill == 0xCE79 || fill == 0xEF59 || fill == 0xBDD7 || fill == 0xFFFF) {
+            pressed_fill = 0x9CD3; // Classic pressed dark gray
+        } else if (fill == 0x3DF2) {
+            pressed_fill = 0x23EA;
+        } else if (fill == 0x24EE) {
+            pressed_fill = 0x11EB;
+        } else if (fill == 0xF800) {
+            pressed_fill = 0x9800;
+        } else if (fill == 0xF621) {
+            pressed_fill = 0xCE00;
+        } else if (fill == 0xC618) {
+            pressed_fill = 0x8410;
+        } else if (fill == 0x7BEF) {
+            pressed_fill = 0x52AA;
+        } else if (fill == 0x05E0) {
+            pressed_fill = 0x03C0;
+        } else if (fill == 0x0DE5) {
+            pressed_fill = 0x0A43;
+        } else if (fill == 0xF9A6) {
+            pressed_fill = 0xD880;
+        } else if (fill == 0x8000) {
+            pressed_fill = 0x5000;
+        }
+
+        draw_rect(bx + 3, by + 3, bw - 5, bh - 5, pressed_fill);
+
+        int len = (int)strlen(label);
+        int tx = bx + (bw - (len * 9)) / 2 + 1;
+        int ty = by + (bh - 8) / 2 + 1;
+        if (tx < bx + 3) tx = bx + 3;
+        if (ty < by + 2) ty = by + 2;
+        print_string((char*)label, tx, ty, text_col);
+    }
+}
+
+void draw_ui_btn(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col) {
+    draw_ui_btn_state(bx, by, bw, bh, label, fill, text_col, 0);
+}
+
+void ui_btn_click_effect(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col) {
+    prev_cursor();
+    draw_ui_btn_state(bx, by, bw, bh, label, fill, text_col, 1);
+    draw_cursor(pos_x, pos_y);
+    play_sound(800);
+    sleep(30);
+    no_sound();
+}
+
 void draw_ui_button(int x, int y, int w, int h, const char* text, unsigned short bg_col, unsigned short text_col, int sunken) {
-    unsigned short top_left = sunken ? 0x4208 : 0xFFFF;
-    unsigned short bot_right = sunken ? 0xFFFF : 0x4208;
+    draw_rect(x, y, w, h, 0x0000);
+    if (!sunken) {
+        draw_rect(x + 1, y + 1, w - 2, 1, 0xFFFF);
+        draw_rect(x + 1, y + 1, 1, h - 2, 0xFFFF);
+        draw_rect(x + w - 2, y + 1, 1, h - 2, 0x7BEF);
+        draw_rect(x + 1, y + h - 2, w - 2, 1, 0x7BEF);
+        draw_rect(x + 2, y + 2, w - 4, h - 4, bg_col);
 
-    draw_rect(x, y, w, h, bg_col);
-    draw_rect(x, y, w, 1, top_left);
-    draw_rect(x, y, 1, h, top_left);
-    draw_rect(x, y + h - 1, w, 1, bot_right);
-    draw_rect(x + w - 1, y, 1, h, bot_right);
+        int len = (int)strlen(text);
+        int tx = x + (w - (len * 9)) / 2;
+        int ty = y + (h - 8) / 2;
+        if (tx < x + 2) tx = x + 2;
+        if (ty < y + 1) ty = y + 1;
+        print_string((char*)text, tx, ty, text_col);
+    } else {
+        draw_rect(x + 1, y + 1, w - 2, 1, 0x39E7);
+        draw_rect(x + 1, y + 1, 1, h - 2, 0x39E7);
+        draw_rect(x + 2, y + 2, w - 4, 1, 0x7BEF);
+        draw_rect(x + 2, y + 2, 1, h - 4, 0x7BEF);
+        draw_rect(x + w - 2, y + 1, 1, h - 2, 0xFFFF);
+        draw_rect(x + 1, y + h - 2, w - 2, 1, 0xFFFF);
 
-    int len = 0;
-    while (text[len]) len++;
-    int tx = x + (w - (len * 9)) / 2;
-    int ty = y + (h - 8) / 2;
-    if (sunken) { tx++; ty++; }
-    print_string((char*)text, tx, ty, text_col);
+        unsigned short sunken_col = bg_col;
+        if (bg_col == 0xCE79 || bg_col == 0xEF59 || bg_col == 0xBDD7) sunken_col = 0x9CD3;
+        else if (bg_col == 0x05E0) sunken_col = 0x03C0;
+        else if (bg_col == 0x03EA) sunken_col = 0x0280;
+
+        draw_rect(x + 3, y + 3, w - 5, h - 5, sunken_col);
+
+        int len = (int)strlen(text);
+        int tx = x + (w - (len * 9)) / 2 + 1;
+        int ty = y + (h - 8) / 2 + 1;
+        if (tx < x + 3) tx = x + 3;
+        if (ty < y + 2) ty = y + 2;
+        print_string((char*)text, tx, ty, text_col);
+    }
+}
+
+void ui_button_click_effect(int x, int y, int w, int h, const char* text, unsigned short bg_col, unsigned short text_col) {
+    prev_cursor();
+    draw_ui_button(x, y, w, h, text, bg_col, text_col, 1);
+    draw_cursor(pos_x, pos_y);
+    play_sound(750);
+    sleep(30);
+    no_sound();
 }
 
 int desktop_handle_click(int mouse_x, int mouse_y) {
@@ -1007,18 +1014,22 @@ int desktop_handle_click(int mouse_x, int mouse_y) {
         // Row 1 (y = card_y + 142 .. card_y + 168)
         if (mouse_y >= card_y + 142 && mouse_y <= card_y + 168) {
             if (mouse_x >= card_x + 30 && mouse_x <= card_x + 165) {
+                ui_button_click_effect(card_x + 30, card_y + 142, 135, 26, "Notepad.maxP", 0xCE79, 0x0000);
                 maxp_launch_app(MAXP_APP_NOTEPAD);
                 return 1;
             }
             if (mouse_x >= card_x + 175 && mouse_x <= card_x + 310) {
+                ui_button_click_effect(card_x + 175, card_y + 142, 135, 26, "Explorer.maxP", 0xCE79, 0x0000);
                 maxp_launch_app(MAXP_APP_EXPLORER);
                 return 1;
             }
             if (mouse_x >= card_x + 320 && mouse_x <= card_x + 455) {
+                ui_button_click_effect(card_x + 320, card_y + 142, 135, 26, "Calc.maxP", 0xCE79, 0x0000);
                 maxp_launch_app(MAXP_APP_CALC);
                 return 1;
             }
             if (mouse_x >= card_x + 465 && mouse_x <= card_x + 610) {
+                ui_button_click_effect(card_x + 465, card_y + 142, 145, 26, "SysInfo.maxP", 0xCE79, 0x0000);
                 maxp_launch_app(MAXP_APP_SYSINFO);
                 return 1;
             }
@@ -1027,18 +1038,22 @@ int desktop_handle_click(int mouse_x, int mouse_y) {
         // Row 2 (y = card_y + 178 .. card_y + 204)
         if (mouse_y >= card_y + 178 && mouse_y <= card_y + 204) {
             if (mouse_x >= card_x + 30 && mouse_x <= card_x + 165) {
+                ui_button_click_effect(card_x + 30, card_y + 178, 135, 26, "Mem.maxP", 0x05E0, 0x0000);
                 maxp_launch_app(MAXP_APP_MEM);
                 return 1;
             }
             if (mouse_x >= card_x + 175 && mouse_x <= card_x + 310) {
+                ui_button_click_effect(card_x + 175, card_y + 178, 135, 26, "Pong.maxP", 0xCE79, 0x0000);
                 maxp_launch_app(MAXP_APP_PONG);
                 return 1;
             }
             if (mouse_x >= card_x + 320 && mouse_x <= card_x + 455) {
+                ui_button_click_effect(card_x + 320, card_y + 178, 135, 26, "Install.maxP", 0xCE79, 0x0000);
                 maxp_launch_app(MAXP_APP_INSTALLER);
                 return 1;
             }
             if (mouse_x >= card_x + 465 && mouse_x <= card_x + 610) {
+                ui_button_click_effect(card_x + 465, card_y + 178, 145, 26, "Ring 3 Demo", 0x03EA, 0xFFFF);
                 ring3_demo_launch();
                 return 1;
             }
@@ -1047,10 +1062,10 @@ int desktop_handle_click(int mouse_x, int mouse_y) {
         // Row 3 (y = card_y + 214 .. card_y + 240)
         if (mouse_y >= card_y + 214 && mouse_y <= card_y + 240) {
             if (mouse_x >= card_x + 30 && mouse_x <= card_x + 610) {
+                ui_button_click_effect(card_x + 30, card_y + 214, 580, 26, "Cycle Desktop Theme (1-9)", 0xBDD7, 0x0000);
                 theme = (theme % 9) + 1;
                 draw_window();
                 draw_cursor(pos_x, pos_y);
-                play_sound(700); sleep(30); no_sound();
                 return 1;
             }
         }

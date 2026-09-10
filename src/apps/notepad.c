@@ -26,27 +26,9 @@ static const char* color_names[] = {
     "Black", "Blue", "Green", "Red", "Amber", "Purple"
 };
 
-static void draw_ui_btn(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col) {
-    draw_rect(bx, by, bw, bh, 0x0000);
-    draw_rect(bx + 1, by + 1, bw - 2, 1, 0xFFFF);
-    draw_rect(bx + 1, by + 1, 1, bh - 2, 0xFFFF);
-    draw_rect(bx + 2, by + 2, bw - 4, bh - 4, fill);
-    int len = 0;
-    while (label[len] != '\0') len++;
-    int tx = bx + (bw - (len * 9)) / 2;
-    int ty = by + (bh - 8) / 2;
-    if (tx < bx + 2) tx = bx + 2;
-    if (ty < by + 1) ty = by + 1;
-    print_string((char*)label, tx, ty, text_col);
-}
-
 static void notepad_set_status_s(notepad_state_t* s, const char* msg) {
-    int i = 0;
-    while (msg[i] != '\0' && i < 62) {
-        s->np_status[i] = msg[i];
-        i++;
-    }
-    s->np_status[i] = '\0';
+    strncpy(s->np_status, msg, sizeof(s->np_status) - 1);
+    s->np_status[sizeof(s->np_status) - 1] = '\0';
 }
 
 void notepad_instance_init(notepad_state_t* s, const char* initial_file) {
@@ -55,60 +37,45 @@ void notepad_instance_init(notepad_state_t* s, const char* initial_file) {
     s->focus_mode = 0;
     s->file_picker_open = 0;
     s->picker_selected = 0;
-    for (int i = 0; i < 2048; i++) s->ftext[i] = '\0';
+    memset(s->ftext, 0, sizeof(s->ftext));
 
     if (initial_file && initial_file[0] != '\0') {
         int slot = maxfs_find_file(initial_file);
         if (slot >= 0) {
             struct VirtualFile* vf = maxfs_get_file(slot);
             if (vf && vf->exists) {
-                s->fname_len = 0;
-                while (vf->name[s->fname_len] != '\0' && s->fname_len < 31) {
-                    s->fname_input[s->fname_len] = vf->name[s->fname_len];
-                    s->fname_len++;
-                }
-                s->fname_input[s->fname_len] = '\0';
+                strncpy(s->fname_input, vf->name, sizeof(s->fname_input) - 1);
+                s->fname_input[sizeof(s->fname_input) - 1] = '\0';
+                s->fname_len = strlen(s->fname_input);
 
-                s->textid = 0;
-                while (vf->content[s->textid] != '\0' && s->textid < 2040) {
-                    s->ftext[s->textid] = vf->content[s->textid];
-                    s->textid++;
-                }
-                s->ftext[s->textid] = '\0';
+                strncpy(s->ftext, vf->content, sizeof(s->ftext) - 1);
+                s->ftext[sizeof(s->ftext) - 1] = '\0';
+                s->textid = strlen(s->ftext);
 
                 char msg[64] = "Loaded: ";
-                int p = 8;
-                for (int i = 0; s->fname_input[i] != '\0' && p < 50; i++) msg[p++] = s->fname_input[i];
-                msg[p] = '\0';
+                strncat(msg, s->fname_input, 45);
                 notepad_set_status_s(s, msg);
                 return;
             }
         }
     }
 
-    s->fname_input[0] = 'n'; s->fname_input[1] = 'o'; s->fname_input[2] = 't'; s->fname_input[3] = 'e';
-    s->fname_input[4] = '.'; s->fname_input[5] = 't'; s->fname_input[6] = 'x'; s->fname_input[7] = 't';
-    s->fname_input[8] = '\0';
+    strcpy(s->fname_input, "note.txt");
     s->fname_len = 8;
     notepad_set_status_s(s, "Ready | Click [Save] or [Open]");
 }
 
 static void notepad_instance_save(notepad_state_t* s) {
     if (s->fname_len == 0) {
-        s->fname_input[0] = 'n'; s->fname_input[1] = 'o'; s->fname_input[2] = 't'; s->fname_input[3] = 'e';
-        s->fname_input[4] = '.'; s->fname_input[5] = 't'; s->fname_input[6] = 'x'; s->fname_input[7] = 't';
-        s->fname_input[8] = '\0';
+        strcpy(s->fname_input, "note.txt");
         s->fname_len = 8;
     }
 
     int res = maxfs_write_file(s->fname_input, s->ftext, s->textid);
     if (res >= 0) {
         char msg[64] = "Saved: ";
-        int p = 7;
-        for (int i = 0; s->fname_input[i] != '\0' && p < 50; i++) msg[p++] = s->fname_input[i];
-        msg[p++] = ' '; msg[p++] = 't'; msg[p++] = 'o'; msg[p++] = ' ';
-        msg[p++] = 'd'; msg[p++] = 'i'; msg[p++] = 's'; msg[p++] = 'k';
-        msg[p++] = '!'; msg[p] = '\0';
+        strncat(msg, s->fname_input, 40);
+        strcat(msg, " to disk!");
         notepad_set_status_s(s, msg);
         play_sound(700); sleep(50); play_sound(1100); sleep(70); no_sound();
     } else {
@@ -118,10 +85,9 @@ static void notepad_instance_save(notepad_state_t* s) {
 }
 
 static void notepad_instance_new_file(notepad_state_t* s) {
-    for (int i = 0; i < 2048; i++) s->ftext[i] = '\0';
+    memset(s->ftext, 0, sizeof(s->ftext));
     s->textid = 0;
-    s->fname_input[0] = 'n'; s->fname_input[1] = 'e'; s->fname_input[2] = 'w'; s->fname_input[3] = '.';
-    s->fname_input[4] = 't'; s->fname_input[5] = 'x'; s->fname_input[6] = 't'; s->fname_input[7] = '\0';
+    strcpy(s->fname_input, "new.txt");
     s->fname_len = 7;
     s->focus_mode = 0;
     s->file_picker_open = 0;
@@ -140,24 +106,16 @@ static void notepad_instance_load_file(notepad_state_t* s, const char* name) {
     struct VirtualFile* vf = maxfs_get_file(slot);
     if (!vf || !vf->exists) return;
 
-    s->fname_len = 0;
-    while (vf->name[s->fname_len] != '\0' && s->fname_len < 31) {
-        s->fname_input[s->fname_len] = vf->name[s->fname_len];
-        s->fname_len++;
-    }
-    s->fname_input[s->fname_len] = '\0';
+    strncpy(s->fname_input, vf->name, sizeof(s->fname_input) - 1);
+    s->fname_input[sizeof(s->fname_input) - 1] = '\0';
+    s->fname_len = strlen(s->fname_input);
 
-    s->textid = 0;
-    while (vf->content[s->textid] != '\0' && s->textid < 2040) {
-        s->ftext[s->textid] = vf->content[s->textid];
-        s->textid++;
-    }
-    s->ftext[s->textid] = '\0';
+    strncpy(s->ftext, vf->content, sizeof(s->ftext) - 1);
+    s->ftext[sizeof(s->ftext) - 1] = '\0';
+    s->textid = strlen(s->ftext);
 
     char msg[64] = "Loaded: ";
-    int p = 8;
-    for (int i = 0; s->fname_input[i] != '\0' && p < 50; i++) msg[p++] = s->fname_input[i];
-    msg[p] = '\0';
+    strncat(msg, s->fname_input, 45);
     notepad_set_status_s(s, msg);
     s->focus_mode = 0;
     s->file_picker_open = 0;
@@ -388,6 +346,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
         // Check [Cancel] button
         if (mouse_x >= dlg_x + dlg_w - 85 && mouse_x <= dlg_x + dlg_w - 13 &&
             mouse_y >= dlg_y + dlg_h - 34 && mouse_y <= dlg_y + dlg_h - 12) {
+            ui_btn_click_effect(dlg_x + dlg_w - 85, dlg_y + dlg_h - 34, 72, 22, "Cancel", 0xF9A6, 0x0000);
             s->file_picker_open = 0;
             draw_window();
             play_sound(400); sleep(50); no_sound();
@@ -405,6 +364,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
                     s->file_picker_open = 0;
                     notepad_instance_load_file(s, vf->name);
                     draw_window();
+                    play_sound(750); sleep(50); no_sound();
                     return 1;
                 }
                 row_y += 24;
@@ -424,6 +384,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
 
     // Check [Save] button: np_x + 192 .. np_x + 240
     if (mouse_x >= np_x + 192 && mouse_x <= np_x + 240 && mouse_y >= np_y + 25 && mouse_y <= np_y + 44) {
+        ui_btn_click_effect(np_x + 192, np_y + 25, 48, 19, "Save", 0x3DF2, 0x0000);
         notepad_instance_save(s);
         draw_window();
         return 1;
@@ -431,6 +392,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
 
     // Check [Open] button: np_x + 246 .. np_x + 294
     if (mouse_x >= np_x + 246 && mouse_x <= np_x + 294 && mouse_y >= np_y + 25 && mouse_y <= np_y + 44) {
+        ui_btn_click_effect(np_x + 246, np_y + 25, 48, 19, "Open", 0x24EE, 0xFFFF);
         s->file_picker_open = 1;
         s->picker_selected = 0;
         draw_window();
@@ -440,6 +402,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
 
     // Check [New] button: np_x + 300 .. np_x + 344
     if (mouse_x >= np_x + 300 && mouse_x <= np_x + 344 && mouse_y >= np_y + 25 && mouse_y <= np_y + 44) {
+        ui_btn_click_effect(np_x + 300, np_y + 25, 44, 19, "New",  0xC618, 0x0000);
         notepad_instance_new_file(s);
         draw_window();
         return 1;
@@ -447,6 +410,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
 
     // Check [Col] button: np_x + 350 .. np_x + 394
     if (mouse_x >= np_x + 350 && mouse_x <= np_x + 394 && mouse_y >= np_y + 25 && mouse_y <= np_y + 44) {
+        ui_btn_click_effect(np_x + 350, np_y + 25, 44, 19, "Col",  0x7BEF, 0x0000);
         s->current_color_idx = (s->current_color_idx + 1) % 6;
         draw_window();
         play_sound(750); sleep(40); no_sound();
@@ -466,6 +430,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
 
     // Check [X] Close button (Titlebar)
     if (mouse_x >= np_x + np_w - 26 && mouse_x <= np_x + np_w && mouse_y >= np_y && mouse_y <= np_y + 24) {
+        ui_btn_click_effect(np_x + np_w - 22, np_y + 4, 18, 16, "X", 0xF800, 0xFFFF);
         return -1; // Request close
     }
 

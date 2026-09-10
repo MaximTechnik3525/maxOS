@@ -8,38 +8,9 @@
 int explorer_open = 0;
 static explorer_state_t primary_explorer_state;
 
-static void draw_ui_btn(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col) {
-    draw_rect(bx, by, bw, bh, 0x0000);
-    draw_rect(bx + 1, by + 1, bw - 2, 1, 0xFFFF);
-    draw_rect(bx + 1, by + 1, 1, bh - 2, 0xFFFF);
-    draw_rect(bx + 2, by + 2, bw - 4, bh - 4, fill);
-    int len = 0;
-    while (label[len] != '\0') len++;
-    int tx = bx + (bw - (len * 9)) / 2;
-    int ty = by + (bh - 8) / 2;
-    if (tx < bx + 2) tx = bx + 2;
-    if (ty < by + 1) ty = by + 1;
-    print_string((char*)label, tx, ty, text_col);
-}
-
-static int str_ends_with(const char* str, const char* suffix) {
-    int slen = 0, suflen = 0;
-    while (str[slen] != '\0') slen++;
-    while (suffix[suflen] != '\0') suflen++;
-    if (suflen > slen) return 0;
-    for (int i = 0; i < suflen; i++) {
-        if (str[slen - suflen + i] != suffix[i]) return 0;
-    }
-    return 1;
-}
-
 static void explorer_set_status_s(explorer_state_t* s, const char* msg) {
-    int i = 0;
-    while (msg[i] != '\0' && i < 62) {
-        s->exp_status[i] = msg[i];
-        i++;
-    }
-    s->exp_status[i] = '\0';
+    strncpy(s->exp_status, msg, sizeof(s->exp_status) - 1);
+    s->exp_status[sizeof(s->exp_status) - 1] = '\0';
 }
 
 void explorer_instance_init(explorer_state_t* s) {
@@ -212,6 +183,7 @@ void explorer_instance_draw(explorer_state_t* s, int exp_x, int exp_y, int exp_w
 int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w, int exp_h, int mouse_x, int mouse_y) {
     // Check [Open File] button
     if (mouse_x >= exp_x + 8 && mouse_x <= exp_x + 104 && mouse_y >= exp_y + 25 && mouse_y <= exp_y + 44) {
+        ui_btn_click_effect(exp_x + 8, exp_y + 25, 96, 19, "Open File", 0x3DF2, 0x0000);
         if (s->selected_file >= 0 && s->selected_file < MAXFS_MAX_FILES) {
             struct VirtualFile* vf = maxfs_get_file(s->selected_file);
             if (vf && vf->exists) {
@@ -227,12 +199,14 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
 
     // Check [New Note] button
     if (mouse_x >= exp_x + 110 && mouse_x <= exp_x + 198 && mouse_y >= exp_y + 25 && mouse_y <= exp_y + 44) {
+        ui_btn_click_effect(exp_x + 110, exp_y + 25, 88, 19, "New Note", 0x24EE, 0xFFFF);
         maxp_spawn_instance(MAXP_APP_NOTEPAD, "Notepad", 0);
         return 1;
     }
 
     // Check [Delete] button
     if (mouse_x >= exp_x + 204 && mouse_x <= exp_x + 274 && mouse_y >= exp_y + 25 && mouse_y <= exp_y + 44) {
+        ui_btn_click_effect(exp_x + 204, exp_y + 25, 70, 19, "Delete", 0xF800, 0xFFFF);
         if (s->selected_file >= 0 && s->selected_file < MAXFS_MAX_FILES) {
             struct VirtualFile* vf = maxfs_get_file(s->selected_file);
             if (vf && vf->exists) {
@@ -247,23 +221,24 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
 
     // Check [Refresh] button
     if (mouse_x >= exp_x + 280 && mouse_x <= exp_x + 360 && mouse_y >= exp_y + 25 && mouse_y <= exp_y + 44) {
+        ui_btn_click_effect(exp_x + 280, exp_y + 25, 80, 19, "Refresh", 0xC618, 0x0000);
         if (maxfs_is_mounted()) maxfs_mount();
         draw_window();
-        play_sound(700); sleep(40); no_sound();
         return 1;
     }
 
     // Check [Format Disk] button
     if (mouse_x >= exp_x + 366 && mouse_x <= exp_x + 481 && mouse_y >= exp_y + 25 && mouse_y <= exp_y + 44) {
+        ui_btn_click_effect(exp_x + 366, exp_y + 25, 115, 19, "Format Disk", 0x8000, 0xFFFF);
         maxfs_format("maxOS System Disk");
         s->selected_file = -1;
         draw_window();
-        play_sound(400); sleep(60); play_sound(800); sleep(60); no_sound();
         return 1;
     }
 
     // Check [X] Close button (Titlebar)
     if (mouse_x >= exp_x + exp_w - 26 && mouse_x <= exp_x + exp_w && mouse_y >= exp_y && mouse_y <= exp_y + 24) {
+        ui_btn_click_effect(exp_x + exp_w - 22, exp_y + 4, 18, 16, "X", 0xF800, 0xFFFF);
         return -1; // Request close
     }
 

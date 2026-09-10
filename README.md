@@ -31,7 +31,6 @@ trailon, trailoff - enables and disables cursor trail.
   - Dynamic multi-instance taskbar: each running instance has its own dedicated 3D tab with live focus indicator.
   - Global `Tab` shortcut (Alt-Tab style) cycles through all open instances with instant focus transfer.
 - **64-Bit Long Mode (x86_64)**: 4-level PML4 paging with 2MB huge pages, AMD64 System V ABI, Long Mode GDT (`src/boot/entry.asm`).
-- **64-Bit Long Mode (x86_64)**: 4-level PML4 paging with 2MB huge pages, AMD64 System V ABI, Long Mode GDT (`src/boot/entry.asm`).
 - **Preemptive Task Scheduler (Путь B)**: Full hardware timer-driven preemptive multitasking (`src/kernel/task.c` / `task.h`). Round-Robin 20ms time slices, complete 15-register CPU trap frame preservation, SSE/FPU FXSAVE/FXRSTOR context switching, and per-process 32KB kernel & user stacks.
 - **Simultaneous Multi-Process Execution**: Multiple applications run at the same time without losing state or closing each other.
 - **Ring 3 Protected User Mode**: TSS and SYSCALL/SYSRET architecture isolating user apps from kernel space (`src/kernel/user.c`). Non-blocking `SYS_SLEEP`, `SYS_YIELD`, `SYS_SPAWN`, `SYS_KILL`, and `SYS_TASKLIST`.

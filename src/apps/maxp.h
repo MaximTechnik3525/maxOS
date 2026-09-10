@@ -80,6 +80,7 @@ void maxp_draw_all_instances(void);
 int maxp_handle_click_active(int mx, int my);
 int maxp_handle_key_active(char ch, unsigned char scan);
 void maxp_tick_all_instances(void);
+int  maxp_has_ticking_instances(void);
 
 // Legacy compatibility
 int maxp_get_active_app(void);

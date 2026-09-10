@@ -63,9 +63,7 @@ static int ring3_demo_active = 0;
  * ------------------------------------------------------------------------- */
 void user_mode_init(void) {
     // 1. Initialize Task State Segment (TSS)
-    for (unsigned int i = 0; i < sizeof(struct tss64_t); i++) {
-        ((unsigned char*)&default_tss)[i] = 0;
-    }
+    memset(&default_tss, 0, sizeof(default_tss));
     // Dedicated stack top loaded by hardware on interrupt from Ring 3
     default_tss.rsp0 = (unsigned long long)&interrupt_stack_top;
     default_tss.iopb_offset = sizeof(struct tss64_t); // Disable raw I/O for Ring 3

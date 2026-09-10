@@ -74,22 +74,8 @@ void mem_stress_release(void) {
     stress_current_offset = 0;
 }
 
-/* Button helper with 3D bevel */
-static void draw_btn(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col) {
-    draw_rect(bx, by, bw, bh, 0x0000);
-    draw_rect(bx + 1, by + 1, bw - 2, 1, 0xFFFF);
-    draw_rect(bx + 1, by + 1, 1, bh - 2, 0xFFFF);
-    draw_rect(bx + bw - 2, by + 1, 1, bh - 2, 0x7BEF);
-    draw_rect(bx + 1, by + bh - 2, bw - 2, 1, 0x7BEF);
-    draw_rect(bx + 2, by + 2, bw - 4, bh - 4, fill);
-    int len = 0;
-    while (label[len] != '\0') len++;
-    int tx = bx + (bw - (len * 9)) / 2;
-    int ty = by + (bh - 8) / 2;
-    if (tx < bx + 2) tx = bx + 2;
-    if (ty < by + 1) ty = by + 1;
-    print_string((char*)label, tx, ty, text_col);
-}
+/* Button helper using global UI primitive */
+#define draw_btn draw_ui_btn
 
 /* Format KB to string "X.YY MB" or "X MB" */
 static void format_kb_to_mb(unsigned int kb, char* out) {
@@ -627,6 +613,7 @@ int mem_handle_click(int mouse_x, int mouse_y) {
 
     // [X] Titlebar close button
     if (mouse_x >= sx + sw - 26 && mouse_x <= sx + sw && mouse_y >= sy && mouse_y <= sy + 24) {
+        ui_btn_click_effect(sx + sw - 22, sy + 3, 18, 16, "X", 0xF800, 0xFFFF);
         mem_close_window();
         return 1;
     }
@@ -635,21 +622,22 @@ int mem_handle_click(int mouse_x, int mouse_y) {
         // Task Manager Mode
         // "Memory View (m)" button
         if (mouse_x >= sx + 20 && mouse_x <= sx + 150 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            ui_btn_click_effect(sx + 20, sy + sh - 34, 130, 22, "Memory View (m)", 0x24EE, 0xFFFF);
             mem_view_mode = 0;
             mem_draw();
-            play_sound(750); sleep(20); no_sound();
             return 1;
         }
 
         // "Refresh (r)" button
         if (mouse_x >= sx + 160 && mouse_x <= sx + 260 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            ui_btn_click_effect(sx + 160, sy + sh - 34, 100, 22, "Refresh (r)", 0xC618, 0x0000);
             mem_draw();
-            play_sound(750); sleep(20); no_sound();
             return 1;
         }
 
         // "Kill Task (k)" button
         if (mouse_x >= sx + 270 && mouse_x <= sx + 385 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            ui_btn_click_effect(sx + 270, sy + sh - 34, 115, 22, "Kill Task (k)", 0xF800, 0xFFFF);
             task_info_t tlist[MAX_TASKS];
             int tcount = task_get_list(tlist, MAX_TASKS);
             if (selected_task_idx >= 0 && selected_task_idx < tcount) {
@@ -669,9 +657,9 @@ int mem_handle_click(int mouse_x, int mouse_y) {
 
         // "Stress (s)" button
         if (mouse_x >= sx + 395 && mouse_x <= sx + 490 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            ui_btn_click_effect(sx + 395, sy + sh - 34, 95, 22, "Stress (s)", 0x0DE5, 0x0000);
             mem_view_mode = 2;
             mem_draw();
-            play_sound(850); sleep(20); no_sound();
             return 1;
         }
 
@@ -692,13 +680,14 @@ int mem_handle_click(int mouse_x, int mouse_y) {
         // Memory Monitor Mode
         // Bottom refresh button
         if (mouse_x >= sx + 20 && mouse_x <= sx + 120 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            ui_btn_click_effect(sx + 20, sy + sh - 34, 100, 22, "Refresh (r)", 0xC618, 0x0000);
             mem_draw();
-            play_sound(750); sleep(30); no_sound();
             return 1;
         }
 
         // Bottom optimize RAM button
         if (mouse_x >= sx + 130 && mouse_x <= sx + 265 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            ui_btn_click_effect(sx + 130, sy + sh - 34, 135, 22, "Optimize RAM (o)", 0x03EA, 0xFFFF);
             optimize_flash = 1;
             play_sound(500); sleep(30); play_sound(900); sleep(40); no_sound();
             mem_draw();
@@ -707,23 +696,24 @@ int mem_handle_click(int mouse_x, int mouse_y) {
 
         // "Tasks (t)" button
         if (mouse_x >= sx + 275 && mouse_x <= sx + 365 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            ui_btn_click_effect(sx + 275, sy + sh - 34, 90, 22, "Tasks (t)", 0x24EE, 0xFFFF);
             mem_view_mode = 1;
             mem_draw();
-            play_sound(850); sleep(30); no_sound();
             return 1;
         }
 
         // "Stress (s)" button
         if (mouse_x >= sx + 375 && mouse_x <= sx + 470 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            ui_btn_click_effect(sx + 375, sy + sh - 34, 95, 22, "Stress (s)", 0x0DE5, 0x0000);
             mem_view_mode = 2;
             mem_draw();
-            play_sound(850); sleep(20); no_sound();
             return 1;
         }
     } else if (mem_view_mode == 2) {
         // Stress Test Mode
         // "Start / Stop (s)" button
         if (mouse_x >= sx + 20 && mouse_x <= sx + 150 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            ui_btn_click_effect(sx + 20, sy + sh - 34, 130, 22, stress_active ? "Stop Test (s)" : "Start Test (s)", stress_active ? 0xF800 : 0x05E0, 0xFFFF);
             stress_active = !stress_active;
             if (stress_active) {
                 play_sound(750); sleep(30); play_sound(950); sleep(40); no_sound();
@@ -736,29 +726,29 @@ int mem_handle_click(int mouse_x, int mouse_y) {
 
         // "Reset (x)" button
         if (mouse_x >= sx + 160 && mouse_x <= sx + 250 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            ui_btn_click_effect(sx + 160, sy + sh - 34, 90, 22, "Reset (x)", 0xC618, 0x0000);
             stress_passes_completed = 0;
             stress_errors_detected = 0;
             stress_current_offset = 0;
             stress_mb_per_sec = 0;
             stress_total_tested_bytes = 0;
-            play_sound(600); sleep(30); no_sound();
             mem_draw();
             return 1;
         }
 
         // "Memory View (m)" button
         if (mouse_x >= sx + 260 && mouse_x <= sx + 385 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            ui_btn_click_effect(sx + 260, sy + sh - 34, 125, 22, "Memory View (m)", 0x24EE, 0xFFFF);
             mem_view_mode = 0;
             mem_draw();
-            play_sound(750); sleep(20); no_sound();
             return 1;
         }
 
         // "Tasks (t)" button
         if (mouse_x >= sx + 395 && mouse_x <= sx + 485 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+            ui_btn_click_effect(sx + 395, sy + sh - 34, 90, 22, "Tasks (t)", 0x03EA, 0xFFFF);
             mem_view_mode = 1;
             mem_draw();
-            play_sound(850); sleep(20); no_sound();
             return 1;
         }
     }
@@ -908,6 +898,7 @@ int mem_instance_click(mem_state_t* s, int sx, int sy, int sw, int sh, int mouse
     int wy = win_y + 35;
     int ww = win_w - 40;
     if (mouse_x >= wx + ww - 26 && mouse_x <= wx + ww && mouse_y >= wy && mouse_y <= wy + 24) {
+        ui_btn_click_effect(wx + ww - 22, wy + 3, 18, 16, "X", 0xF800, 0xFFFF);
         return -1;
     }
 

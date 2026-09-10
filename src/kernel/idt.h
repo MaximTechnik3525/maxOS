@@ -18,25 +18,62 @@ struct __attribute__((packed)) idt_ptr_64 {
     unsigned long long base;      // Physical base address of IDT
 };
 
+// Complete CPU trap frame for exception dispatcher
+typedef struct __attribute__((packed)) {
+    // Saved general-purpose registers (r15 down to rax)
+    unsigned long long r15;
+    unsigned long long r14;
+    unsigned long long r13;
+    unsigned long long r12;
+    unsigned long long r11;
+    unsigned long long r10;
+    unsigned long long r9;
+    unsigned long long r8;
+    unsigned long long rbp;
+    unsigned long long rdi;
+    unsigned long long rsi;
+    unsigned long long rdx;
+    unsigned long long rcx;
+    unsigned long long rbx;
+    unsigned long long rax;
+
+    // Pushed by specific ISR stub
+    unsigned long long vector;
+    unsigned long long error_code;
+
+    // Pushed automatically by CPU on interrupt
+    unsigned long long rip;
+    unsigned long long cs;
+    unsigned long long rflags;
+    unsigned long long rsp;
+    unsigned long long ss;
+} isr_frame_t;
+
 // System Timer Tick Counter
 extern volatile unsigned long long system_ticks;
 
-// Subsystem Lifecycle
+// Subsystem Lifecycle & Gate Configuration
 void idt_init(void);
+void idt_set_gate(int num, void* handler, unsigned char type_attr);
 void pic_remap(void);
+void pic_send_eoi(unsigned char irq);
+void pic_set_mask(unsigned char irq);
+void pic_clear_mask(unsigned char irq);
 void pit_init(unsigned int freq_hz);
 unsigned long long get_uptime_ms(void);
 
-// C Exception Handlers
-void divide_error_handler(unsigned long long rip, unsigned long long cs);
-void invalid_opcode_handler(unsigned long long rip, unsigned long long cs);
-void double_fault_handler(unsigned long long err, unsigned long long rip, unsigned long long cs);
-void gp_fault_handler(unsigned long long err, unsigned long long rip, unsigned long long cs);
-void page_fault_handler(unsigned long long err, unsigned long long rip, unsigned long long cs);
+// Unified Exception & IRQ Dispatchers
+void exception_dispatcher(isr_frame_t* frame);
+void irq_default_handler(unsigned long long irq);
 
-// Assembly Routines
+// Assembly Routines & Tables
 void load_idt(void* idtr);
 void irq0_timer_entry(void);
+
+extern void* isr_stub_table[32];
+extern void* irq_stub_table[16];
+
+// Legacy entry points preserved for compatibility
 void divide_error_entry(void);
 void invalid_opcode_entry(void);
 void double_fault_entry(void);

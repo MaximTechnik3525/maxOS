@@ -3,6 +3,7 @@
 #include "user.h"
 #include "idt.h"
 #include "debug.h"
+#include "string.h"
 #include "user/syscall.h"
 
 static task_t tasks[MAX_TASKS];
@@ -21,38 +22,35 @@ static void init_fpu_template(void) {
     }
 }
 
+static inline int sched_get_quantum(task_priority_t prio) {
+    switch (prio) {
+        case TASK_PRIORITY_HIGH:   return TIME_SLICE_HIGH;
+        case TASK_PRIORITY_LOW:    return TIME_SLICE_LOW;
+        case TASK_PRIORITY_NORMAL:
+        default:                   return TIME_SLICE_NORMAL;
+    }
+}
+
 void task_init(void) {
     init_fpu_template();
 
+    memset(tasks, 0, sizeof(tasks));
     for (int i = 0; i < MAX_TASKS; i++) {
         tasks[i].pid = i;
         tasks[i].state = TASK_UNUSED;
-        tasks[i].rsp = 0;
-        tasks[i].kstack_top = 0;
-        tasks[i].sleep_until = 0;
+        tasks[i].priority = TASK_PRIORITY_NORMAL;
         tasks[i].time_slice = DEFAULT_TIME_SLICE;
-        tasks[i].is_user = 0;
-        tasks[i].app_id = 0;
-        tasks[i].total_ticks = 0;
-        tasks[i].name[0] = '\0';
     }
 
     // Task 0: Main kernel & desktop compositor thread
     tasks[0].pid = 0;
-    const char* k_name = "kernel_main";
-    for (int i = 0; k_name[i] != '\0' && i < 31; i++) {
-        tasks[0].name[i] = k_name[i];
-        tasks[0].name[i + 1] = '\0';
-    }
+    strncpy(tasks[0].name, "kernel_main", sizeof(tasks[0].name) - 1);
     tasks[0].state = TASK_RUNNING;
+    tasks[0].priority = TASK_PRIORITY_HIGH; // High priority for smooth UI and desktop
     tasks[0].is_user = 0;
-    tasks[0].time_slice = DEFAULT_TIME_SLICE;
+    tasks[0].time_slice = sched_get_quantum(TASK_PRIORITY_HIGH);
     tasks[0].kstack_top = (unsigned long long)&interrupt_stack_top;
-    
-    // Copy clean FPU state
-    for (int j = 0; j < 512; j++) {
-        tasks[0].fpu_state[j] = default_fpu[j];
-    }
+    memcpy(tasks[0].fpu_state, default_fpu, sizeof(default_fpu));
 
     current_task = &tasks[0];
     scheduler_active = 1;
@@ -60,18 +58,12 @@ void task_init(void) {
     debug_log("SCHED", "Preemptive Multitasking Scheduler Initialized (PID 0 active)");
 }
 
-static void default_task_worker(void) {
-    while (1) {
-        task_sleep(50);
-    }
-}
-
 int task_create(const char* name, void (*entry)(void), int is_user, int app_id) {
     if (get_cpl() == 3) {
         return u_spawn(name, entry, is_user, app_id);
     }
 
-    // Disable interrupts to prevent schedule_tick during task creation
+    // Disable interrupts to ensure atomic task creation
     unsigned long long flags;
     __asm__ __volatile__("pushfq; pop %0; cli" : "=r"(flags));
 
@@ -89,46 +81,25 @@ int task_create(const char* name, void (*entry)(void), int is_user, int app_id) 
     }
 
     task_t* t = &tasks[pid];
+    memset(t, 0, sizeof(task_t));
+
     t->pid = pid;
-    t->state = TASK_UNUSED; // Keep UNUSED while initializing
+    t->state = TASK_UNUSED; // Kept UNUSED until stack and context are completely prepared
     t->is_user = is_user;
     t->app_id = app_id;
-    t->time_slice = DEFAULT_TIME_SLICE;
+    t->priority = TASK_PRIORITY_NORMAL;
+    t->time_slice = sched_get_quantum(TASK_PRIORITY_NORMAL);
     t->total_ticks = 0;
     t->sleep_until = 0;
 
-    int n = 0;
-    while (name && name[n] != '\0' && n < 31) {
-        t->name[n] = name[n];
-        n++;
-    }
-    t->name[n] = '\0';
-
-    // Copy clean FPU state
-    for (int j = 0; j < 512; j++) {
-        t->fpu_state[j] = default_fpu[j];
-    }
+    strncpy(t->name, name ? name : "task", sizeof(t->name) - 1);
+    memcpy(t->fpu_state, default_fpu, sizeof(default_fpu));
 
     unsigned char* kstack_top = t->kstack + TASK_STACK_SIZE;
     t->kstack_top = (unsigned long long)kstack_top;
 
     struct trap_frame* tf = (struct trap_frame*)(kstack_top - sizeof(struct trap_frame));
-
-    tf->rax = 0;
-    tf->rbx = 0;
-    tf->rcx = 0;
-    tf->rdx = 0;
-    tf->rsi = 0;
-    tf->rdi = 0;
-    tf->rbp = 0;
-    tf->r8  = 0;
-    tf->r9  = 0;
-    tf->r10 = 0;
-    tf->r11 = 0;
-    tf->r12 = 0;
-    tf->r13 = 0;
-    tf->r14 = 0;
-    tf->r15 = 0;
+    memset(tf, 0, sizeof(struct trap_frame));
 
     if (is_user && entry != 0) {
         // Real Ring 3 user process
@@ -138,9 +109,9 @@ int task_create(const char* name, void (*entry)(void), int is_user, int app_id) 
         tf->rflags = 0x202; // IF=1
         tf->cs = 0x2B; // User CS (0x28 | 3)
         tf->rip = (unsigned long long)entry;
-    } else {
+        t->state = TASK_READY;
+    } else if (entry != 0) {
         // Kernel task or background worker
-        void (*safe_entry)(void) = entry ? entry : default_task_worker;
         unsigned char* k_rsp = (unsigned char*)(kstack_top - sizeof(struct trap_frame) - 16);
         *((unsigned long long*)k_rsp) = (unsigned long long)task_exit;
 
@@ -148,13 +119,16 @@ int task_create(const char* name, void (*entry)(void), int is_user, int app_id) 
         tf->rsp = (unsigned long long)k_rsp;
         tf->rflags = 0x202; // IF=1
         tf->cs = 0x08; // Kernel CS
-        tf->rip = (unsigned long long)safe_entry;
+        tf->rip = (unsigned long long)entry;
+        t->state = TASK_READY;
+    } else {
+        // UI Application process (event-driven, managed by desktop compositor)
+        // Kept in SLEEPING state so it does not waste CPU cycles or trigger hlt
+        t->state = TASK_SLEEPING;
+        t->sleep_until = 0xFFFFFFFFFFFFFFFFULL;
     }
 
     t->rsp = (unsigned long long)tf;
-
-    // Mark as READY only after stack and trap frame are completely initialized!
-    t->state = TASK_READY;
 
     // Restore interrupt state
     __asm__ __volatile__("push %0; popfq" : : "r"(flags));
@@ -166,6 +140,7 @@ int task_create(const char* name, void (*entry)(void), int is_user, int app_id) 
 void task_exit(void) {
     if (current_task && current_task->pid != 0) {
         current_task->state = TASK_DEAD;
+        current_task->rsp = 0;
         debug_log_app_event("SCHED", "Process Terminated", current_task->pid);
     }
     task_yield();
@@ -182,6 +157,7 @@ int task_kill(int pid) {
     if (tasks[pid].state == TASK_UNUSED || tasks[pid].state == TASK_DEAD) return 0;
 
     tasks[pid].state = TASK_DEAD;
+    tasks[pid].rsp = 0;
     debug_log_app_event("SCHED", "Killed Process", pid);
 
     if (current_task == &tasks[pid]) {
@@ -205,7 +181,7 @@ void task_sleep(unsigned long long ms) {
     current_task->time_slice = 0;
 
     while (current_task->state == TASK_SLEEPING) {
-        __asm__ __volatile__("sti; hlt");
+        task_yield();
     }
 }
 
@@ -217,7 +193,20 @@ void task_yield(void) {
     if (current_task) {
         current_task->time_slice = 0;
     }
-    __asm__ __volatile__("sti; hlt");
+    __asm__ __volatile__("pause");
+}
+
+void task_set_priority(int pid, task_priority_t prio) {
+    if (pid >= 0 && pid < MAX_TASKS) {
+        tasks[pid].priority = prio;
+    }
+}
+
+task_priority_t task_get_priority(int pid) {
+    if (pid >= 0 && pid < MAX_TASKS) {
+        return tasks[pid].priority;
+    }
+    return TASK_PRIORITY_NORMAL;
 }
 
 task_t* task_get_current(void) {
@@ -247,13 +236,13 @@ int task_get_list(task_info_t* list, int max_count) {
     for (int i = 0; i < MAX_TASKS && out_count < max_count; i++) {
         if (tasks[i].state != TASK_UNUSED) {
             list[out_count].pid = tasks[i].pid;
-            for (int k = 0; k < 32; k++) {
-                list[out_count].name[k] = tasks[i].name[k];
-            }
+            strncpy(list[out_count].name, tasks[i].name, sizeof(list[out_count].name) - 1);
+            list[out_count].name[sizeof(list[out_count].name) - 1] = '\0';
             list[out_count].state = (int)tasks[i].state;
             list[out_count].is_user = tasks[i].is_user;
             list[out_count].app_id = tasks[i].app_id;
             list[out_count].total_ticks = tasks[i].total_ticks;
+            list[out_count].priority = (int)tasks[i].priority;
             out_count++;
         }
     }
@@ -264,6 +253,47 @@ int task_is_scheduler_active(void) {
     return scheduler_active;
 }
 
+/* -------------------------------------------------------------------------
+ * Internal Scheduler Routines
+ * ------------------------------------------------------------------------- */
+static void sched_wake_sleeping(unsigned long long now_ticks) {
+    for (int i = 0; i < MAX_TASKS; i++) {
+        if (tasks[i].state == TASK_SLEEPING) {
+            if (now_ticks >= tasks[i].sleep_until) {
+                tasks[i].state = TASK_READY;
+            }
+        }
+    }
+}
+
+static int sched_pick_next(task_t* cur) {
+    int start = cur ? cur->pid : 0;
+
+    // Scan priority levels from HIGH down to LOW
+    for (int p = (int)TASK_PRIORITY_HIGH; p >= (int)TASK_PRIORITY_LOW; p--) {
+        for (int i = 1; i <= MAX_TASKS; i++) {
+            int idx = (start + i) % MAX_TASKS;
+            if (tasks[idx].state == TASK_READY && tasks[idx].priority == (task_priority_t)p) {
+                return idx;
+            }
+        }
+    }
+
+    return -1;
+}
+
+static void sched_switch_fpu(task_t* cur, task_t* next) {
+    if (cur != next) {
+        if (cur && cur->state != TASK_DEAD && cur->state != TASK_UNUSED) {
+            __asm__ __volatile__("fxsave64 %0" : "=m"(cur->fpu_state));
+        }
+        __asm__ __volatile__("fxrstor64 %0" : : "m"(next->fpu_state));
+    }
+}
+
+/* -------------------------------------------------------------------------
+ * Preemptive Scheduler Quantum Tick (called from irq0_timer_entry)
+ * ------------------------------------------------------------------------- */
 unsigned long long schedule_tick(unsigned long long current_rsp) {
     system_ticks++;
 
@@ -271,14 +301,8 @@ unsigned long long schedule_tick(unsigned long long current_rsp) {
         return current_rsp;
     }
 
-    // 1. Wake up sleeping tasks
-    for (int i = 0; i < MAX_TASKS; i++) {
-        if (tasks[i].state == TASK_SLEEPING) {
-            if (system_ticks >= tasks[i].sleep_until) {
-                tasks[i].state = TASK_READY;
-            }
-        }
-    }
+    // 1. Wake up sleeping tasks whose delay has elapsed
+    sched_wake_sleeping(system_ticks);
 
     task_t* cur = current_task;
     if (cur) {
@@ -286,7 +310,7 @@ unsigned long long schedule_tick(unsigned long long current_rsp) {
         if (cur->state == TASK_RUNNING) {
             cur->time_slice--;
             if (cur->time_slice > 0) {
-                // Current task's quantum is still active
+                // Quantum is still active for current task
                 return current_rsp;
             }
             cur->state = TASK_READY;
@@ -294,35 +318,22 @@ unsigned long long schedule_tick(unsigned long long current_rsp) {
         cur->rsp = current_rsp;
     }
 
-    // 2. Select next READY task using Round-Robin
-    int start = cur ? cur->pid : 0;
-    int next_idx = -1;
-
-    for (int i = 1; i <= MAX_TASKS; i++) {
-        int idx = (start + i) % MAX_TASKS;
-        if (tasks[idx].state == TASK_READY) {
-            next_idx = idx;
-            break;
-        }
-    }
+    // 2. Select next READY task using Priority-Aware Round-Robin
+    int next_idx = sched_pick_next(cur);
 
     if (next_idx == -1) {
-        // No other task is ready
+        // No other task ready: if current task is still READY, resume it
         if (cur && cur->state == TASK_READY) {
             cur->state = TASK_RUNNING;
-            cur->time_slice = DEFAULT_TIME_SLICE;
+            cur->time_slice = sched_get_quantum(cur->priority);
             return cur->rsp;
         }
-        // Fallback to task 0 (desktop/kernel)
+
+        // Fallback to task 0 (kernel compositor / idle)
         if (tasks[0].state != TASK_DEAD && tasks[0].state != TASK_UNUSED) {
-            if (cur != &tasks[0]) {
-                if (cur) {
-                    __asm__ __volatile__("fxsave64 %0" : "=m"(cur->fpu_state));
-                }
-                __asm__ __volatile__("fxrstor64 %0" : : "m"(tasks[0].fpu_state));
-            }
+            sched_switch_fpu(cur, &tasks[0]);
             tasks[0].state = TASK_RUNNING;
-            tasks[0].time_slice = DEFAULT_TIME_SLICE;
+            tasks[0].time_slice = sched_get_quantum(tasks[0].priority);
             current_task = &tasks[0];
             tss_set_rsp0(tasks[0].kstack_top);
             return (tasks[0].rsp != 0) ? tasks[0].rsp : current_rsp;
@@ -330,21 +341,15 @@ unsigned long long schedule_tick(unsigned long long current_rsp) {
         return current_rsp;
     }
 
-    // 3. Switch to selected task
+    // 3. Switch context to selected task
     task_t* next = &tasks[next_idx];
-
-    if (cur != next) {
-        if (cur) {
-            __asm__ __volatile__("fxsave64 %0" : "=m"(cur->fpu_state));
-        }
-        __asm__ __volatile__("fxrstor64 %0" : : "m"(next->fpu_state));
-    }
+    sched_switch_fpu(cur, next);
 
     next->state = TASK_RUNNING;
-    next->time_slice = DEFAULT_TIME_SLICE;
+    next->time_slice = sched_get_quantum(next->priority);
     current_task = next;
 
-    // Load next task's kernel stack into TSS.rsp0 for Ring 3 privilege transitions
+    // Load next task's kernel stack top into TSS.rsp0 for privilege transitions
     tss_set_rsp0(next->kstack_top);
 
     return next->rsp;

@@ -5,20 +5,6 @@
 int pong_open = 0;
 static pong_state_t primary_pong_state;
 
-static void draw_ui_btn(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col) {
-    draw_rect(bx, by, bw, bh, 0x0000);
-    draw_rect(bx + 1, by + 1, bw - 2, 1, 0xFFFF);
-    draw_rect(bx + 1, by + 1, 1, bh - 2, 0xFFFF);
-    draw_rect(bx + 2, by + 2, bw - 4, bh - 4, fill);
-    int len = 0;
-    while (label[len] != '\0') len++;
-    int tx = bx + (bw - (len * 9)) / 2;
-    int ty = by + (bh - 8) / 2;
-    if (tx < bx + 2) tx = bx + 2;
-    if (ty < by + 1) ty = by + 1;
-    print_string((char*)label, tx, ty, text_col);
-}
-
 void pong_instance_init(pong_state_t* s, int px, int py, int pw, int ph) {
     s->pad_w = 90;
     s->pad_h = 12;
@@ -162,6 +148,7 @@ void pong_instance_tick(pong_state_t* s, int px, int py, int pw, int ph) {
 int pong_instance_click(pong_state_t* s, int px, int py, int pw, int ph, int mouse_x, int mouse_y) {
     // [X] Close button (Titlebar)
     if (mouse_x >= px + pw - 26 && mouse_x <= px + pw && mouse_y >= py && mouse_y <= py + 24) {
+        ui_btn_click_effect(px + pw - 22, py + 4, 18, 16, "X", 0xF800, 0xFFFF);
         return -1; // Request close
     }
 

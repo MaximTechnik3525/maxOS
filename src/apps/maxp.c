@@ -41,27 +41,17 @@ const struct MaxPAppInfo* maxp_get_app_by_index(int index) {
     return 0;
 }
 
-static int str_equal(const char* a, const char* b) {
-    int i = 0;
-    while (a[i] != '\0' && b[i] != '\0') {
-        if (a[i] != b[i]) return 0;
-        i++;
-    }
-    return (a[i] == '\0' && b[i] == '\0');
+static inline int str_equal(const char* a, const char* b) {
+    return strcmp(a, b) == 0;
 }
 
-static void str_copy_limit(char* dest, const char* src, int max_len) {
-    int i = 0;
-    while (src[i] != '\0' && i < max_len - 1) {
-        dest[i] = src[i];
-        i++;
-    }
-    dest[i] = '\0';
+static inline void str_copy_limit(char* dest, const char* src, int max_len) {
+    strncpy(dest, src, max_len - 1);
+    dest[max_len - 1] = '\0';
 }
 
 int maxp_is_maxp_file(const char* filename) {
-    int len = 0;
-    while (filename[len] != '\0') len++;
+    int len = (int)strlen(filename);
     if (len < 5) return 0;
     const char* ext = &filename[len - 5];
     if (ext[0] == '.' &&
@@ -329,10 +319,14 @@ int maxp_spawn_instance(int app_type, const char* custom_title, const char* file
             break;
 
         case MAXP_APP_INSTALLER:
-            inst->win_x = 120; inst->win_y = 60;
-            inst->win_w = 620; inst->win_h = 440;
+            inst->win_x = 120 + stagger; inst->win_y = 60 + stagger;
+            inst->win_w = 640; inst->win_h = 440;
             str_copy_limit(inst->icon, "INS", 8);
             inst->icon_color = 0x92E0;
+            inst->draw = (void (*)(void*, int, int, int, int))installer_instance_draw;
+            inst->handle_click = (int (*)(void*, int, int, int, int, int, int))installer_instance_click;
+            inst->handle_key = (int (*)(void*, char, unsigned char))installer_instance_key;
+            installer_instance_init((installer_state_t*)inst->state);
             installer_open = 1;
             break;
 
@@ -468,6 +462,14 @@ int maxp_handle_click_active(int mx, int my) {
         }
     }
 
+    // Swallow any click falling inside the active window rectangle so it doesn't click-through to desktop icons underneath
+    if (inst && !inst->is_minimized) {
+        if (mx >= inst->win_x && mx <= inst->win_x + inst->win_w &&
+            my >= inst->win_y && my <= inst->win_y + inst->win_h) {
+            return 1;
+        }
+    }
+
     return 0;
 }
 
@@ -490,6 +492,15 @@ void maxp_tick_all_instances(void) {
             instances[i].tick(instances[i].state, instances[i].win_x, instances[i].win_y, instances[i].win_w, instances[i].win_h);
         }
     }
+}
+
+int maxp_has_ticking_instances(void) {
+    for (int i = 0; i < MAX_APP_INSTANCES; i++) {
+        if (instances[i].instance_id != 0 && !instances[i].is_minimized && instances[i].tick) {
+            return 1;
+        }
+    }
+    return 0;
 }
 
 int maxp_launch_binary(const char* filename, const void* data, unsigned int size) {

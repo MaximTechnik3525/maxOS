@@ -12,20 +12,6 @@ void get_cpu(char* buffer);
 int sysinfo_open = 0;
 static sysinfo_state_t primary_sysinfo_state;
 
-static void draw_ui_btn(int bx, int by, int bw, int bh, const char* label, unsigned short fill, unsigned short text_col) {
-    draw_rect(bx, by, bw, bh, 0x0000);
-    draw_rect(bx + 1, by + 1, bw - 2, 1, 0xFFFF);
-    draw_rect(bx + 1, by + 1, 1, bh - 2, 0xFFFF);
-    draw_rect(bx + 2, by + 2, bw - 4, bh - 4, fill);
-    int len = 0;
-    while (label[len] != '\0') len++;
-    int tx = bx + (bw - (len * 9)) / 2;
-    int ty = by + (bh - 8) / 2;
-    if (tx < bx + 2) tx = bx + 2;
-    if (ty < by + 1) ty = by + 1;
-    print_string((char*)label, tx, ty, text_col);
-}
-
 void sysinfo_instance_init(sysinfo_state_t* s) {
     s->dummy = 0;
 }
@@ -142,18 +128,20 @@ int sysinfo_instance_click(sysinfo_state_t* s, int sx, int sy, int sw, int sh, i
     (void)s;
     // [X] Close button (Titlebar)
     if (mouse_x >= sx + sw - 26 && mouse_x <= sx + sw && mouse_y >= sy && mouse_y <= sy + 24) {
+        ui_btn_click_effect(sx + sw - 22, sy + 3, 18, 16, "X", 0xF800, 0xFFFF);
         return -1;
     }
 
     // Refresh button
     if (mouse_x >= sx + 20 && mouse_x <= sx + 120 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+        ui_btn_click_effect(sx + 20, sy + sh - 34, 100, 22, "Refresh (r)", 0xC618, 0x0000);
         draw_window();
-        play_sound(750); sleep(30); no_sound();
         return 1;
     }
 
     // Ring 3 Demo button
     if (mouse_x >= sx + 130 && mouse_x <= sx + 310 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
+        ui_btn_click_effect(sx + 130, sy + sh - 34, 180, 22, "Run Ring 3 Demo (u)", 0x03EA, 0xFFFF);
         ring3_demo_launch();
         return 1;
     }

@@ -14,22 +14,6 @@
 int start_menu_open = 0;
 static int app_minimized = 0;
 
-static void draw_3d_box(int bx, int by, int bw, int bh, int sunken, unsigned short fill) {
-    draw_rect(bx, by, bw, bh, 0x0000);
-    if (!sunken) {
-        draw_rect(bx + 1, by + 1, bw - 2, 1, 0xFFFF);
-        draw_rect(bx + 1, by + 1, 1, bh - 2, 0xFFFF);
-        draw_rect(bx + bw - 2, by + 1, 1, bh - 2, 0x7BEF);
-        draw_rect(bx + 1, by + bh - 2, bw - 2, 1, 0x7BEF);
-    } else {
-        draw_rect(bx + 1, by + 1, bw - 2, 1, 0x7BEF);
-        draw_rect(bx + 1, by + 1, 1, bh - 2, 0x7BEF);
-        draw_rect(bx + bw - 2, by + 1, 1, bh - 2, 0xFFFF);
-        draw_rect(bx + 1, by + bh - 2, bw - 2, 1, 0xFFFF);
-    }
-    draw_rect(bx + 2, by + 2, bw - 4, bh - 4, fill);
-}
-
 void taskbar_init(void) {
     start_menu_open = 0;
     app_minimized = 0;
@@ -168,11 +152,12 @@ void taskbar_draw(void) {
     unsigned short btn_fill = btn_sunken ? 0x9CD3 : 0xCE79;
     draw_3d_box(4, TASKBAR_Y + 4, 84, 30, btn_sunken, btn_fill);
 
-    // Start logo
-    draw_rect(10, TASKBAR_Y + 9, 18, 18, 0x11EB);
-    draw_rect(11, TASKBAR_Y + 10, 16, 16, 0x03EA);
-    print_string("m", 15, TASKBAR_Y + 14, 0xFFFF);
-    print_string("maxOS", 34, TASKBAR_Y + 13, 0x0000);
+    // Start logo (depressed offset)
+    int s_off = btn_sunken ? 1 : 0;
+    draw_rect(10 + s_off, TASKBAR_Y + 9 + s_off, 18, 18, 0x11EB);
+    draw_rect(11 + s_off, TASKBAR_Y + 10 + s_off, 16, 16, 0x03EA);
+    print_string("m", 15 + s_off, TASKBAR_Y + 14 + s_off, 0xFFFF);
+    print_string("maxOS", 34 + s_off, TASKBAR_Y + 13 + s_off, 0x0000);
 
     // Running Applications Tabs (Multi-Instance)
     int run_count = maxp_get_instance_count();
@@ -184,8 +169,8 @@ void taskbar_draw(void) {
         int tab_h = 28;
         int tab_y = TASKBAR_Y + 5;
         draw_3d_box(tab_x, tab_y, tab_w, tab_h, 1, 0xEF59);
-        print_string("[D]", tab_x + 8, tab_y + 8, 0x0000);
-        print_string("Desktop", tab_x + 38, tab_y + 8, 0x0000);
+        print_string("[D]", tab_x + 9, tab_y + 9, 0x0000);
+        print_string("Desktop", tab_x + 39, tab_y + 9, 0x0000);
     } else {
         int max_w = 125;
         int tab_w = 640 / run_count;
@@ -204,16 +189,17 @@ void taskbar_draw(void) {
             int is_tab_active = (inst->instance_id == active_id && !app_minimized);
             draw_3d_box(tab_x, tab_y, tab_w, tab_h, is_tab_active, is_tab_active ? 0xEF59 : 0xCE79);
 
+            int tab_off = is_tab_active ? 1 : 0;
             char badge_buf[12];
             badge_buf[0] = '[';
             int bp = 1;
             for (int b = 0; inst->icon[b] != '\0' && bp < 9; b++) badge_buf[bp++] = inst->icon[b];
             badge_buf[bp++] = ']';
             badge_buf[bp] = '\0';
-            print_string(badge_buf, tab_x + 6, tab_y + 8, inst->icon_color);
+            print_string(badge_buf, tab_x + 6 + tab_off, tab_y + 8 + tab_off, inst->icon_color);
 
             if (tab_w >= 85) {
-                print_string(inst->title, tab_x + 42, tab_y + 8, 0x0000);
+                print_string(inst->title, tab_x + 42 + tab_off, tab_y + 8 + tab_off, 0x0000);
             }
         }
     }
@@ -303,6 +289,14 @@ void taskbar_draw(void) {
 int taskbar_handle_click(int mouse_x, int mouse_y) {
     // 1. Check Start button click
     if (mouse_x >= 4 && mouse_x <= 88 && mouse_y >= TASKBAR_Y + 4 && mouse_y <= TASKBAR_Y + 34) {
+        prev_cursor();
+        draw_3d_box(4, TASKBAR_Y + 4, 84, 30, 1, 0x9CD3);
+        draw_rect(11, TASKBAR_Y + 10, 18, 18, 0x11EB);
+        draw_rect(12, TASKBAR_Y + 11, 16, 16, 0x03EA);
+        print_string("m", 16, TASKBAR_Y + 15, 0xFFFF);
+        print_string("maxOS", 35, TASKBAR_Y + 14, 0x0000);
+        draw_cursor(pos_x, pos_y);
+        play_sound(750); sleep(35); no_sound();
         taskbar_toggle_start_menu();
         return 1;
     }
@@ -318,6 +312,10 @@ int taskbar_handle_click(int mouse_x, int mouse_y) {
             for (int i = 0; i < 7; i++) {
                 int iy = sm_y + 30 + (i * 27);
                 if (mouse_y >= iy && mouse_y <= iy + 25) {
+                    prev_cursor();
+                    draw_rect(sm_x + 28, iy, sm_w - 32, 24, 0x11EB);
+                    draw_cursor(pos_x, pos_y);
+                    play_sound(800); sleep(30); no_sound();
                     start_menu_open = 0;
                     app_minimized = 0;
                     if (i == 0) maxp_spawn_instance(MAXP_APP_NOTEPAD, 0, 0);
@@ -369,6 +367,8 @@ int taskbar_handle_click(int mouse_x, int mouse_y) {
         int tab_w = 640 / run_count;
         if (tab_w > max_w) tab_w = max_w;
         if (tab_w < 65) tab_w = 65;
+        int tab_h = 28;
+        int tab_y = TASKBAR_Y + 5;
 
         for (int i = 0; i < run_count; i++) {
             app_instance_t* inst = maxp_get_instance_by_index(i);
@@ -378,15 +378,26 @@ int taskbar_handle_click(int mouse_x, int mouse_y) {
             if (tab_x + tab_w > 755) break;
 
             if (mouse_x >= tab_x && mouse_x <= tab_x + tab_w && mouse_y >= TASKBAR_Y + 5 && mouse_y <= TASKBAR_Y + 33) {
+                prev_cursor();
+                draw_3d_box(tab_x, tab_y, tab_w, tab_h, 1, 0x9CD3);
+                char badge_buf[12];
+                badge_buf[0] = '[';
+                int bp = 1;
+                for (int b = 0; inst->icon[b] != '\0' && bp < 9; b++) badge_buf[bp++] = inst->icon[b];
+                badge_buf[bp++] = ']';
+                badge_buf[bp] = '\0';
+                print_string(badge_buf, tab_x + 7, tab_y + 9, inst->icon_color);
+                if (tab_w >= 85) print_string(inst->title, tab_x + 43, tab_y + 9, 0x0000);
+                draw_cursor(pos_x, pos_y);
+                play_sound(750); sleep(35); no_sound();
+
                 if (inst->instance_id == active_id) {
                     app_minimized = !app_minimized;
                     inst->is_minimized = app_minimized;
-                    play_sound(650); sleep(20); no_sound();
                 } else {
                     maxp_set_active_instance(inst->instance_id);
                     app_minimized = 0;
                     inst->is_minimized = 0;
-                    play_sound(750); sleep(20); no_sound();
                 }
                 draw_window();
                 draw_cursor(pos_x, pos_y);
