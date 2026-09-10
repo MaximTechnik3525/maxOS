@@ -252,7 +252,7 @@ int installer_instance_key(installer_state_t* s, char ascii_char, unsigned char 
         int iw = inst ? inst->win_w : (win_w - 30);
         int ih = inst ? inst->win_h : (win_h - 45);
         installer_run_install(s, ix, iy, iw, ih);
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 

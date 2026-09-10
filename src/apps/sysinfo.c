@@ -142,7 +142,7 @@ int sysinfo_instance_click(sysinfo_state_t* s, int sx, int sy, int sw, int sh, i
     // Refresh button
     if (mouse_x >= sx + 20 && mouse_x <= sx + 120 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
         ui_btn_click_effect(sx + 20, sy + sh - 34, 100, 22, "Refresh (r)", 0xC618, 0x0000);
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
@@ -172,7 +172,7 @@ int sysinfo_instance_key(sysinfo_state_t* s, char ascii_char, unsigned char scan
     }
 
     if (ascii_char == 'r' || ascii_char == 'R') {
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 

@@ -121,7 +121,7 @@ void mem_open_window(void) {
     drag = 1;
     selected_task_idx = 0;
     maxp_set_active_app(MAXP_APP_MEM);
-    draw_window();
+    maxp_draw_active_instance();
 }
 
 void mem_open_stress_window(void) {
@@ -131,7 +131,7 @@ void mem_open_stress_window(void) {
     drag = 1;
     selected_task_idx = 0;
     maxp_set_active_app(MAXP_APP_MEM);
-    draw_window();
+    maxp_draw_active_instance();
 }
 
 void mem_close_window(void) {

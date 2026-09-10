@@ -132,6 +132,13 @@ int ata_init(void) {
     } else {
         debug_log("ATA", "ATA Drive Not Detected");
     }
+
+    debug_log("ATA", "Initializing ATAPI CD-ROM...");
+    ata_outb(0x376, 0x02); // Disable interrupts for secondary bus too
+    if (atapi_init() == 0) {
+        debug_log("ATA", "ATAPI CD-ROM Detected");
+    }
+
     return res;
 }
 
@@ -320,4 +327,174 @@ int ata_flush(void) {
         debug_log_ata_event("FLUSH-ERR", 0, 0, -1);
     }
     return ret;
+}
+
+struct ATAPIDevice atapi_device = {0, 0, 0, "Not Detected", 0, 0};
+
+static void atapi_delay(unsigned short base_port) {
+    ata_inb(base_port + 7);
+    ata_inb(base_port + 7);
+    ata_inb(base_port + 7);
+    ata_inb(base_port + 7);
+}
+
+static int atapi_wait_bsy(unsigned short base_port) {
+    int timeout = 100000;
+    while ((ata_inb(base_port + 7) & 0x80) && --timeout);
+    return (timeout > 0) ? 0 : -1;
+}
+
+static int atapi_wait_drq(unsigned short base_port) {
+    int timeout = 100000;
+    while (!((ata_inb(base_port + 7) & 0x08)) && --timeout) {
+        if (ata_inb(base_port + 7) & 0x01) return -1;
+    }
+    return (timeout > 0) ? 0 : -1;
+}
+
+int atapi_identify_drive(unsigned short base_port, unsigned char drive_sel) {
+    ata_outb(base_port + 6, drive_sel);
+    atapi_delay(base_port);
+
+    ata_outb(base_port + 2, 0);
+    ata_outb(base_port + 3, 0);
+    ata_outb(base_port + 4, 0);
+    ata_outb(base_port + 5, 0);
+
+    ata_outb(base_port + 7, 0xA1); // IDENTIFY PACKET DEVICE
+    atapi_delay(base_port);
+
+    unsigned char status = ata_inb(base_port + 7);
+    if (status == 0) return -1;
+
+    if (atapi_wait_bsy(base_port) != 0) return -1;
+
+    // Check signature
+    unsigned char mid = ata_inb(base_port + 4);
+    unsigned char hi = ata_inb(base_port + 5);
+    if (mid != 0x14 || hi != 0xEB) {
+        return -1; // Not ATAPI
+    }
+
+    if (atapi_wait_drq(base_port) != 0) return -1;
+
+    unsigned short data[256];
+    for (int i = 0; i < 256; i++) {
+        data[i] = ata_inw(base_port + 0);
+    }
+
+    atapi_device.base_port = base_port;
+    atapi_device.drive_sel = drive_sel;
+    atapi_device.present = 1;
+
+    int p = 0;
+    for (int i = 27; i <= 46; i++) {
+        atapi_device.model[p++] = (char)(data[i] >> 8);
+        atapi_device.model[p++] = (char)(data[i] & 0xFF);
+    }
+    atapi_device.model[40] = '\0';
+
+    int len = 39;
+    while (len >= 0 && (atapi_device.model[len] == ' ' || atapi_device.model[len] == '\0')) {
+        atapi_device.model[len] = '\0';
+        len--;
+    }
+
+    return 0;
+}
+
+int atapi_init(void) {
+    atapi_device.present = 0;
+    // Probe Sec Master
+    if (atapi_identify_drive(0x170, 0xA0) == 0) return 0;
+    // Probe Sec Slave
+    if (atapi_identify_drive(0x170, 0xB0) == 0) return 0;
+    // Probe Pri Slave
+    if (atapi_identify_drive(0x1F0, 0xB0) == 0) return 0;
+    // Probe Pri Master
+    if (atapi_identify_drive(0x1F0, 0xA0) == 0) return 0;
+    
+    return -1;
+}
+
+int atapi_read_sector(unsigned int lba, unsigned char* buffer) {
+    if (!atapi_device.present) return -1;
+    unsigned short base = atapi_device.base_port;
+
+    ata_outb(base + 6, atapi_device.drive_sel);
+    atapi_delay(base);
+
+    ata_outb(base + 1, 0); // Features = 0
+    ata_outb(base + 4, (2048 & 0xFF)); // byte count limit
+    ata_outb(base + 5, (2048 >> 8));
+
+    ata_outb(base + 7, 0xA0); // PACKET command
+    atapi_delay(base);
+
+    if (atapi_wait_bsy(base) != 0) return -1;
+    
+    // Wait for DRQ to send packet
+    if (atapi_wait_drq(base) != 0) return -1;
+
+    unsigned char packet[12] = {0};
+    packet[0] = 0xA8; // READ(12)
+    packet[2] = (lba >> 24) & 0xFF;
+    packet[3] = (lba >> 16) & 0xFF;
+    packet[4] = (lba >> 8) & 0xFF;
+    packet[5] = lba & 0xFF;
+    packet[9] = 1; // 1 sector (2048 bytes)
+
+    unsigned short* pkt_words = (unsigned short*)packet;
+    for (int i = 0; i < 6; i++) {
+        ata_outw(base + 0, pkt_words[i]);
+    }
+
+    if (atapi_wait_bsy(base) != 0) return -1;
+    if (atapi_wait_drq(base) != 0) return -1;
+
+    unsigned short* ptr = (unsigned short*)buffer;
+    for (int i = 0; i < 1024; i++) {
+        ptr[i] = ata_inw(base + 0);
+    }
+
+    if (atapi_wait_bsy(base) != 0) return -1;
+    
+    return 0;
+}
+
+int atapi_get_volume_label(char* out_label) {
+    if (!atapi_device.present) {
+        char* str = "No CD-ROM";
+        while (*str) *out_label++ = *str++;
+        *out_label = '\0';
+        return -1;
+    }
+    unsigned char sector[2048];
+    if (atapi_read_sector(16, sector) != 0) {
+        char* str = "Read Error";
+        while (*str) *out_label++ = *str++;
+        *out_label = '\0';
+        return -1;
+    }
+    if (sector[0] != 1 || sector[1] != 'C' || sector[2] != 'D' || sector[3] != '0' || sector[4] != '0' || sector[5] != '1') {
+        char* str = "Not ISO9660";
+        while (*str) *out_label++ = *str++;
+        *out_label = '\0';
+        return -1;
+    }
+    int p = 0;
+    for (int i = 0; i < 32; i++) {
+        char c = sector[40 + i];
+        if (c >= 32 && c <= 126) {
+            out_label[p++] = c;
+        }
+    }
+    while (p > 0 && out_label[p-1] == ' ') p--;
+    out_label[p] = '\0';
+    if (p == 0) {
+        char* str = "Unnamed CD";
+        while (*str) *out_label++ = *str++;
+        *out_label = '\0';
+    }
+    return 0;
 }

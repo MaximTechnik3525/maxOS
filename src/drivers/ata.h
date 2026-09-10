@@ -33,4 +33,22 @@ int ata_flush(void);
 int ata_is_available(void);
 const struct ATADebugStats* ata_get_debug_stats(void);
 
+#define ATAPI_SECTOR_SIZE 2048
+
+struct ATAPIDevice {
+    int present;
+    unsigned int total_sectors;
+    unsigned int size_mb;
+    char model[41];
+    unsigned short base_port;
+    unsigned char drive_sel;
+};
+
+extern struct ATAPIDevice atapi_device;
+
+int atapi_init(void);
+int atapi_identify_drive(unsigned short base_port, unsigned char drive_sel);
+int atapi_read_sector(unsigned int lba, unsigned char* buffer);
+int atapi_get_volume_label(char* out_label);
+
 #endif // ATA_H

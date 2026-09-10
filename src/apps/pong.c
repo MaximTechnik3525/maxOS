@@ -222,7 +222,7 @@ int pong_instance_key(pong_state_t* s, char ascii_char, unsigned char scan_code)
     if (ascii_char == 'r' || ascii_char == 'R') {
         s->pong_score = 0;
         pong_instance_init(s, px, py, pw, ph);
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 

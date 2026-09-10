@@ -398,7 +398,7 @@ int calc_instance_click(calc_state_t* s, int cx, int cy, int cw, int ch, int mou
                     else if (c == 2) calc_input_dot(s);
                     else if (c == 3) calc_input_equals(s);
                 }
-                draw_window();
+                maxp_draw_active_instance();
                 return 1;
             }
         }
@@ -414,53 +414,53 @@ int calc_instance_click(calc_state_t* s, int cx, int cy, int cw, int ch, int mou
 int calc_instance_key(calc_state_t* s, char ascii_char, unsigned char scan_code) {
     if (ascii_char >= '0' && ascii_char <= '9') {
         calc_input_digit(s, ascii_char - '0');
-        draw_window();
+        maxp_draw_active_instance();
         play_sound(800); sleep(15); no_sound();
         return 1;
     }
 
     if (ascii_char == '.' || ascii_char == ',' || scan_code == 0x34 || scan_code == 0x33) {
         calc_input_dot(s);
-        draw_window();
+        maxp_draw_active_instance();
         play_sound(800); sleep(15); no_sound();
         return 1;
     }
 
     if (ascii_char == '+' || ascii_char == '-' || ascii_char == '*' || ascii_char == '/') {
         calc_input_op(s, ascii_char);
-        draw_window();
+        maxp_draw_active_instance();
         play_sound(900); sleep(15); no_sound();
         return 1;
     }
 
     if (ascii_char == '=' || scan_code == 0x1C || ascii_char == '\n') {
         calc_input_equals(s);
-        draw_window();
+        maxp_draw_active_instance();
         play_sound(1000); sleep(20); no_sound();
         return 1;
     }
 
     if (ascii_char == 'c' || ascii_char == 'C' || scan_code == 0x53) {
         calc_clear_all(s);
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
     if (ascii_char == 'e' || ascii_char == 'E') {
         calc_clear_entry(s);
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
     if (scan_code == 0x0E || ascii_char == 'B') {
         calc_backspace(s);
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
     if (ascii_char == 'n' || ascii_char == 'N' || ascii_char == '_') {
         calc_negate(s);
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 

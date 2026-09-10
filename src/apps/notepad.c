@@ -349,7 +349,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
             mouse_y >= dlg_y + dlg_h - 34 && mouse_y <= dlg_y + dlg_h - 12) {
             ui_btn_click_effect(dlg_x + dlg_w - 85, dlg_y + dlg_h - 34, 72, 22, "Cancel", 0xF9A6, 0x0000);
             s->file_picker_open = 0;
-            draw_window();
+            maxp_draw_active_instance();
             play_sound(400); sleep(50); no_sound();
             return 1;
         }
@@ -364,7 +364,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
                     mouse_y >= row_y && mouse_y <= row_y + 20) {
                     s->file_picker_open = 0;
                     notepad_instance_load_file(s, vf->name);
-                    draw_window();
+                    maxp_draw_active_instance();
                     play_sound(750); sleep(50); no_sound();
                     return 1;
                 }
@@ -378,7 +378,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
     // Check Filename input box: np_x + 50 .. np_x + 185, np_y + 25 .. np_y + 44
     if (mouse_x >= np_x + 50 && mouse_x <= np_x + 185 && mouse_y >= np_y + 25 && mouse_y <= np_y + 44) {
         s->focus_mode = 1;
-        draw_window();
+        maxp_draw_active_instance();
         play_sound(600); sleep(40); no_sound();
         return 1;
     }
@@ -387,7 +387,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
     if (mouse_x >= np_x + 192 && mouse_x <= np_x + 240 && mouse_y >= np_y + 25 && mouse_y <= np_y + 44) {
         ui_btn_click_effect(np_x + 192, np_y + 25, 48, 19, "Save", 0x3DF2, 0x0000);
         notepad_instance_save(s);
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
@@ -396,7 +396,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
         ui_btn_click_effect(np_x + 246, np_y + 25, 48, 19, "Open", 0x24EE, 0xFFFF);
         s->file_picker_open = 1;
         s->picker_selected = 0;
-        draw_window();
+        maxp_draw_active_instance();
         play_sound(600); sleep(60); no_sound();
         return 1;
     }
@@ -405,7 +405,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
     if (mouse_x >= np_x + 300 && mouse_x <= np_x + 344 && mouse_y >= np_y + 25 && mouse_y <= np_y + 44) {
         ui_btn_click_effect(np_x + 300, np_y + 25, 44, 19, "New",  0xC618, 0x0000);
         notepad_instance_new_file(s);
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
@@ -413,7 +413,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
     if (mouse_x >= np_x + 350 && mouse_x <= np_x + 394 && mouse_y >= np_y + 25 && mouse_y <= np_y + 44) {
         ui_btn_click_effect(np_x + 350, np_y + 25, 44, 19, "Col",  0x7BEF, 0x0000);
         s->current_color_idx = (s->current_color_idx + 1) % 6;
-        draw_window();
+        maxp_draw_active_instance();
         play_sound(750); sleep(40); no_sound();
         return 1;
     }
@@ -423,7 +423,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
         int cx = np_x + 402 + (i * 17);
         if (mouse_x >= cx && mouse_x <= cx + 14 && mouse_y >= np_y + 26 && mouse_y <= np_y + 43) {
             s->current_color_idx = i;
-            draw_window();
+            maxp_draw_active_instance();
             play_sound(800 + i * 50); sleep(35); no_sound();
             return 1;
         }
@@ -449,7 +449,7 @@ int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int
     if (mouse_x >= area_x && mouse_x <= area_x + area_w && mouse_y >= area_y && mouse_y <= area_y + area_h) {
         if (s->focus_mode != 0) {
             s->focus_mode = 0;
-            draw_window();
+            maxp_draw_active_instance();
         }
         return 1;
     }
@@ -467,7 +467,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
     if (scan_code == 0x01 || scan_code == 0x3C) {
         if (s->file_picker_open) {
             s->file_picker_open = 0;
-            draw_window();
+            maxp_draw_active_instance();
             return 1;
         }
         return -1; // Request close
@@ -488,7 +488,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
         if (scan_code == 0x48 || ascii_char == 'U') {
             if (s->picker_selected > 0) {
                 s->picker_selected--;
-                draw_window();
+                maxp_draw_active_instance();
                 play_sound(550); sleep(25); no_sound();
             }
             return 1;
@@ -498,7 +498,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
         if (scan_code == 0x50 || ascii_char == 'D') {
             if (s->picker_selected < total - 1) {
                 s->picker_selected++;
-                draw_window();
+                maxp_draw_active_instance();
                 play_sound(550); sleep(25); no_sound();
             }
             return 1;
@@ -510,7 +510,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
                 s->file_picker_open = 0;
                 struct VirtualFile* vf = maxfs_get_file(file_indices[s->picker_selected]);
                 if (vf) notepad_instance_load_file(s, vf->name);
-                draw_window();
+                maxp_draw_active_instance();
             }
             return 1;
         }
@@ -521,7 +521,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
     // Tab (0x0F) toggles focus
     if (scan_code == 0x0F || ascii_char == '\t') {
         s->focus_mode = 1 - s->focus_mode;
-        draw_window();
+        maxp_draw_active_instance();
         play_sound(600); sleep(30); no_sound();
         return 1;
     }
@@ -529,7 +529,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
     // F3 (0x3D) quick save
     if (scan_code == 0x3D && km_mode == 0) {
         notepad_instance_save(s);
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
@@ -537,14 +537,14 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
     if (scan_code == 0x3E && km_mode == 0) {
         s->file_picker_open = 1;
         s->picker_selected = 0;
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
     // F7 (0x41) or F8 (0x42) quick cycle color
     if ((scan_code == 0x41 || scan_code == 0x42) && km_mode == 0) {
         s->current_color_idx = (s->current_color_idx + 1) % 6;
-        draw_window();
+        maxp_draw_active_instance();
         play_sound(750 + s->current_color_idx * 50); sleep(30); no_sound();
         return 1;
     }
@@ -560,7 +560,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
             if (s->fname_len > 0) {
                 s->fname_len--;
                 s->fname_input[s->fname_len] = '\0';
-                draw_window();
+                maxp_draw_active_instance();
             }
             return 1;
         }
@@ -568,7 +568,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
         if (scan_code == 0x1C || ascii_char == '\n') {
             s->focus_mode = 0;
             notepad_instance_save(s);
-            draw_window();
+            maxp_draw_active_instance();
             return 1;
         }
 
@@ -578,7 +578,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
             if (s->fname_len < 30) {
                 s->fname_input[s->fname_len++] = ascii_char;
                 s->fname_input[s->fname_len] = '\0';
-                draw_window();
+                maxp_draw_active_instance();
             }
             return 1;
         }
@@ -590,7 +590,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
         if (s->textid > 0) {
             s->textid--;
             s->ftext[s->textid] = '\0';
-            draw_window();
+            maxp_draw_active_instance();
         }
         return 1;
     }
@@ -599,7 +599,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
         if (s->textid < 2040) {
             s->ftext[s->textid++] = '\n';
             s->ftext[s->textid] = '\0';
-            draw_window();
+            maxp_draw_active_instance();
         }
         return 1;
     }
@@ -614,7 +614,7 @@ int notepad_instance_key(notepad_state_t* s, char ascii_char, unsigned char scan
         if (s->textid < 2040) {
             s->ftext[s->textid++] = ascii_char;
             s->ftext[s->textid] = '\0';
-            draw_window();
+            maxp_draw_active_instance();
         }
         return 1;
     }

@@ -49,6 +49,7 @@ void explorer_instance_draw(explorer_state_t* s, int exp_x, int exp_y, int exp_w
     draw_ui_btn(exp_x + 348,        exp_y + 25, 60,  19, "Delete",     0xF800, 0xFFFF);
     draw_ui_btn(exp_x + 414,        exp_y + 25, 60,  19, "Refresh",    0xC618, 0x0000);
     draw_ui_btn(exp_x + 480,        exp_y + 25, 70,  19, "Format",     0x8000, 0xFFFF);
+    draw_ui_btn(exp_x + 556,        exp_y + 25, 70,  19, "Read CD",    0x03EA, 0x0000);
 
     // Drive Info Banner (Row 2)
     draw_rect(exp_x + 2, exp_y + 47, exp_w - 4, 20, 0xE71C);
@@ -251,7 +252,7 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
                 }
             }
             s->dlg.active = 0;
-            draw_window();
+            maxp_draw_active_instance();
         }
         return 1;
     }
@@ -263,7 +264,7 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
             s->current_dir_inode = (int)maxfs_get_parent(s->current_dir_inode);
             s->selected_index = -1;
             s->scroll_offset = 0;
-            draw_window();
+            maxp_draw_active_instance();
         }
         return 1;
     }
@@ -278,7 +279,7 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
                     s->current_dir_inode = s->selected_index;
                     s->selected_index = -1;
                     s->scroll_offset = 0;
-                    draw_window();
+                    maxp_draw_active_instance();
                 } else if (maxp_is_maxp_file(vf->name) || str_ends_with(vf->name, ".bin") || str_ends_with(vf->name, ".BIN")) {
                     maxp_launch_file(vf->name);
                 } else {
@@ -296,7 +297,7 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
         dialog_add_field(&s->dlg, "File Name:", "newfile.txt", 31);
         dialog_center(&s->dlg, exp_x, exp_y, exp_w, exp_h);
         s->dlg.active = 1;
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
@@ -307,7 +308,7 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
         dialog_add_field(&s->dlg, "Dir Name:", "NewFolder", 31);
         dialog_center(&s->dlg, exp_x, exp_y, exp_w, exp_h);
         s->dlg.active = 1;
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
@@ -321,7 +322,7 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
                 dialog_add_field(&s->dlg, "New Name:", vf->name, 31);
                 dialog_center(&s->dlg, exp_x, exp_y, exp_w, exp_h);
                 s->dlg.active = 1;
-                draw_window();
+                maxp_draw_active_instance();
             }
         }
         return 1;
@@ -336,7 +337,7 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
                 maxfs_delete_inode(s->selected_index);
                 s->selected_index = -1;
                 play_sound(300); sleep(80); play_sound(200); sleep(80); no_sound();
-                draw_window();
+                maxp_draw_active_instance();
             }
         }
         return 1;
@@ -346,7 +347,7 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
     if (mouse_x >= exp_x + 414 && mouse_x <= exp_x + 474 && mouse_y >= exp_y + 25 && mouse_y <= exp_y + 44) {
         ui_btn_click_effect(exp_x + 414, exp_y + 25, 60, 19, "Refresh", 0xC618, 0x0000);
         if (maxfs_is_mounted()) maxfs_mount();
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
@@ -355,7 +356,23 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
         ui_btn_click_effect(exp_x + 480, exp_y + 25, 70, 19, "Format", 0x8000, 0xFFFF);
         maxfs_format("maxOS System Disk");
         s->selected_index = -1;
-        draw_window();
+        maxp_draw_active_instance();
+        return 1;
+    }
+
+    // Check [Read CD] button
+    if (mouse_x >= exp_x + 556 && mouse_x <= exp_x + 626 && mouse_y >= exp_y + 25 && mouse_y <= exp_y + 44) {
+        ui_btn_click_effect(exp_x + 556, exp_y + 25, 70, 19, "Read CD", 0x03EA, 0x0000);
+        char cd_label[64] = {0};
+        atapi_get_volume_label(cd_label);
+        char status_msg[80] = "CD-ROM Vol: ";
+        int sp = 12;
+        for (int i = 0; cd_label[i] && sp < 79; i++) {
+            status_msg[sp++] = cd_label[i];
+        }
+        status_msg[sp] = '\0';
+        explorer_set_status_s(s, status_msg);
+        maxp_draw_active_instance();
         return 1;
     }
 
@@ -390,7 +407,7 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
         ui_btn_click_effect(sb_x, sb_y, sb_w, 18, "^", 0xCE79, 0x0000);
         if (s->scroll_offset > 0) {
             s->scroll_offset--;
-            draw_window();
+            maxp_draw_active_instance();
         }
         return 1;
     }
@@ -400,7 +417,7 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
         ui_btn_click_effect(sb_x, sb_y + sb_h - 18, sb_w, 18, "v", 0xCE79, 0x0000);
         if (s->scroll_offset + EXPLORER_MAX_VISIBLE < dir_count_c) {
             s->scroll_offset++;
-            draw_window();
+            maxp_draw_active_instance();
         }
         return 1;
     }
@@ -422,7 +439,7 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
                 s->scroll_offset += EXPLORER_MAX_VISIBLE;
                 if (s->scroll_offset > dir_count_c - EXPLORER_MAX_VISIBLE) s->scroll_offset = dir_count_c - EXPLORER_MAX_VISIBLE;
             }
-            draw_window();
+            maxp_draw_active_instance();
         }
         return 1;
     }
@@ -445,11 +462,11 @@ int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w
                     } else {
                         maxp_spawn_instance(MAXP_APP_NOTEPAD, "Notepad", vf->name);
                     }
-                    draw_window();
+                    maxp_draw_active_instance();
                     return 1;
                 }
                 s->selected_index = inode_idx;
-                draw_window();
+                maxp_draw_active_instance();
                 play_sound(600); sleep(40); no_sound();
                 return 1;
             }
@@ -487,7 +504,7 @@ int explorer_instance_key(explorer_state_t* s, char ascii_char, unsigned char sc
                 }
             }
             s->dlg.active = 0;
-            draw_window();
+            maxp_draw_active_instance();
         }
         return 1;
     }
@@ -507,7 +524,7 @@ int explorer_instance_key(explorer_state_t* s, char ascii_char, unsigned char sc
                 // Center dialog. We don't have exp_x, exp_y in key handler, so use fixed screen size or primary explorer size
                 dialog_center(&s->dlg, 15, 35, 750, 555); // Approximated from typical win_x + 15, etc.
                 s->dlg.active = 1;
-                draw_window();
+                maxp_draw_active_instance();
             }
         }
         return 1;
@@ -525,7 +542,7 @@ int explorer_instance_key(explorer_state_t* s, char ascii_char, unsigned char sc
             s->current_dir_inode = (int)maxfs_get_parent(s->current_dir_inode);
             s->selected_index = -1;
             s->scroll_offset = 0;
-            draw_window();
+            maxp_draw_active_instance();
         }
         return 1;
     }
@@ -539,7 +556,7 @@ int explorer_instance_key(explorer_state_t* s, char ascii_char, unsigned char sc
                     s->current_dir_inode = s->selected_index;
                     s->selected_index = -1;
                     s->scroll_offset = 0;
-                    draw_window();
+                    maxp_draw_active_instance();
                 } else if (maxp_is_maxp_file(vf->name) || str_ends_with(vf->name, ".bin") || str_ends_with(vf->name, ".BIN")) {
                     maxp_launch_file(vf->name);
                 } else {
@@ -558,7 +575,7 @@ int explorer_instance_key(explorer_state_t* s, char ascii_char, unsigned char sc
             if (vf && vf->exists) {
                 maxfs_delete_inode(s->selected_index);
                 s->selected_index = -1;
-                draw_window();
+                maxp_draw_active_instance();
                 play_sound(300); sleep(80); no_sound();
                 return 1;
             }
@@ -574,7 +591,7 @@ int explorer_instance_key(explorer_state_t* s, char ascii_char, unsigned char sc
         if (dk_count > 0 && s->scroll_offset < dk_count) {
             s->selected_index = dk_indices[s->scroll_offset];
         }
-        draw_window();
+        maxp_draw_active_instance();
         play_sound(500); sleep(20); no_sound();
         return 1;
     }
@@ -590,7 +607,7 @@ int explorer_instance_key(explorer_state_t* s, char ascii_char, unsigned char sc
         if (dk_count > 0 && s->scroll_offset < dk_count) {
             s->selected_index = dk_indices[s->scroll_offset];
         }
-        draw_window();
+        maxp_draw_active_instance();
         play_sound(500); sleep(20); no_sound();
         return 1;
     }
@@ -601,7 +618,7 @@ int explorer_instance_key(explorer_state_t* s, char ascii_char, unsigned char sc
         int dk_count = maxfs_list_dir((unsigned int)s->current_dir_inode, dk_indices, MAXFS_MAX_FILES);
         s->scroll_offset = 0;
         if (dk_count > 0) s->selected_index = dk_indices[0];
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
@@ -612,7 +629,7 @@ int explorer_instance_key(explorer_state_t* s, char ascii_char, unsigned char sc
         if (dk_count > EXPLORER_MAX_VISIBLE) s->scroll_offset = dk_count - EXPLORER_MAX_VISIBLE;
         else s->scroll_offset = 0;
         if (dk_count > 0) s->selected_index = dk_indices[dk_count - 1];
-        draw_window();
+        maxp_draw_active_instance();
         return 1;
     }
 
@@ -636,7 +653,7 @@ int explorer_instance_key(explorer_state_t* s, char ascii_char, unsigned char sc
                     s->scroll_offset = new_di - (EXPLORER_MAX_VISIBLE - 1);
                 }
                 if (s->scroll_offset < 0) s->scroll_offset = 0;
-                draw_window();
+                maxp_draw_active_instance();
                 play_sound(550); sleep(30); no_sound();
             }
             return 1;
@@ -653,7 +670,7 @@ int explorer_instance_key(explorer_state_t* s, char ascii_char, unsigned char sc
                     s->scroll_offset = new_di - (EXPLORER_MAX_VISIBLE - 1);
                 }
                 if (s->scroll_offset < 0) s->scroll_offset = 0;
-                draw_window();
+                maxp_draw_active_instance();
                 play_sound(550); sleep(30); no_sound();
             }
             return 1;
