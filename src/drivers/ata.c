@@ -1,6 +1,6 @@
 #include "ata.h"
 #include "debug.h"
-#include "user/syscall.h"
+#include "../user/libc/sys/syscall.h"
 
 extern long get_cpl(void);
 

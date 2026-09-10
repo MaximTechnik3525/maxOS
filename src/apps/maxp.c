@@ -1,6 +1,7 @@
 #include "maxp.h"
 #include "maxb.h"
 #include "app_binaries.h"
+#include "../kernel/event.h"
 #include "maxfs.h"
 #include "notepad.h"
 #include "explorer.h"
@@ -244,17 +245,19 @@ int maxp_spawn_instance(int app_type, const char* custom_title, const char* file
             notepad_open = 1;
             break;
 
-        case MAXP_APP_CALC:
+        case MAXP_APP_CALC: {
+            extern void calc_main(void);
             inst->win_x = 180 + stagger; inst->win_y = 60 + stagger;
             inst->win_w = 340; inst->win_h = 380;
             str_copy_limit(inst->icon, "CAL", 8);
             inst->icon_color = 0xF621;
-            inst->draw = (void (*)(void*, int, int, int, int))calc_instance_draw;
-            inst->handle_click = (int (*)(void*, int, int, int, int, int, int))calc_instance_click;
-            inst->handle_key = (int (*)(void*, char, unsigned char))calc_instance_key;
-            calc_instance_init((calc_state_t*)inst->state);
+            inst->draw = 0;
+            inst->handle_click = 0;
+            inst->handle_key = 0;
+            inst->pid = task_create("calc", calc_main, 1, app_type);
             calc_open = 1;
             break;
+        }
 
         case MAXP_APP_PONG:
             inst->win_x = 160 + stagger; inst->win_y = 55 + stagger;
@@ -444,38 +447,57 @@ void maxp_close_all_windows(void) {
 
 void maxp_draw_active_instance(void) {
     app_instance_t* inst = maxp_get_active_instance();
-    if (inst && !inst->is_minimized && inst->draw) {
-        inst->draw(inst->state, inst->win_x, inst->win_y, inst->win_w, inst->win_h);
+    if (inst && !inst->is_minimized) {
+        if (inst->draw) {
+            inst->draw(inst->state, inst->win_x, inst->win_y, inst->win_w, inst->win_h);
+        } else if (inst->pid > 0) {
+            task_push_event(inst->pid, EVENT_DRAW, 0, 0, 0, 0);
+        }
     }
 }
 
 void maxp_draw_all_instances(void) {
     // 1. Draw background windows (inactive)
     for (int i = 0; i < MAX_APP_INSTANCES; i++) {
-        if (instances[i].instance_id != 0 && instances[i].instance_id != active_instance_id && !instances[i].is_minimized && instances[i].draw) {
-            instances[i].draw(instances[i].state, instances[i].win_x, instances[i].win_y, instances[i].win_w, instances[i].win_h);
+        if (instances[i].instance_id != 0 && instances[i].instance_id != active_instance_id && !instances[i].is_minimized) {
+            if (instances[i].draw) {
+                instances[i].draw(instances[i].state, instances[i].win_x, instances[i].win_y, instances[i].win_w, instances[i].win_h);
+            } else if (instances[i].pid > 0) {
+                task_push_event(instances[i].pid, EVENT_DRAW, 0, 0, 0, 0);
+            }
         }
     }
     // 2. Draw active window on top
-    app_instance_t* act = maxp_get_active_instance();
-    if (act && !act->is_minimized && act->draw) {
-        act->draw(act->state, act->win_x, act->win_y, act->win_w, act->win_h);
-    }
+    maxp_draw_active_instance();
 }
 
 int maxp_handle_click_active(int mx, int my) {
     app_instance_t* inst = maxp_get_active_instance();
-    if (inst && !inst->is_minimized && inst->handle_click) {
-        int res = inst->handle_click(inst->state, inst->win_x, inst->win_y, inst->win_w, inst->win_h, mx, my);
-        if (res == -1) {
-            maxp_close_instance(inst->instance_id);
+    if (inst && !inst->is_minimized) {
+        if (inst->handle_click) {
+            int res = inst->handle_click(inst->state, inst->win_x, inst->win_y, inst->win_w, inst->win_h, mx, my);
+            if (res == -1) {
+                maxp_close_instance(inst->instance_id);
+                return 1;
+            }
+            if (res == -2) {
+                maxp_minimize_instance(inst->instance_id);
+                return 1;
+            }
+            if (res != 0) return res;
+        } else if (inst->pid > 0) {
+            // Titlebar bounds check
+            if (mx >= inst->win_x + inst->win_w - 48 && mx <= inst->win_x + inst->win_w - 26 && my >= inst->win_y && my <= inst->win_y + 24) {
+                maxp_minimize_instance(inst->instance_id);
+                return 1;
+            }
+            if (mx >= inst->win_x + inst->win_w - 26 && mx <= inst->win_x + inst->win_w && my >= inst->win_y && my <= inst->win_y + 24) {
+                maxp_close_instance(inst->instance_id);
+                return 1;
+            }
+            task_push_event(inst->pid, EVENT_CLICK, mx, my, 0, 0);
             return 1;
         }
-        if (res == -2) {
-            maxp_minimize_instance(inst->instance_id);
-            return 1;
-        }
-        if (res != 0) return res;
     }
 
     // Check if clicked another running window in background to bring to focus!
@@ -506,32 +528,41 @@ int maxp_handle_click_active(int mx, int my) {
 
 int maxp_handle_key_active(char ch, unsigned char scan) {
     app_instance_t* inst = maxp_get_active_instance();
-    if (inst && !inst->is_minimized && inst->handle_key) {
-        int res = inst->handle_key(inst->state, ch, scan);
-        if (res == -1) {
-            maxp_close_instance(inst->instance_id);
+    if (inst && !inst->is_minimized) {
+        if (inst->handle_key) {
+            int res = inst->handle_key(inst->state, ch, scan);
+            if (res == -1) {
+                maxp_close_instance(inst->instance_id);
+                return 1;
+            }
+            return res;
+        } else if (inst->pid > 0) {
+            task_push_event(inst->pid, EVENT_KEY, 0, 0, ch, scan);
             return 1;
         }
-        return res;
     }
     return 0;
 }
 
 void maxp_tick_all_instances(void) {
     for (int i = 0; i < MAX_APP_INSTANCES; i++) {
-        if (instances[i].instance_id != 0 && !instances[i].is_minimized && instances[i].tick) {
+        if (instances[i].instance_id != 0 && !instances[i].is_minimized) {
             // Games/visual animations like Pong should only tick/draw when active on top
             if (instances[i].app_type == MAXP_APP_PONG && instances[i].instance_id != active_instance_id) {
                 continue;
             }
-            instances[i].tick(instances[i].state, instances[i].win_x, instances[i].win_y, instances[i].win_w, instances[i].win_h);
+            if (instances[i].tick) {
+                instances[i].tick(instances[i].state, instances[i].win_x, instances[i].win_y, instances[i].win_w, instances[i].win_h);
+            } else if (instances[i].pid > 0) {
+                task_push_event(instances[i].pid, EVENT_TICK, 0, 0, 0, 0);
+            }
         }
     }
 }
 
 int maxp_has_ticking_instances(void) {
     for (int i = 0; i < MAX_APP_INSTANCES; i++) {
-        if (instances[i].instance_id != 0 && !instances[i].is_minimized && instances[i].tick) {
+        if (instances[i].instance_id != 0 && !instances[i].is_minimized && (instances[i].tick || instances[i].pid > 0)) {
             if (instances[i].app_type == MAXP_APP_PONG && instances[i].instance_id != active_instance_id) {
                 continue;
             }

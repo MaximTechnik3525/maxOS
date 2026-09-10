@@ -64,6 +64,14 @@ typedef struct {
     unsigned char ustack[TASK_STACK_SIZE] __attribute__((aligned(16)));
     unsigned char fpu_state[512] __attribute__((aligned(16)));
     unsigned long long sleep_until;      // System ticks to wake up
+    
+    // Process-level event queue
+    struct {
+        int events[32 * 5]; // 32 events * 5 ints
+        int head;
+        int tail;
+    } eq;
+
     int time_slice;                      // Remaining ticks in current quantum
     int is_user;                         // 1 = Ring 3, 0 = Ring 0
     int app_id;                          // Associated app_id (MAXP_APP_*) or 0
@@ -97,6 +105,7 @@ task_t*         task_get_by_pid(int pid);
 int             task_get_count(void);
 int             task_get_list(task_info_t* list, int max_count);
 int             task_is_scheduler_active(void);
+void            task_push_event(int pid, int type, int x, int y, int key, int scan);
 
 // Called by irq0_timer_entry assembly
 unsigned long long schedule_tick(unsigned long long current_rsp);

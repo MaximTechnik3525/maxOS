@@ -5,7 +5,7 @@
 #include "idt.h"
 #include "debug.h"
 #include "string.h"
-#include "user/syscall.h"
+#include "../user/libc/sys/syscall.h"
 
 static task_t tasks[MAX_TASKS];
 static task_t* current_task = 0;
@@ -258,6 +258,23 @@ int task_get_list(task_info_t* list, int max_count) {
 
 int task_is_scheduler_active(void) {
     return scheduler_active;
+}
+
+void task_push_event(int pid, int type, int x, int y, int key, int scan) {
+    if (pid <= 0 || pid >= MAX_TASKS) return;
+    task_t* t = &tasks[pid];
+    if (t->state == TASK_UNUSED || t->state == TASK_DEAD) return;
+    
+    int next = (t->eq.tail + 1) % 32;
+    if (next != t->eq.head) {
+        int idx = t->eq.tail * 5;
+        t->eq.events[idx + 0] = type;
+        t->eq.events[idx + 1] = x;
+        t->eq.events[idx + 2] = y;
+        t->eq.events[idx + 3] = key;
+        t->eq.events[idx + 4] = scan;
+        t->eq.tail = next;
+    }
 }
 
 /* -------------------------------------------------------------------------

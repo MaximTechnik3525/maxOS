@@ -55,12 +55,14 @@ $CC -c src/apps/mem.c -o build/mem.o $CFLAGS
 $CC -c src/kernel/mmu.c -o build/mmu.o $CFLAGS
 $CC -c src/kernel/pmm.c -o build/pmm.o $CFLAGS
 $CC -c src/kernel/malloc.c -o build/malloc.o $CFLAGS
+$CC -c src/kernel/elf.c -o build/elf.o $CFLAGS
 $CC -c src/kernel/kernel.c -o build/kernel.o $CFLAGS
+$CC -c src/user/libc/libc.c -o build/libc.o $CFLAGS
 
 echo "=== [3/5] Линковка 64-битного ядра (ELF64) ==="
 $LD --no-warn-rwx-segments -T src/linker.ld -o build/mykernel.bin \
     build/entry.o build/mbr_data.o build/syscall_asm.o build/idt_asm.o \
-    build/string.o build/dialog.o build/debug.o build/mmu.o build/pmm.o build/malloc.o build/idt.o build/user.o build/task.o build/kernel.o build/ata.o \
+    build/string.o build/dialog.o build/debug.o build/mmu.o build/pmm.o build/malloc.o build/elf.o build/idt.o build/user.o build/task.o build/kernel.o build/ata.o build/libc.o \
     build/maxfs.o build/maxp.o build/taskbar.o build/notepad.o \
     build/installer.o build/explorer.o build/calc.o build/sysinfo.o build/pong.o build/mem.o \
     build/app_binaries.o

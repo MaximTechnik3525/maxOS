@@ -53,7 +53,7 @@ struct multiboot_info {
 #include "idt.h"
 #include "task.h"
 #include "debug.h"
-#include "user/syscall.h"
+#include "../user/libc/sys/syscall.h"
 #include "font.h"
 #include "string.h"
 

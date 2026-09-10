@@ -13,7 +13,7 @@
 #include "mem.h"
 #include "debug.h"
 #include "ata.h"
-#include "user/syscall.h"
+#include "../user/libc/sys/syscall.h"
 
 // 64-bit Task State Segment (AMD64 Architecture Manual Vol 2)
 struct __attribute__((packed)) tss64_t {
@@ -205,6 +205,23 @@ long syscall_dispatcher(long num, long a1, long a2, long a3, long a4, long a5) {
         case 22: // SYS_FREE
             kfree((void*)a1);
             return 0;
+
+        case 23: { // SYS_GET_EVENT
+            task_t* cur = task_get_current();
+            if (!cur) return 0;
+            if (cur->eq.head == cur->eq.tail) return 0; // No events
+            
+            int* user_ev = (int*)a1;
+            int idx = cur->eq.head * 5;
+            user_ev[0] = cur->eq.events[idx + 0];
+            user_ev[1] = cur->eq.events[idx + 1];
+            user_ev[2] = cur->eq.events[idx + 2];
+            user_ev[3] = cur->eq.events[idx + 3];
+            user_ev[4] = cur->eq.events[idx + 4];
+            
+            cur->eq.head = (cur->eq.head + 1) % 32;
+            return 1;
+        }
 
         default:
             return -1;
