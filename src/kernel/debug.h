@@ -11,8 +11,8 @@ void debug_log_app_event(const char* app_name, const char* event, int app_id);
 void debug_log_ata_event(const char* op, unsigned int lba, int count, int status);
 
 // Circular ring buffer of recent logs for in-OS viewing
-#define DEBUG_HISTORY_COUNT 16
-#define DEBUG_MSG_LEN 72
+#define DEBUG_HISTORY_COUNT 64
+#define DEBUG_MSG_LEN 80
 
 struct DebugLogEntry {
     unsigned long long timestamp_ms;

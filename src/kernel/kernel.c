@@ -57,6 +57,7 @@ struct multiboot_info {
 #include "../user/libc/sys/syscall.h"
 #include "font.h"
 #include "string.h"
+#include "verbose_boot.h"
 
 extern char _kernel_start[];
 extern char _kernel_end[];
@@ -188,51 +189,94 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         mb_mem_upper = mbi->mem_upper;
     }
 
+    // Parse Multiboot command line for verbose boot flags
+    int verbose_mode = 0;
+    if ((mbi->flags & (1 << 2)) && mbi->cmdline != 0) {
+        const char* cmdline = (const char*)(unsigned long)mbi->cmdline;
+        if (str_in((char*)cmdline, "verbose") || str_in((char*)cmdline, "-v") || str_in((char*)cmdline, "debug")) {
+            verbose_mode = 1;
+        }
+    }
+    // Check if user held or pressed V, TAB, or ESC at the very start
+    if (inb(0x64) & 1) {
+        unsigned char sc = inb(0x60);
+        if (sc == 0x2F || sc == 0x01 || sc == 0x0F) { // 'V', ESC, TAB
+            verbose_mode = 1;
+        }
+    }
+
     // Initialize Diagnostic Serial Debugger (COM1 38400 baud)
     debug_init();
     
+    // Initialize Verbose Boot subsystem (Onscreen Diagnostic Console)
+    verbose_boot_init(verbose_mode, mb_mem_upper);
+    verbose_boot_step("SYSTEM", "Starting maxOS v4.0 EventUpdate (x86_64 Long Mode)", BOOT_STATUS_INFO, 5);
+
     // Initialize Memory Management Unit (4KB pages & Security)
     mmu_init();
+    verbose_boot_step("MMU", "4KB Paging structures & null-pointer protection active", BOOT_STATUS_OK, 12);
     
     // Initialize Physical Memory Manager and Kernel Heap
     pmm_init(mb_mem_upper);
     malloc_init();
+    verbose_boot_step("PMM", "Physical memory manager & kernel dynamic heap allocated", BOOT_STATUS_OK, 22);
 
     init_mouse();
 
     // Initialize 64-bit IDT, 8259 PIC Remap, and PIT 1000Hz Timer
     idt_init();
+    verbose_boot_step("IDT", "64-bit IDT loaded, PIC remapped (IRQ 0x20..0x2F), PIT 1000Hz", BOOT_STATUS_OK, 32);
 
     // Initialize Ring 3 User Space, TSS, and SYSCALL MSRs
     user_mode_init();
+    verbose_boot_step("USER", "Ring 3 User Space, TSS descriptor & SYSCALL/SYSRET active", BOOT_STATUS_OK, 42);
 
     // Initialize Preemptive Task Scheduler (Ring 0 & Ring 3 Multitasking)
     task_init();
+    verbose_boot_step("SCHED", "Preemptive Multitasking Scheduler initialized (Ring 0 & 3)", BOOT_STATUS_OK, 52);
 
     // Initialize PCI Bus Enumerator and Hardware Scanner
     pci_init();
+    verbose_boot_step("PCI", "PCI Bus Enumerator & hardware scan completed", BOOT_STATUS_OK, 62);
 
-    // Splash screen
-    for (int y = 0; y < 768; y++) {
-        for (int x = 0; x < 1024; x++) {
-            if (y <= 387 && y >= 384) {
-                gfx_memory[y * 1024 + x] = 0x0DE5;
-            } else if (y <= 393 && y > 387) {
-                gfx_memory[y * 1024 + x] = 0x03EA;
-            } else if (y <= 400 && y > 393) {
-                gfx_memory[y * 1024 + x] = 0x01A4;
-            } else {
-                gfx_memory[y * 1024 + x] = 0x0000;
+    if (!verbose_boot_is_active()) {
+        // Splash screen
+        for (int y = 0; y < 768; y++) {
+            for (int x = 0; x < 1024; x++) {
+                if (y <= 387 && y >= 384) {
+                    gfx_memory[y * 1024 + x] = 0x0DE5;
+                } else if (y <= 393 && y > 387) {
+                    gfx_memory[y * 1024 + x] = 0x03EA;
+                } else if (y <= 400 && y > 393) {
+                    gfx_memory[y * 1024 + x] = 0x01A4;
+                } else {
+                    gfx_memory[y * 1024 + x] = 0x0000;
+                }
+            }
+        }
+        print_string("maxOS v4.0 EventUpdate x86_64", 380, 420, 0x0DE5);
+        print_string("by maxTech", 10, 10, 0x24EE);
+        print_string("Press [V] or [ESC] for Verbose Boot (Подробная загрузка)", 265, 520, 0x5ACB);
+        play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
+
+        // Check for 'V', 'Tab', or 'ESC' during splash display
+        for (int s = 0; s < 15; s++) {
+            sleep(100);
+            if (inb(0x64) & 1) {
+                unsigned char sc = inb(0x60);
+                if (sc == 0x2F || sc == 0x01 || sc == 0x0F) { // 'V', ESC, TAB
+                    verbose_boot_set_active(1);
+                    break;
+                }
             }
         }
     }
-    print_string("maxOS v4.0 EventUpdate x86_64", 380, 420, 0x0DE5);
-    print_string("by maxTech", 10, 10, 0x24EE);
-    play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
-    sleep(1500);
 
     // Initialize all filesystem, application, and GUI subsystems
+    verbose_boot_step("STORAGE", "Probing storage controllers (Native SATA AHCI & Legacy IDE)...", BOOT_STATUS_INFO, 70);
     maxfs_init();
+    verbose_boot_step("FS", "maxFS 2.0 Inode Filesystem mounted and synchronized", BOOT_STATUS_OK, 80);
+
     maxp_init();
     taskbar_init();
     notepad_init();
@@ -242,6 +286,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     sysinfo_init();
     pong_init();
     mem_init();
+    verbose_boot_step("APPS", "Standalone applications & GUI Compositor initialized", BOOT_STATUS_OK, 95);
+
+    verbose_boot_finish();
 
     drag = 0;
     draw_window();

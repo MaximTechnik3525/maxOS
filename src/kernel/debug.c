@@ -2,6 +2,7 @@
 #include "kernel.h"
 #include "idt.h"
 #include "string.h"
+#include "verbose_boot.h"
 
 #define COM1_PORT 0x3F8
 
@@ -94,6 +95,11 @@ void debug_log(const char* tag, const char* msg) {
 
     debug_history_head = (debug_history_head + 1) % DEBUG_HISTORY_COUNT;
     if (debug_history_total < DEBUG_HISTORY_COUNT) debug_history_total++;
+
+    // 3. Output to on-screen Verbose Boot Console if active
+    if (verbose_boot_is_active()) {
+        verbose_boot_log(tag, msg);
+    }
 }
 
 void debug_log_app_event(const char* app_name, const char* event, int app_id) {
