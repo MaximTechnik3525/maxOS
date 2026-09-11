@@ -3,6 +3,7 @@
 #include "string.h"
 #include "maxp.h"
 #include "ata.h"
+#include "ahci.h"
 #include "pci.h"
 #include "task.h"
 
@@ -81,9 +82,13 @@ static void sysinfo_render_overview(int sx, int sy, int sw, int sh) {
     maxos_print_text("Kernel Load Address:        0x00100000 (1 MB Physical RAM)", sx + 25, row_y, 0x0000);
     row_y += 17;
 
-    maxos_print_text("[ Storage & ATA Driver Diagnostics ]", sx + 20, row_y, 0x11EB);
+    maxos_print_text("[ Storage & Disk Controller Diagnostics ]", sx + 20, row_y, 0x11EB);
     row_y += 14;
-    maxos_print_text("Storage Device: ATA Primary Master (IDE PIO)", sx + 25, row_y, 0x0000);
+    if (ahci_is_available()) {
+        maxos_print_text("Controller: SATA AHCI 1.0 (Bus Master DMA / MMIO)", sx + 25, row_y, 0x05E0);
+    } else {
+        maxos_print_text("Controller: Legacy ATA Primary Master (IDE PIO)", sx + 25, row_y, 0x0000);
+    }
     row_y += 13;
     maxos_print_text("Drive Model: ", sx + 25, row_y, 0x0000);
     maxos_print_text(ata_primary_master.present ? ata_primary_master.model : "Not Detected", sx + 135, row_y, 0x24EE);

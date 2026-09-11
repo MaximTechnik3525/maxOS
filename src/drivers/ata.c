@@ -1,4 +1,6 @@
 #include "ata.h"
+#include "ahci.h"
+#include "string.h"
 #include "debug.h"
 #include "../user/libc/sys/syscall.h"
 
@@ -123,7 +125,21 @@ int ata_identify(void) {
 }
 
 int ata_init(void) {
-    debug_log("ATA", "Initializing ATA Controller (Primary Master)...");
+    // First, check if native SATA AHCI controller is present on PCI bus
+    if (ahci_init()) {
+        debug_log("STORAGE", "Native SATA AHCI Controller Active - Using Hardware DMA Engine");
+        ahci_device_t* sdev = ahci_get_primary_device();
+        if (sdev && sdev->present) {
+            ata_primary_master.present = 1;
+            ata_primary_master.total_sectors = sdev->total_sectors;
+            ata_primary_master.size_mb = sdev->size_mb;
+            strncpy(ata_primary_master.model, sdev->model, sizeof(ata_primary_master.model) - 1);
+            ata_primary_master.model[sizeof(ata_primary_master.model) - 1] = '\0';
+        }
+        return 0;
+    }
+
+    debug_log("ATA", "Initializing Legacy ATA Controller (Primary Master)...");
     // Disable interrupts by setting nIEN bit in Device Control register
     ata_outb(0x3F6, 0x02);
     int res = ata_identify();
@@ -146,6 +162,7 @@ int ata_is_available(void) {
     if (get_cpl() == 3) {
         return u_ata_status();
     }
+    if (ahci_is_available()) return 1;
     return ata_primary_master.present;
 }
 
@@ -160,6 +177,18 @@ int ata_read_sector(unsigned int lba, unsigned char* buffer) {
     ata_debug_stats.last_op[2] = 'A';
     ata_debug_stats.last_op[3] = 'D';
     ata_debug_stats.last_op[4] = '\0';
+
+    if (ahci_is_available()) {
+        int res = ahci_read_sector(lba, buffer);
+        if (res == 0) {
+            ata_debug_stats.reads_count++;
+            debug_log_ata_event("AHCI-RD", lba, 1, 0);
+            return 0;
+        }
+        ata_debug_stats.errors_count++;
+        debug_log_ata_event("AHCI-RDERR", lba, 1, -1);
+        return -1;
+    }
 
     if (!ata_primary_master.present) {
         ata_debug_stats.errors_count++;
@@ -223,6 +252,18 @@ int ata_write_sector(unsigned int lba, const unsigned char* buffer) {
     ata_debug_stats.last_op[4] = 'E';
     ata_debug_stats.last_op[5] = '\0';
 
+    if (ahci_is_available()) {
+        int res = ahci_write_sector(lba, buffer);
+        if (res == 0) {
+            ata_debug_stats.writes_count++;
+            debug_log_ata_event("AHCI-WR", lba, 1, 0);
+            return 0;
+        }
+        ata_debug_stats.errors_count++;
+        debug_log_ata_event("AHCI-WRERR", lba, 1, -1);
+        return -1;
+    }
+
     if (!ata_primary_master.present) {
         ata_debug_stats.errors_count++;
         debug_log_ata_event("WR-NOPRES", lba, 1, -1);
@@ -284,6 +325,14 @@ int ata_write_sector(unsigned int lba, const unsigned char* buffer) {
 }
 
 int ata_read_sectors(unsigned int lba, int count, unsigned char* buffer) {
+    if (ahci_is_available()) {
+        int res = ahci_read_sectors(lba, count, buffer);
+        if (res == 0) {
+            ata_debug_stats.reads_count += count;
+            return 0;
+        }
+        return -1;
+    }
     for (int i = 0; i < count; i++) {
         if (ata_read_sector(lba + i, buffer + (i * ATA_SECTOR_SIZE)) != 0) {
             return -1;
@@ -293,6 +342,14 @@ int ata_read_sectors(unsigned int lba, int count, unsigned char* buffer) {
 }
 
 int ata_write_sectors(unsigned int lba, int count, const unsigned char* buffer) {
+    if (ahci_is_available()) {
+        int res = ahci_write_sectors(lba, count, buffer);
+        if (res == 0) {
+            ata_debug_stats.writes_count += count;
+            return 0;
+        }
+        return -1;
+    }
     for (int i = 0; i < count; i++) {
         if (ata_write_sector(lba + i, buffer + (i * ATA_SECTOR_SIZE)) != 0) {
             return -1;
@@ -304,6 +361,11 @@ int ata_write_sectors(unsigned int lba, int count, const unsigned char* buffer) 
 int ata_flush(void) {
     if (get_cpl() == 3) {
         return u_ata_flush();
+    }
+
+    if (ahci_is_available()) {
+        ata_debug_stats.flushes_count++;
+        return 0;
     }
 
     ata_debug_stats.last_op[0] = 'F';
