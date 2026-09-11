@@ -23,13 +23,13 @@ static app_instance_t instances[MAX_APP_INSTANCES];
 static unsigned char instance_state_pool[MAX_APP_INSTANCES][4096];
 
 static const struct MaxPAppInfo app_registry[MAXP_APP_COUNT] = {
-    { MAXP_APP_NOTEPAD,   "Notepad",     "notepad.maxP", "Text Editor v3.5",            "NP",   0x03EA },
-    { MAXP_APP_EXPLORER,  "Explorer",    "explorer.maxP", "File & Disk Manager",         "EXP",  0x24EE },
-    { MAXP_APP_CALC,      "Calculator",  "calc.maxP",     "GUI Calculator",             "CALC", 0xF621 },
-    { MAXP_APP_SYSINFO,   "SysInfo",     "sysinfo.maxP",  "x86_64 Long Mode Info",      "CPU",  0x0DE5 },
-    { MAXP_APP_PONG,      "Pong Arcade", "pong.maxP",     "Retro Arcade Game",          "PONG", 0x7BEF },
-    { MAXP_APP_INSTALLER, "Installer",   "install.maxP",  "maxOS HDD Setup",            "INST", 0x92E0 },
-    { MAXP_APP_MEM,       "Mem",         "mem.maxP",      "RAM & Memory Usage Monitor", "MEM",  0x05E0 }
+    { MAXP_APP_NOTEPAD,   "Notepad",     "notepad.maxP", "Text Editor 4.0",            "NP",   0x03EA },
+    { MAXP_APP_EXPLORER,  "Explorer",    "explorer.maxP", "File & Disk Manager 4.0",    "EXP",  0x24EE },
+    { MAXP_APP_CALC,      "Calculator",  "calc.maxP",     "GUI Calculator 4.0",         "CALC", 0xF621 },
+    { MAXP_APP_SYSINFO,   "SysInfo",     "sysinfo.maxP",  "x86_64 Long Mode Info 4.0",  "CPU",  0x0DE5 },
+    { MAXP_APP_PONG,      "Pong Arcade", "pong.maxP",     "Retro Arcade Game 4.0",      "PONG", 0x7BEF },
+    { MAXP_APP_INSTALLER, "Installer",   "install.maxP",  "maxOS HDD Setup 4.0",        "INST", 0x92E0 },
+    { MAXP_APP_MEM,       "Mem",         "mem.maxP",      "RAM & Task Monitor 4.0",     "MEM",  0x05E0 }
 };
 
 const struct MaxPAppInfo* maxp_get_app_info(int app_id) {
@@ -239,17 +239,21 @@ int maxp_spawn_instance(int app_type, const char* custom_title, const char* file
     inst->pid = 0;
 
     switch (app_type) {
-        case MAXP_APP_NOTEPAD:
+        case MAXP_APP_NOTEPAD: {
+            extern void notepad_main(void);
             inst->win_x = 90 + stagger; inst->win_y = 45 + stagger;
             inst->win_w = 780; inst->win_h = 520;
             str_copy_limit(inst->icon, "NP", 8);
             inst->icon_color = 0x03EA;
-            inst->draw = (void (*)(void*, int, int, int, int))notepad_instance_draw;
-            inst->handle_click = (int (*)(void*, int, int, int, int, int, int))notepad_instance_click;
-            inst->handle_key = (int (*)(void*, char, unsigned char))notepad_instance_key;
+            inst->draw = 0;
+            inst->handle_click = 0;
+            inst->handle_key = 0;
+            inst->tick = 0;
             notepad_instance_init((notepad_state_t*)inst->state, file_arg);
+            inst->pid = task_create("notepad", notepad_main, 1, app_type);
             notepad_open = 1;
             break;
+        }
 
         case MAXP_APP_CALC: {
             extern void calc_main(void);
@@ -260,35 +264,43 @@ int maxp_spawn_instance(int app_type, const char* custom_title, const char* file
             inst->draw = 0;
             inst->handle_click = 0;
             inst->handle_key = 0;
+            inst->tick = 0;
             inst->pid = task_create("calc", calc_main, 1, app_type);
             calc_open = 1;
             break;
         }
 
-        case MAXP_APP_PONG:
+        case MAXP_APP_PONG: {
+            extern void pong_main(void);
             inst->win_x = 160 + stagger; inst->win_y = 55 + stagger;
             inst->win_w = 520; inst->win_h = 380;
             str_copy_limit(inst->icon, "PNG", 8);
             inst->icon_color = 0x7BEF;
-            inst->draw = (void (*)(void*, int, int, int, int))pong_instance_draw;
-            inst->handle_click = (int (*)(void*, int, int, int, int, int, int))pong_instance_click;
-            inst->handle_key = (int (*)(void*, char, unsigned char))pong_instance_key;
-            inst->tick = (void (*)(void*, int, int, int, int))pong_instance_tick;
+            inst->draw = 0;
+            inst->handle_click = 0;
+            inst->handle_key = 0;
+            inst->tick = 0;
             pong_instance_init((pong_state_t*)inst->state, inst->win_x, inst->win_y, inst->win_w, inst->win_h);
+            inst->pid = task_create("pong", pong_main, 1, app_type);
             pong_open = 1;
             break;
+        }
 
-        case MAXP_APP_EXPLORER:
+        case MAXP_APP_EXPLORER: {
+            extern void explorer_main(void);
             inst->win_x = 70 + stagger; inst->win_y = 45 + stagger;
             inst->win_w = 780; inst->win_h = 520;
             str_copy_limit(inst->icon, "EXP", 8);
             inst->icon_color = 0x24EE;
-            inst->draw = (void (*)(void*, int, int, int, int))explorer_instance_draw;
-            inst->handle_click = (int (*)(void*, int, int, int, int, int, int))explorer_instance_click;
-            inst->handle_key = (int (*)(void*, char, unsigned char))explorer_instance_key;
+            inst->draw = 0;
+            inst->handle_click = 0;
+            inst->handle_key = 0;
+            inst->tick = 0;
             explorer_instance_init((explorer_state_t*)inst->state);
+            inst->pid = task_create("explorer", explorer_main, 1, app_type);
             explorer_open = 1;
             break;
+        }
 
         case MAXP_APP_SYSINFO: {
             extern void sysinfo_main(void);
@@ -299,48 +311,59 @@ int maxp_spawn_instance(int app_type, const char* custom_title, const char* file
             inst->draw = 0;
             inst->handle_click = 0;
             inst->handle_key = 0;
+            inst->tick = 0;
             inst->pid = task_create("sysinfo", sysinfo_main, 1, app_type);
             sysinfo_open = 1;
             break;
         }
 
-        case MAXP_APP_MEM:
+        case MAXP_APP_MEM: {
+            extern void mem_main(void);
             inst->win_x = 80 + stagger; inst->win_y = 45 + stagger;
             inst->win_w = 760; inst->win_h = 490;
             str_copy_limit(inst->icon, "MEM", 8);
             inst->icon_color = 0x05E0;
-            inst->draw = (void (*)(void*, int, int, int, int))mem_instance_draw;
-            inst->handle_click = (int (*)(void*, int, int, int, int, int, int))mem_instance_click;
-            inst->handle_key = (int (*)(void*, char, unsigned char))mem_instance_key;
-            inst->tick = (void (*)(void*, int, int, int, int))mem_instance_tick;
+            inst->draw = 0;
+            inst->handle_click = 0;
+            inst->handle_key = 0;
+            inst->tick = 0;
             mem_instance_init((mem_state_t*)inst->state, 0);
+            inst->pid = task_create("mem", mem_main, 1, app_type);
             mem_open = 1;
             break;
+        }
 
-        case MAXP_APP_STRESS:
+        case MAXP_APP_STRESS: {
+            extern void mem_main(void);
             inst->win_x = 80 + stagger; inst->win_y = 45 + stagger;
             inst->win_w = 760; inst->win_h = 490;
             str_copy_limit(inst->icon, "RAM", 8);
             inst->icon_color = 0xF800;
-            inst->draw = (void (*)(void*, int, int, int, int))mem_instance_draw;
-            inst->handle_click = (int (*)(void*, int, int, int, int, int, int))mem_instance_click;
-            inst->handle_key = (int (*)(void*, char, unsigned char))mem_instance_key;
-            inst->tick = (void (*)(void*, int, int, int, int))mem_instance_tick;
+            inst->draw = 0;
+            inst->handle_click = 0;
+            inst->handle_key = 0;
+            inst->tick = 0;
             mem_instance_init((mem_state_t*)inst->state, 2);
+            inst->pid = task_create("stress", mem_main, 1, app_type);
             mem_open = 1;
             break;
+        }
 
-        case MAXP_APP_INSTALLER:
+        case MAXP_APP_INSTALLER: {
+            extern void installer_main(void);
             inst->win_x = 120 + stagger; inst->win_y = 60 + stagger;
             inst->win_w = 640; inst->win_h = 440;
             str_copy_limit(inst->icon, "INS", 8);
             inst->icon_color = 0x92E0;
-            inst->draw = (void (*)(void*, int, int, int, int))installer_instance_draw;
-            inst->handle_click = (int (*)(void*, int, int, int, int, int, int))installer_instance_click;
-            inst->handle_key = (int (*)(void*, char, unsigned char))installer_instance_key;
+            inst->draw = 0;
+            inst->handle_click = 0;
+            inst->handle_key = 0;
+            inst->tick = 0;
             installer_instance_init((installer_state_t*)inst->state);
+            inst->pid = task_create("installer", installer_main, 1, app_type);
             installer_open = 1;
             break;
+        }
 
         default:
             return 0;
@@ -568,14 +591,16 @@ int maxp_handle_key_active(char ch, unsigned char scan) {
 void maxp_tick_all_instances(void) {
     for (int i = 0; i < MAX_APP_INSTANCES; i++) {
         if (instances[i].instance_id != 0 && !instances[i].is_minimized) {
-            // Games/visual animations like Pong should only tick/draw when active on top
-            if (instances[i].app_type == MAXP_APP_PONG && instances[i].instance_id != active_instance_id) {
-                continue;
-            }
-            if (instances[i].tick) {
+            if (instances[i].app_type == MAXP_APP_PONG) {
+                if (instances[i].instance_id == active_instance_id && instances[i].pid > 0) {
+                    task_push_event(instances[i].pid, EVENT_TICK, 0, 0, 0, 0);
+                }
+            } else if (instances[i].app_type == MAXP_APP_STRESS || instances[i].app_type == MAXP_APP_MEM) {
+                if (mem_stress_is_active() && instances[i].pid > 0) {
+                    task_push_event(instances[i].pid, EVENT_TICK, 0, 0, 0, 0);
+                }
+            } else if (instances[i].tick) {
                 instances[i].tick(instances[i].state, instances[i].win_x, instances[i].win_y, instances[i].win_w, instances[i].win_h);
-            } else if (instances[i].pid > 0) {
-                task_push_event(instances[i].pid, EVENT_TICK, 0, 0, 0, 0);
             }
         }
     }
@@ -583,11 +608,16 @@ void maxp_tick_all_instances(void) {
 
 int maxp_has_ticking_instances(void) {
     for (int i = 0; i < MAX_APP_INSTANCES; i++) {
-        if (instances[i].instance_id != 0 && !instances[i].is_minimized && (instances[i].tick || instances[i].pid > 0)) {
-            if (instances[i].app_type == MAXP_APP_PONG && instances[i].instance_id != active_instance_id) {
-                continue;
+        if (instances[i].instance_id != 0 && !instances[i].is_minimized) {
+            if (instances[i].app_type == MAXP_APP_PONG && instances[i].instance_id == active_instance_id) {
+                return 1;
             }
-            return 1;
+            if ((instances[i].app_type == MAXP_APP_STRESS || instances[i].app_type == MAXP_APP_MEM) && mem_stress_is_active()) {
+                return 1;
+            }
+            if (instances[i].tick) {
+                return 1;
+            }
         }
     }
     return 0;
@@ -709,39 +739,39 @@ void maxp_init(void) {
 
     // Seed default .maxP program files if not present
     if (maxfs_find_file("notepad.maxP") == -1) {
-        const char* np_content = "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 3.5 Text Editor\n";
+        const char* np_content = "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 4.0 Text Editor\n";
         maxfs_write_file("notepad.maxP", np_content, (unsigned int)strlen(np_content));
     }
     if (maxfs_find_file("explorer.maxP") == -1) {
-        const char* exp_content = "MAXP\nNAME=Explorer\nEXEC=explorer\nICON=EXP\nDESC=File & Disk Manager\n";
-        maxfs_write_file("explorer.maxP", exp_content, 67);
+        const char* exp_content = "MAXP\nNAME=Explorer\nEXEC=explorer\nICON=EXP\nDESC=File & Disk Manager 4.0\n";
+        maxfs_write_file("explorer.maxP", exp_content, (unsigned int)strlen(exp_content));
     }
     if (maxfs_find_file("calc.maxP") == -1) {
-        const char* calc_content = "MAXP\nNAME=Calculator\nEXEC=calc\nICON=CALC\nDESC=Desktop GUI Calculator\n";
-        maxfs_write_file("calc.maxP", calc_content, 71);
+        const char* calc_content = "MAXP\nNAME=Calculator\nEXEC=calc\nICON=CALC\nDESC=Desktop GUI Calculator 4.0\n";
+        maxfs_write_file("calc.maxP", calc_content, (unsigned int)strlen(calc_content));
     }
     if (maxfs_find_file("sysinfo.maxP") == -1) {
-        const char* sys_content = "MAXP\nNAME=SysInfo\nEXEC=sysinfo\nICON=CPU\nDESC=x86_64 Long Mode System Info\n";
-        maxfs_write_file("sysinfo.maxP", sys_content, 76);
+        const char* sys_content = "MAXP\nNAME=SysInfo\nEXEC=sysinfo\nICON=CPU\nDESC=x86_64 Long Mode System Info 4.0\n";
+        maxfs_write_file("sysinfo.maxP", sys_content, (unsigned int)strlen(sys_content));
     }
     if (maxfs_find_file("pong.maxP") == -1) {
-        const char* pong_content = "MAXP\nNAME=Pong\nEXEC=pong\nICON=PONG\nDESC=Retro Pong Arcade Game\n";
-        maxfs_write_file("pong.maxP", pong_content, 64);
+        const char* pong_content = "MAXP\nNAME=Pong\nEXEC=pong\nICON=PONG\nDESC=Retro Pong Arcade Game 4.0\n";
+        maxfs_write_file("pong.maxP", pong_content, (unsigned int)strlen(pong_content));
     }
     if (maxfs_find_file("install.maxP") == -1) {
-        const char* inst_content = "MAXP\nNAME=Installer\nEXEC=installer\nICON=INST\nDESC=maxOS System Setup & HDD Installer\n";
-        maxfs_write_file("install.maxP", inst_content, 83);
+        const char* inst_content = "MAXP\nNAME=Installer\nEXEC=installer\nICON=INST\nDESC=maxOS System Setup & HDD Installer 4.0\n";
+        maxfs_write_file("install.maxP", inst_content, (unsigned int)strlen(inst_content));
     }
     if (maxfs_find_file("mem.maxP") == -1) {
-        const char* mem_content = "MAXP\nNAME=Mem\nEXEC=mem\nICON=MEM\nDESC=maxOS RAM & Memory Monitor\n";
-        maxfs_write_file("mem.maxP", mem_content, 66);
+        const char* mem_content = "MAXP\nNAME=Mem\nEXEC=mem\nICON=MEM\nDESC=maxOS RAM & Memory Monitor 4.0\n";
+        maxfs_write_file("mem.maxP", mem_content, (unsigned int)strlen(mem_content));
     }
     if (maxfs_find_file("stress.maxP") == -1) {
-        const char* stress_content = "MAXP\nNAME=StressTest\nEXEC=stress\nICON=RAM\nDESC=RAM Hardware Stress Test & Benchmark\n";
-        maxfs_write_file("stress.maxP", stress_content, 79);
+        const char* stress_content = "MAXP\nNAME=StressTest\nEXEC=stress\nICON=RAM\nDESC=RAM Hardware Stress Test & Benchmark 4.0\n";
+        maxfs_write_file("stress.maxP", stress_content, (unsigned int)strlen(stress_content));
     }
     if (maxfs_find_file("readme.txt") == -1) {
-        const char* rm = "Welcome to maxOS MaxRing v3.5 x86_64!\nStandalone binaries: .bin (MAXB format)\nMulti-instance enabled: run multiple Notepads, Calcs, etc!\n";
+        const char* rm = "Welcome to maxOS v4.0 EventUpdate x86_64!\nStandalone binaries: .bin (MAXB format)\nEvent Loop multi-tasking: Notepads, Calcs, Explorer, SysInfo, Pong, Mem, Installer!\n";
         maxfs_write_file("readme.txt", rm, (unsigned int)strlen(rm));
     }
 }

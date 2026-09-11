@@ -31,4 +31,7 @@ int mem_stress_is_active(void);
 void mem_stress_run_pass(void);
 void mem_stress_release(void);
 
+// Event Loop Entry Point (v4.0 EventUpdate)
+void mem_main(void);
+
 #endif // MEM_H

@@ -1,6 +1,8 @@
 #include "pong.h"
 #include "maxp.h"
 #include "kernel.h"
+#include "../user/libc/include/maxos.h"
+#include "../user/libc/sys/syscall.h"
 
 int pong_open = 0;
 static pong_state_t primary_pong_state;
@@ -22,15 +24,13 @@ void pong_instance_init(pong_state_t* s, int px, int py, int pw, int ph) {
 }
 
 void pong_instance_draw(pong_state_t* s, int px, int py, int pw, int ph) {
-    prev_cursor();
-
     // Window frame
     draw_rect(px, py, pw, ph, 0x0000);
     draw_rect(px + 1, py + 1, pw - 2, ph - 2, 0xCE79);
 
     // Titlebar
     draw_rect(px + 2, py + 2, pw - 4, 22, 0x11EB);
-    print_string("Pong Arcade - [pong.bin]", px + 8, py + 6, 0xFFFF);
+    print_string("Pong Arcade 4.0 - [Event Loop]", px + 8, py + 6, 0xFFFF);
 
     // [_] Minimize & [X] Close button
     draw_ui_btn(px + pw - 44, py + 4, 18, 16, "_", 0xCE79, 0x0000);
@@ -74,8 +74,6 @@ void pong_instance_draw(pong_state_t* s, int px, int py, int pw, int ph) {
         // Draw ball
         draw_rect(s->ball_x, s->ball_y, s->ball_size, s->ball_size, 0xFFE0);
     }
-
-    draw_cursor(pos_x, pos_y);
 }
 
 void pong_instance_tick(pong_state_t* s, int px, int py, int pw, int ph) {
@@ -278,3 +276,46 @@ int pong_handle_key(char ascii_char, unsigned char scan_code) {
     }
     return res;
 }
+
+void pong_main(void) {
+    int pid = u_getpid();
+    app_instance_t* inst = maxp_get_instance_by_pid(pid);
+    pong_state_t* s = inst ? (pong_state_t*)inst->state : &primary_pong_state;
+    int px = inst ? inst->win_x : 160;
+    int py = inst ? inst->win_y : 55;
+    int pw = inst ? inst->win_w : 520;
+    int ph = inst ? inst->win_h : 380;
+    pong_open = 1;
+    maxos_debug_log("PONG", "Pong app started in Ring 3 Event Loop");
+
+    while (1) {
+        maxos_event_t ev;
+        if (maxos_get_event(&ev)) {
+            if (ev.type == EVENT_DRAW) {
+                if (ev.x != 0 || ev.y != 0) {
+                    px = ev.x; py = ev.y; pw = ev.key; ph = ev.scan;
+                }
+                pong_instance_draw(s, px, py, pw, ph);
+            } else if (ev.type == EVENT_CLICK) {
+                int res = pong_instance_click(s, px, py, pw, ph, ev.x, ev.y);
+                if (res == -1) {
+                    if (inst) maxp_close_instance(inst->instance_id);
+                    break;
+                }
+                if (res == -2) {
+                    if (inst) maxp_minimize_instance(inst->instance_id);
+                }
+            } else if (ev.type == EVENT_KEY) {
+                int res = pong_instance_key(s, (char)ev.key, (unsigned char)ev.scan);
+                if (res == -1) {
+                    if (inst) maxp_close_instance(inst->instance_id);
+                    break;
+                }
+            } else if (ev.type == EVENT_TICK) {
+                pong_instance_tick(s, px, py, pw, ph);
+            }
+        }
+        maxos_yield();
+    }
+}
+

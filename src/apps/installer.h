@@ -21,4 +21,7 @@ void installer_draw(void);
 int  installer_handle_click(int mouse_x, int mouse_y);
 int  installer_handle_key(char ascii_char, unsigned char scan_code);
 
+// Event Loop Entry Point (v4.0 EventUpdate)
+void installer_main(void);
+
 #endif // INSTALLER_H

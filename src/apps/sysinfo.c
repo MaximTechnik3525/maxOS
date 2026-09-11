@@ -37,8 +37,8 @@ static void sysinfo_render(int sx, int sy, int sw, int sh) {
     maxos_draw_rect(sx + 10, sy + sh - 41, sw - 20, 1, 0x7BEF);
 
     maxos_draw_rect(sx + 15, sy + 34, sw - 30, 32, 0x0DE5);
-    maxos_print_text("maxOS MaxRing v3.5 (x86_64 Long Mode)", sx + 25, sy + 40, 0x0000);
-    maxos_print_text("Kernel Architecture: 64-bit AMD64 / Intel 64", sx + 25, sy + 54, 0x0000);
+    maxos_print_text("maxOS v4.0 EventUpdate (x86_64 Long Mode)", sx + 25, sy + 40, 0x0000);
+    maxos_print_text("Kernel Architecture: 64-bit AMD64 | Event Loop Apps", sx + 25, sy + 54, 0x0000);
 
     int row_y = sy + 74;
 
@@ -155,5 +155,5 @@ void sysinfo_init(void) {}
 void sysinfo_open_window(void) { maxp_spawn_instance(MAXP_APP_SYSINFO, "SysInfo", 0); }
 void sysinfo_close_window(void) {}
 void sysinfo_draw(void) {}
-int sysinfo_handle_click(int mx, int my) { return 0; }
-int sysinfo_handle_key(char ch, unsigned char scan) { return 0; }
+int sysinfo_handle_click(int mx, int my) { (void)mx; (void)my; return 0; }
+int sysinfo_handle_key(char ch, unsigned char scan) { (void)ch; (void)scan; return 0; }

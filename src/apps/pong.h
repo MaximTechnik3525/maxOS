@@ -33,4 +33,7 @@ void pong_tick(void);
 int pong_handle_click(int mouse_x, int mouse_y);
 int pong_handle_key(char ascii_char, unsigned char scan_code);
 
+// Event Loop Entry Point (v4.0 EventUpdate)
+void pong_main(void);
+
 #endif // PONG_H

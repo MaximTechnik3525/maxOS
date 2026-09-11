@@ -36,4 +36,7 @@ void notepad_draw_text(void);
 int notepad_handle_click(int mouse_x, int mouse_y);
 int notepad_handle_key(char ascii_char, unsigned char scan_code);
 
+// Event Loop Entry Point (v4.0 EventUpdate)
+void notepad_main(void);
+
 #endif // NOTEPAD_H

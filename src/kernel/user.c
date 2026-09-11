@@ -249,7 +249,6 @@ static int r3_app_running = 0;
 
 static void ring3_app_worker(void) {
     r3_app_running = 1;
-    app_instance_t* inst = maxp_get_active_instance();
 
     if (r3_action == 0) {
         // Draw active application in Ring 3
@@ -279,12 +278,8 @@ static void ring3_app_worker(void) {
         }
     } else if (r3_action == 2) {
         // Keyboard handler in Ring 3
-        if (inst && !inst->is_minimized && inst->handle_key) {
-            r3_result = inst->handle_key(inst->state, r3_arg_ch, r3_arg_scan);
-            if (r3_result == -1) {
-                maxp_close_instance(inst->instance_id);
-                r3_result = 1;
-            }
+        if (maxp_get_instance_count() > 0) {
+            r3_result = maxp_handle_key_active(r3_arg_ch, r3_arg_scan);
         } else {
             if (r3_target_app == MAXP_APP_NOTEPAD) r3_result = notepad_handle_key(r3_arg_ch, r3_arg_scan);
             else if (r3_target_app == MAXP_APP_EXPLORER) r3_result = explorer_handle_key(r3_arg_ch, r3_arg_scan);

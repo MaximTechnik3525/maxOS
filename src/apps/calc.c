@@ -130,7 +130,7 @@ static void calc_render_window(int cx, int cy, int cw, int ch, calc_state_t* s) 
     maxos_draw_rect(cx, cy, cw, ch, 0x0000);
     maxos_draw_rect(cx + 1, cy + 1, cw - 2, ch - 2, 0xCE79);
     maxos_draw_rect(cx + 3, cy + 3, cw - 6, 22, 0x11EB);
-    maxos_print_text("Calculator 3.5 - [Event Loop]", cx + 8, cy + 10, 0xFFFF);
+    maxos_print_text("Calculator 4.0 - [Event Loop]", cx + 8, cy + 10, 0xFFFF);
 
     draw_ui_btn(cx + cw - 44, cy + 6, 18, 16, "_", 0xCE79, 0x0000);
     draw_ui_btn(cx + cw - 22, cy + 6, 18, 16, "X", 0xF800, 0xFFFF);
@@ -261,5 +261,5 @@ void calc_init(void) {}
 void calc_open_window(void) { maxp_spawn_instance(MAXP_APP_CALC, "Calculator", 0); }
 void calc_close_window(void) {}
 void calc_draw(void) {}
-int calc_handle_click(int mx, int my) { return 0; }
-int calc_handle_key(char ch, unsigned char scan) { return 0; }
+int calc_handle_click(int mx, int my) { (void)mx; (void)my; return 0; }
+int calc_handle_key(char ch, unsigned char scan) { (void)ch; (void)scan; return 0; }

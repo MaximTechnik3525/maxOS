@@ -33,4 +33,7 @@ void explorer_draw(void);
 int explorer_handle_click(int mouse_x, int mouse_y);
 int explorer_handle_key(char ascii_char, unsigned char scan_code);
 
+// Event Loop Entry Point (v4.0 EventUpdate)
+void explorer_main(void);
+
 #endif // EXPLORER_H

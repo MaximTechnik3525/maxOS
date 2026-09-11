@@ -248,7 +248,7 @@ void taskbar_draw(void) {
 
         // Header
         draw_rect(sm_x + 28, sm_y + 4, sm_w - 32, 22, 0x2417);
-        print_string("maxOS v3.5 MaxRing", sm_x + 34, sm_y + 8, 0xFFFF);
+        print_string("maxOS v4.0 EventUpdate", sm_x + 34, sm_y + 8, 0xFFFF);
 
         // Menu Items
         const char* sm_items[7] = {

@@ -22,7 +22,7 @@ void debug_init(void) {
     serial_initialized = 1;
 
     debug_puts("\n========================================\n");
-    debug_puts(" maxOS MaxRing v3.5 x86_64 Debug Stream\n");
+    debug_puts(" maxOS v4.0 EventUpdate x86_64 Debug Stream\n");
     debug_puts(" Diagnostic Logger active on COM1\n");
     debug_puts("========================================\n\n");
 }

@@ -5,10 +5,16 @@
 #include "user.h"
 #include "task.h"
 #include "debug.h"
+#include "../user/libc/include/maxos.h"
+#include "../user/libc/sys/syscall.h"
 
 int mem_open = 0;
 
 static mem_state_t primary_mem_state;
+static int cur_mem_x = 80;
+static int cur_mem_y = 45;
+static int cur_mem_w = 760;
+static int cur_mem_h = 490;
 
 void mem_instance_init(mem_state_t* s, int mode) {
     s->mem_view_mode = mode;
@@ -414,12 +420,10 @@ static void draw_stress_test(int sx, int sy, int sw, int sh) {
 }
 
 void mem_draw(void) {
-    prev_cursor();
-
-    int sx = win_x + 20;
-    int sy = win_y + 35;
-    int sw = win_w - 40;
-    int sh = win_h - 45;
+    int sx = cur_mem_x;
+    int sy = cur_mem_y;
+    int sw = cur_mem_w;
+    int sh = cur_mem_h;
 
     // Window frame (Classic 3D border)
     draw_rect(sx, sy, sw, sh, 0x0000);
@@ -428,9 +432,9 @@ void mem_draw(void) {
     // Titlebar
     draw_rect(sx + 2, sy + 2, sw - 4, 20, 0x041F); // Royal Cyan/Navy
     if (mem_view_mode == 2) {
-        print_string("maxOS RAM Stress Test & Diagnostic Benchmark (stress.maxP)", sx + 8, sy + 6, 0xFFFF);
+        print_string("maxOS RAM Stress Test & Diagnostic Benchmark 4.0", sx + 8, sy + 6, 0xFFFF);
     } else {
-        print_string("maxOS Memory & Task Manager (mem.maxP)", sx + 8, sy + 6, 0xFFFF);
+        print_string("maxOS Memory & Task Manager 4.0 - [Event Loop]", sx + 8, sy + 6, 0xFFFF);
     }
 
     // [_] Minimize & [X] Close button on titlebar
@@ -446,7 +450,6 @@ void mem_draw(void) {
 
     if (mem_view_mode == 1) {
         draw_task_manager(sx, sy, sw, sh);
-        draw_cursor(pos_x, pos_y);
         return;
     } else if (mem_view_mode == 2) {
         draw_stress_test(sx, sy, sw, sh);
@@ -600,17 +603,15 @@ void mem_draw(void) {
         print_string("[*] Cache Flushed!", sx + 430, sy + sh - 28, 0x03EA);
         optimize_flash = 0;
     }
-
-    draw_cursor(pos_x, pos_y);
 }
 
 int mem_handle_click(int mouse_x, int mouse_y) {
     if (!mem_open) return 0;
 
-    int sx = win_x + 20;
-    int sy = win_y + 35;
-    int sw = win_w - 40;
-    int sh = win_h - 45;
+    int sx = cur_mem_x;
+    int sy = cur_mem_y;
+    int sw = cur_mem_w;
+    int sh = cur_mem_h;
 
     // [_] Titlebar minimize button
     if (mouse_x >= sx + sw - 48 && mouse_x <= sx + sw - 26 && mouse_y >= sy && mouse_y <= sy + 24) {
@@ -948,3 +949,53 @@ void mem_instance_tick(mem_state_t* s, int sx, int sy, int sw, int sh) {
     }
     mem_tick();
 }
+
+void mem_main(void) {
+    int pid = u_getpid();
+    app_instance_t* inst = maxp_get_instance_by_pid(pid);
+    mem_state_t* s = inst ? (mem_state_t*)inst->state : &primary_mem_state;
+    int sx = inst ? inst->win_x : 80;
+    int sy = inst ? inst->win_y : 45;
+    int sw = inst ? inst->win_w : 760;
+    int sh = inst ? inst->win_h : 490;
+    cur_mem_x = sx; cur_mem_y = sy; cur_mem_w = sw; cur_mem_h = sh;
+    mem_open = 1;
+    maxos_debug_log("MEM", "Mem app started in Ring 3 Event Loop");
+
+    while (1) {
+        maxos_event_t ev;
+        if (maxos_get_event(&ev)) {
+            if (ev.type == EVENT_DRAW) {
+                if (ev.x != 0 || ev.y != 0) {
+                    sx = ev.x; sy = ev.y; sw = ev.key; sh = ev.scan;
+                    cur_mem_x = sx; cur_mem_y = sy; cur_mem_w = sw; cur_mem_h = sh;
+                }
+                mem_instance_draw(s, sx, sy, sw, sh);
+            } else if (ev.type == EVENT_CLICK) {
+                int res = mem_instance_click(s, sx, sy, sw, sh, ev.x, ev.y);
+                if (res == -1) {
+                    if (inst) maxp_close_instance(inst->instance_id);
+                    break;
+                }
+                if (res == -2) {
+                    if (inst) maxp_minimize_instance(inst->instance_id);
+                } else if (res) {
+                    mem_instance_draw(s, sx, sy, sw, sh);
+                }
+            } else if (ev.type == EVENT_KEY) {
+                int res = mem_instance_key(s, (char)ev.key, (unsigned char)ev.scan);
+                if (res == -1) {
+                    if (inst) maxp_close_instance(inst->instance_id);
+                    break;
+                }
+                if (res) {
+                    mem_instance_draw(s, sx, sy, sw, sh);
+                }
+            } else if (ev.type == EVENT_TICK) {
+                mem_instance_tick(s, sx, sy, sw, sh);
+            }
+        }
+        maxos_yield();
+    }
+}
+

@@ -84,7 +84,7 @@ set gfxmode=1024x768x16
 # Указываем GRUB передать этот графический режим ядру "как есть" (НЕ переключать в текст)
 set gfxpayload=keep
 
-menuentry "maxOS MaxRing v3.5 (x86_64 Long Mode)" {
+menuentry "maxOS v4.0 EventUpdate (x86_64 Long Mode)" {
     multiboot /boot/mykernel.bin
     boot
 }
@@ -111,7 +111,7 @@ else
 fi
 
 echo "============================================="
-echo " Сборка 64-битной maxOS v3.5 MaxRing завершена успешно!"
+echo " Сборка 64-битной maxOS v4.0 EventUpdate завершена успешно!"
 echo " Архитектура: x86_64 (Long Mode)"
 echo " ISO файл: maxos.iso"
 echo " HDD диск: maxos_disk.img"

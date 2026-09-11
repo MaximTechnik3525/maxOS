@@ -4,6 +4,8 @@
 #include "maxp.h"
 #include "kernel.h"
 #include "string.h"
+#include "../user/libc/include/maxos.h"
+#include "../user/libc/sys/syscall.h"
 
 extern const unsigned char mbr_boot_code[512];
 
@@ -44,15 +46,13 @@ static void draw_progress_bar(int px, int py, int pw, int ph, int pct) {
 }
 
 void installer_instance_draw(installer_state_t* s, int inst_x, int inst_y, int inst_w, int inst_h) {
-    prev_cursor();
-
     // Window frame
     draw_rect(inst_x, inst_y, inst_w, inst_h, 0x0000);
     draw_rect(inst_x + 1, inst_y + 1, inst_w - 2, inst_h - 2, 0xEF59);
 
     // Titlebar
     draw_rect(inst_x + 2, inst_y + 2, inst_w - 4, 20, 0x11EB);
-    print_string("maxOS System Setup & Installer v3.5", inst_x + 8, inst_y + 6, 0xFFFF);
+    print_string("maxOS System Setup & Installer 4.0", inst_x + 8, inst_y + 6, 0xFFFF);
 
     // [_] Minimize & [X] Close button
     draw_ui_btn(inst_x + inst_w - 44, inst_y + 4, 18, 16, "_", 0xCE79, 0x0000);
@@ -126,6 +126,7 @@ void installer_instance_draw(installer_state_t* s, int inst_x, int inst_y, int i
 }
 
 static void installer_set_step(installer_state_t* s, int inst_x, int inst_y, int inst_w, int inst_h, int pct, const char* msg) {
+    (void)inst_h;
     if (s) {
         s->install_progress = pct;
         strncpy(s->install_status, msg, sizeof(s->install_status) - 1);
@@ -137,8 +138,6 @@ static void installer_set_step(installer_state_t* s, int inst_x, int inst_y, int
     draw_progress_bar(inst_x + 25, inst_y + 172, inst_w - 50, 22, s ? s->install_progress : 0);
     draw_rect(inst_x + 25, inst_y + 104, inst_w - 50, 20, 0xEF59); // Clear background
     print_string((char*)msg, inst_x + 25, inst_y + 104, 0x0200);
-
-    draw_cursor(pos_x, pos_y);
 }
 
 static void installer_run_install(installer_state_t* s, int inst_x, int inst_y, int inst_w, int inst_h) {
@@ -178,22 +177,22 @@ static void installer_run_install(installer_state_t* s, int inst_x, int inst_y, 
     // Step 4: Write default configuration & documents
     installer_set_step(s, inst_x, inst_y, inst_w, inst_h, 80, "4/5: Writing system configs and documents...");
     play_sound(950); sleep(100); no_sound();
-    const char* sys_cfg = "theme=1\nresolution=1024x768x16\nos=maxOS MaxRing v3.5 x86_64\n";
+    const char* sys_cfg = "theme=1\nresolution=1024x768x16\nos=maxOS v4.0 EventUpdate x86_64\n";
     maxfs_write_file("system.cfg", sys_cfg, (unsigned int)strlen(sys_cfg));
-    const char* wel_txt = "Welcome to maxOS v3.5 MaxRing x86_64!\nInstalled on your real Hard Disk with maxFS 2.0.";
+    const char* wel_txt = "Welcome to maxOS v4.0 EventUpdate x86_64!\nInstalled on your real Hard Disk with maxFS 2.0.";
     maxfs_write_file("welcome.txt", wel_txt, (unsigned int)strlen(wel_txt));
-    const char* rdm_txt = "maxOS MaxRing 3.5 (x86_64 Long Mode)\nPrograms use .maxP extension!\nAll edits persist!";
+    const char* rdm_txt = "maxOS v4.0 EventUpdate (x86_64 Long Mode)\nPrograms use .maxP & .bin extension!\nAll edits persist!";
     maxfs_write_file("readme.txt", rdm_txt, (unsigned int)strlen(rdm_txt));
     maxfs_write_file("notes.txt", "Sample document stored on hard drive sectors.\nOpen and edit in Notepad!", 71);
-    const char* np_desc = "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 3.5 Text Editor\n";
+    const char* np_desc = "MAXP\nNAME=Notepad\nEXEC=notepad\nICON=NP\nDESC=maxOS Notepad 4.0 Text Editor\n";
     maxfs_write_file("notepad.maxP", np_desc, (unsigned int)strlen(np_desc));
-    maxfs_write_file("explorer.maxP", "MAXP\nNAME=Explorer\nEXEC=explorer\nICON=EXP\nDESC=File & Disk Manager\n", 67);
-    maxfs_write_file("calc.maxP", "MAXP\nNAME=Calculator\nEXEC=calc\nICON=CALC\nDESC=Desktop GUI Calculator\n", 71);
-    maxfs_write_file("sysinfo.maxP", "MAXP\nNAME=SysInfo\nEXEC=sysinfo\nICON=CPU\nDESC=x86_64 Long Mode System Info\n", 76);
-    maxfs_write_file("pong.maxP", "MAXP\nNAME=Pong\nEXEC=pong\nICON=PONG\nDESC=Retro Pong Arcade Game\n", 64);
-    maxfs_write_file("install.maxP", "MAXP\nNAME=Installer\nEXEC=installer\nICON=INST\nDESC=maxOS System Setup & HDD Installer\n", 83);
-    maxfs_write_file("mem.maxP", "MAXP\nNAME=Mem\nEXEC=mem\nICON=MEM\nDESC=maxOS RAM & Memory Monitor\n", 66);
-    maxfs_write_file("stress.maxP", "MAXP\nNAME=StressTest\nEXEC=stress\nICON=RAM\nDESC=RAM Hardware Stress Test & Benchmark\n", 79);
+    maxfs_write_file("explorer.maxP", "MAXP\nNAME=Explorer\nEXEC=explorer\nICON=EXP\nDESC=File & Disk Manager 4.0\n", 71);
+    maxfs_write_file("calc.maxP", "MAXP\nNAME=Calculator\nEXEC=calc\nICON=CALC\nDESC=Desktop GUI Calculator 4.0\n", 75);
+    maxfs_write_file("sysinfo.maxP", "MAXP\nNAME=SysInfo\nEXEC=sysinfo\nICON=CPU\nDESC=x86_64 Long Mode System Info 4.0\n", 80);
+    maxfs_write_file("pong.maxP", "MAXP\nNAME=Pong\nEXEC=pong\nICON=PONG\nDESC=Retro Pong Arcade Game 4.0\n", 68);
+    maxfs_write_file("install.maxP", "MAXP\nNAME=Installer\nEXEC=installer\nICON=INST\nDESC=maxOS System Setup & HDD Installer 4.0\n", 87);
+    maxfs_write_file("mem.maxP", "MAXP\nNAME=Mem\nEXEC=mem\nICON=MEM\nDESC=maxOS RAM & Memory Monitor 4.0\n", 70);
+    maxfs_write_file("stress.maxP", "MAXP\nNAME=StressTest\nEXEC=stress\nICON=RAM\nDESC=RAM Hardware Stress Test & Benchmark 4.0\n", 83);
 
     // Step 5: Flush cache & verify
     installer_set_step(s, inst_x, inst_y, inst_w, inst_h, 100, "5/5: Verifying & Flushing ATA cache...");
@@ -309,3 +308,49 @@ int installer_handle_key(char ascii_char, unsigned char scan_code) {
     }
     return res;
 }
+
+void installer_main(void) {
+    int pid = u_getpid();
+    app_instance_t* inst = maxp_get_instance_by_pid(pid);
+    installer_state_t* s = inst ? (installer_state_t*)inst->state : &primary_installer_state;
+    int ix = inst ? inst->win_x : 120;
+    int iy = inst ? inst->win_y : 60;
+    int iw = inst ? inst->win_w : 640;
+    int ih = inst ? inst->win_h : 440;
+    installer_open = 1;
+    maxos_debug_log("INSTALLER", "Installer app started in Ring 3 Event Loop");
+
+    while (1) {
+        maxos_event_t ev;
+        if (maxos_get_event(&ev)) {
+            if (ev.type == EVENT_DRAW) {
+                if (ev.x != 0 || ev.y != 0) {
+                    ix = ev.x; iy = ev.y; iw = ev.key; ih = ev.scan;
+                }
+                installer_instance_draw(s, ix, iy, iw, ih);
+            } else if (ev.type == EVENT_CLICK) {
+                int res = installer_instance_click(s, ix, iy, iw, ih, ev.x, ev.y);
+                if (res == -1) {
+                    if (inst) maxp_close_instance(inst->instance_id);
+                    break;
+                }
+                if (res == -2) {
+                    if (inst) maxp_minimize_instance(inst->instance_id);
+                } else if (res) {
+                    installer_instance_draw(s, ix, iy, iw, ih);
+                }
+            } else if (ev.type == EVENT_KEY) {
+                int res = installer_instance_key(s, (char)ev.key, (unsigned char)ev.scan);
+                if (res == -1) {
+                    if (inst) maxp_close_instance(inst->instance_id);
+                    break;
+                }
+                if (res) {
+                    installer_instance_draw(s, ix, iy, iw, ih);
+                }
+            }
+        }
+        maxos_yield();
+    }
+}
+

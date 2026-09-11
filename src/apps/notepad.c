@@ -2,6 +2,8 @@
 #include "maxfs.h"
 #include "maxp.h"
 #include "kernel.h"
+#include "../user/libc/include/maxos.h"
+#include "../user/libc/sys/syscall.h"
 
 extern int km_mode;
 
@@ -293,8 +295,6 @@ static void notepad_instance_draw_file_picker(notepad_state_t* s, int np_x, int 
 }
 
 void notepad_instance_draw(notepad_state_t* s, int np_x, int np_y, int np_w, int np_h) {
-    prev_cursor();
-
     // Window frame
     draw_rect(np_x, np_y, np_w, np_h, 0x0000);
     draw_rect(np_x + 1, np_y + 1, np_w - 2, np_h - 2, 0xEF59);
@@ -302,16 +302,9 @@ void notepad_instance_draw(notepad_state_t* s, int np_x, int np_y, int np_w, int
     // Titlebar
     draw_rect(np_x + 2, np_y + 2, np_w - 4, 20, 0x24EE);
     char title[64];
-    title[0] = 'm'; title[1] = 'a'; title[2] = 'x'; title[3] = 'O'; title[4] = 'S';
-    title[5] = ' '; title[6] = 'N'; title[7] = 'o'; title[8] = 't'; title[9] = 'e';
-    title[10] = 'p'; title[11] = 'a'; title[12] = 'd'; title[13] = ' ';
-    title[14] = '3'; title[15] = '.'; title[16] = '2'; title[17] = ' ';
-    title[18] = '-'; title[19] = ' ';
-    title[20] = '[';
-    int tp = 21;
-    for (int i = 0; s->fname_input[i] != '\0' && tp < 55; i++) title[tp++] = s->fname_input[i];
-    title[tp++] = ']';
-    title[tp] = '\0';
+    strcpy(title, "maxOS Notepad 4.0 - [");
+    strncat(title, s->fname_input, 30);
+    strcat(title, "]");
     print_string(title, np_x + 8, np_y + 6, 0xFFFF);
 
     // [_] Minimize & [X] Close button (Titlebar)
@@ -333,8 +326,6 @@ void notepad_instance_draw(notepad_state_t* s, int np_x, int np_y, int np_w, int
     if (s->file_picker_open) {
         notepad_instance_draw_file_picker(s, np_x, np_y, np_w, np_h);
     }
-
-    draw_cursor(pos_x, pos_y);
 }
 
 int notepad_instance_click(notepad_state_t* s, int np_x, int np_y, int np_w, int np_h, int mouse_x, int mouse_y) {
@@ -672,3 +663,49 @@ int notepad_handle_key(char ascii_char, unsigned char scan_code) {
     }
     return res;
 }
+
+void notepad_main(void) {
+    int pid = u_getpid();
+    app_instance_t* inst = maxp_get_instance_by_pid(pid);
+    notepad_state_t* s = inst ? (notepad_state_t*)inst->state : &primary_notepad_state;
+    int np_x = inst ? inst->win_x : 90;
+    int np_y = inst ? inst->win_y : 45;
+    int np_w = inst ? inst->win_w : 780;
+    int np_h = inst ? inst->win_h : 520;
+    notepad_open = 1;
+    maxos_debug_log("NOTEPAD", "Notepad app started in Ring 3 Event Loop");
+
+    while (1) {
+        maxos_event_t ev;
+        if (maxos_get_event(&ev)) {
+            if (ev.type == EVENT_DRAW) {
+                if (ev.x != 0 || ev.y != 0) {
+                    np_x = ev.x; np_y = ev.y; np_w = ev.key; np_h = ev.scan;
+                }
+                notepad_instance_draw(s, np_x, np_y, np_w, np_h);
+            } else if (ev.type == EVENT_CLICK) {
+                int res = notepad_instance_click(s, np_x, np_y, np_w, np_h, ev.x, ev.y);
+                if (res == -1) {
+                    if (inst) maxp_close_instance(inst->instance_id);
+                    break;
+                }
+                if (res == -2) {
+                    if (inst) maxp_minimize_instance(inst->instance_id);
+                } else if (res) {
+                    notepad_instance_draw(s, np_x, np_y, np_w, np_h);
+                }
+            } else if (ev.type == EVENT_KEY) {
+                int res = notepad_instance_key(s, (char)ev.key, (unsigned char)ev.scan);
+                if (res == -1) {
+                    if (inst) maxp_close_instance(inst->instance_id);
+                    break;
+                }
+                if (res) {
+                    notepad_instance_draw(s, np_x, np_y, np_w, np_h);
+                }
+            }
+        }
+        maxos_yield();
+    }
+}
+

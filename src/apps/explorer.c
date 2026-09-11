@@ -4,6 +4,8 @@
 #include "ata.h"
 #include "maxp.h"
 #include "kernel.h"
+#include "../user/libc/include/maxos.h"
+#include "../user/libc/sys/syscall.h"
 
 int explorer_open = 0;
 static explorer_state_t primary_explorer_state;
@@ -22,15 +24,13 @@ void explorer_instance_init(explorer_state_t* s) {
 }
 
 void explorer_instance_draw(explorer_state_t* s, int exp_x, int exp_y, int exp_w, int exp_h) {
-    prev_cursor();
-
     // Window frame
     draw_rect(exp_x, exp_y, exp_w, exp_h, 0x0000);
     draw_rect(exp_x + 1, exp_y + 1, exp_w - 2, exp_h - 2, 0xEF59);
 
     // Titlebar
     draw_rect(exp_x + 2, exp_y + 2, exp_w - 4, 20, 0x0320);
-    print_string("maxOS Explorer 3.5 - Filesystem & Disk Manager", exp_x + 8, exp_y + 6, 0xFFFF);
+    print_string("maxOS Explorer 4.0 - Filesystem & Disk Manager", exp_x + 8, exp_y + 6, 0xFFFF);
 
     // [_] Minimize & [X] Close button (Titlebar)
     draw_ui_btn(exp_x + exp_w - 44, exp_y + 4, 18, 16, "_", 0xCE79, 0x0000);
@@ -225,8 +225,6 @@ void explorer_instance_draw(explorer_state_t* s, int exp_x, int exp_y, int exp_w
     if (s->dlg.active) {
         dialog_draw(&s->dlg);
     }
-
-    draw_cursor(pos_x, pos_y);
 }
 
 int explorer_instance_click(explorer_state_t* s, int exp_x, int exp_y, int exp_w, int exp_h, int mouse_x, int mouse_y) {
@@ -720,3 +718,49 @@ int explorer_handle_key(char ascii_char, unsigned char scan_code) {
     }
     return res;
 }
+
+void explorer_main(void) {
+    int pid = u_getpid();
+    app_instance_t* inst = maxp_get_instance_by_pid(pid);
+    explorer_state_t* s = inst ? (explorer_state_t*)inst->state : &primary_explorer_state;
+    int exp_x = inst ? inst->win_x : 70;
+    int exp_y = inst ? inst->win_y : 45;
+    int exp_w = inst ? inst->win_w : 780;
+    int exp_h = inst ? inst->win_h : 520;
+    explorer_open = 1;
+    maxos_debug_log("EXPLORER", "Explorer app started in Ring 3 Event Loop");
+
+    while (1) {
+        maxos_event_t ev;
+        if (maxos_get_event(&ev)) {
+            if (ev.type == EVENT_DRAW) {
+                if (ev.x != 0 || ev.y != 0) {
+                    exp_x = ev.x; exp_y = ev.y; exp_w = ev.key; exp_h = ev.scan;
+                }
+                explorer_instance_draw(s, exp_x, exp_y, exp_w, exp_h);
+            } else if (ev.type == EVENT_CLICK) {
+                int res = explorer_instance_click(s, exp_x, exp_y, exp_w, exp_h, ev.x, ev.y);
+                if (res == -1) {
+                    if (inst) maxp_close_instance(inst->instance_id);
+                    break;
+                }
+                if (res == -2) {
+                    if (inst) maxp_minimize_instance(inst->instance_id);
+                } else if (res) {
+                    explorer_instance_draw(s, exp_x, exp_y, exp_w, exp_h);
+                }
+            } else if (ev.type == EVENT_KEY) {
+                int res = explorer_instance_key(s, (char)ev.key, (unsigned char)ev.scan);
+                if (res == -1) {
+                    if (inst) maxp_close_instance(inst->instance_id);
+                    break;
+                }
+                if (res) {
+                    explorer_instance_draw(s, exp_x, exp_y, exp_w, exp_h);
+                }
+            }
+        }
+        maxos_yield();
+    }
+}
+

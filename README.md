@@ -17,6 +17,25 @@ sleep - makes delay for 2s.
 errscr - running the error screen.
 trailon, trailoff - enables and disables cursor trail.
 
+### maxOS 4.0 (EventUpdate - Pure Event-Driven Ring 3 Architecture) Features:
+- **Universal Event Loop (`while(1)`) & Message Queuing**:
+  - Every application is migrated from synchronous callbacks to an asynchronous non-blocking event-driven loop.
+  - Per-process event queues (`task_push_event` / `maxos_get_event`) dispatching `EVENT_DRAW`, `EVENT_CLICK`, `EVENT_KEY`, and `EVENT_TICK`.
+  - Non-blocking cooperative yielding via `maxos_yield()` coupled with PIT 1000Hz preemptive time-slicing.
+  - Complete application suite rewrite:
+    - `notepad.maxP` (`src/apps/notepad.c`): Notepad 4.0 [Event Loop] with responsive text editing, file dialogs, and color picker.
+    - `explorer.maxP` (`src/apps/explorer.c`): Explorer 4.0 [Event Loop] with real-time directory listing, maxFS disk manager, and file execution.
+    - `calc.maxP` (`src/apps/calc.c`): Calculator 4.0 [Event Loop] with 3D button depression, aligned LCD layout, and floating-point math.
+    - `sysinfo.maxP` (`src/apps/sysinfo.c`): SysInfo 4.0 [Event Loop] with live CPU / RAM / VBE inspection.
+    - `pong.maxP` (`src/apps/pong.c`): Pong Arcade 4.0 [Event Loop] with event-driven 60 FPS paddle & ball physics via `EVENT_TICK`.
+    - `mem.maxP` (`src/apps/mem.c`): Mem & Task Manager 4.0 [Event Loop] with background RAM stress testing engine and live process table.
+    - `install.maxP` (`src/apps/installer.c`): System Installer 4.0 [Event Loop] with disk partitioner, MBR installer, and pre-seeded apps.
+- **Glitch-Free Compositing**:
+  - Elimination of in-app cursor draws preventing ghosting and tearing; mouse pointer compositing handled centrally by kernel desktop loop.
+- **Ring 3 Standard C Library (`src/user/libc/`)**:
+  - Independent user-space libc with `stdio.h`, `stdlib.h`, `string.h` and system call wrappers.
+  - Robust per-task kernel syscall stacks (`kstack`) preventing stack corruption on reentrant interrupts.
+
 ### maxOS 3.5 (MaxRing Multi-Instance & Window Management) Features:
 - **Window Minimize `[_]` Support & Titlebar Controls**:
   - Dedicated `[_]` minimize button across all application windows (`Notepad`, `Explorer`, `Calculator`, `SysInfo`, `Pong`, `Installer`, `Mem / Tasks`).
