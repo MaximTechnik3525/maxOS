@@ -2,7 +2,7 @@
 #include "pmm.h"
 
 // Very simple block allocator over PMM
-#define HEAP_PAGES 1024 // 4 MB kernel heap
+#define HEAP_PAGES 8192 // 32 MB kernel heap
 static unsigned char* heap_base = 0;
 static unsigned int heap_ptr = 0;
 

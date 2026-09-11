@@ -9,7 +9,11 @@
 
 static task_t tasks[MAX_TASKS];
 static task_t* current_task = 0;
-static int scheduler_active = 0;
+int current_pid = -1;
+int scheduler_active = 0;
+
+unsigned long long current_kstack_top = 0;
+
 static unsigned char default_fpu[512] __attribute__((aligned(16)));
 static int fpu_initialized = 0;
 
@@ -47,13 +51,14 @@ void task_init(void) {
     tasks[0].pid = 0;
     strncpy(tasks[0].name, "kernel_main", sizeof(tasks[0].name) - 1);
     tasks[0].state = TASK_RUNNING;
-    tasks[0].priority = TASK_PRIORITY_HIGH; // High priority for smooth UI and desktop
+    tasks[0].priority = TASK_PRIORITY_NORMAL; // Equal priority with user processes for fair round-robin
     tasks[0].is_user = 0;
-    tasks[0].time_slice = sched_get_quantum(TASK_PRIORITY_HIGH);
+    tasks[0].time_slice = sched_get_quantum(TASK_PRIORITY_NORMAL);
     tasks[0].kstack_top = (unsigned long long)&interrupt_stack_top;
     memcpy(tasks[0].fpu_state, default_fpu, sizeof(default_fpu));
 
     current_task = &tasks[0];
+    current_kstack_top = current_task->kstack_top;
     scheduler_active = 1;
 
     debug_log("SCHED", "Preemptive Multitasking Scheduler Initialized (PID 0 active)");
@@ -359,6 +364,7 @@ unsigned long long schedule_tick(unsigned long long current_rsp) {
             tasks[0].state = TASK_RUNNING;
             tasks[0].time_slice = sched_get_quantum(tasks[0].priority);
             current_task = &tasks[0];
+            current_kstack_top = tasks[0].kstack_top;
             tss_set_rsp0(tasks[0].kstack_top);
             if (tasks[0].cr3) {
                 __asm__ __volatile__("mov %0, %%cr3" : : "r" (tasks[0].cr3));
@@ -375,6 +381,7 @@ unsigned long long schedule_tick(unsigned long long current_rsp) {
     next->state = TASK_RUNNING;
     next->time_slice = sched_get_quantum(next->priority);
     current_task = next;
+    current_kstack_top = next->kstack_top;
 
     // Load next task's kernel stack top into TSS.rsp0 for privilege transitions
     tss_set_rsp0(next->kstack_top);

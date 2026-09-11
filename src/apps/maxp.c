@@ -2,7 +2,6 @@
 #include "maxb.h"
 #include "app_binaries.h"
 #include "../kernel/event.h"
-#include "maxfs.h"
 #include "notepad.h"
 #include "explorer.h"
 #include "installer.h"
@@ -10,9 +9,12 @@
 #include "sysinfo.h"
 #include "pong.h"
 #include "mem.h"
-#include "kernel.h"
-#include "taskbar.h"
-#include "task.h"
+#include "maxfs.h"
+#include "../kernel/kernel.h"
+#include "../kernel/task.h"
+#include "../kernel/taskbar.h"
+#include "../kernel/malloc.h"
+#include "../user/libc/include/string.h"
 #include "debug.h"
 
 static int active_app_id = MAXP_APP_NONE;
@@ -82,11 +84,14 @@ app_instance_t* maxp_get_instance(int instance_id) {
 }
 
 app_instance_t* maxp_get_instance_by_index(int index) {
-    int cur = 0;
+    if (index < 0 || index >= MAX_APP_INSTANCES) return 0;
+    return &instances[index];
+}
+
+app_instance_t* maxp_get_instance_by_pid(int pid) {
     for (int i = 0; i < MAX_APP_INSTANCES; i++) {
-        if (instances[i].instance_id != 0) {
-            if (cur == index) return &instances[i];
-            cur++;
+        if (instances[i].instance_id != 0 && instances[i].pid == pid) {
+            return &instances[i];
         }
     }
     return 0;
@@ -231,6 +236,7 @@ int maxp_spawn_instance(int app_type, const char* custom_title, const char* file
 
     inst->tick = 0;
     inst->close = 0;
+    inst->pid = 0;
 
     switch (app_type) {
         case MAXP_APP_NOTEPAD:
@@ -284,16 +290,19 @@ int maxp_spawn_instance(int app_type, const char* custom_title, const char* file
             explorer_open = 1;
             break;
 
-        case MAXP_APP_SYSINFO:
+        case MAXP_APP_SYSINFO: {
+            extern void sysinfo_main(void);
             inst->win_x = 140 + stagger; inst->win_y = 55 + stagger;
             inst->win_w = 540; inst->win_h = 380;
             str_copy_limit(inst->icon, "CPU", 8);
             inst->icon_color = 0x0DE5;
-            inst->draw = (void (*)(void*, int, int, int, int))sysinfo_instance_draw;
-            inst->handle_click = (int (*)(void*, int, int, int, int, int, int))sysinfo_instance_click;
-            inst->handle_key = (int (*)(void*, char, unsigned char))sysinfo_instance_key;
+            inst->draw = 0;
+            inst->handle_click = 0;
+            inst->handle_key = 0;
+            inst->pid = task_create("sysinfo", sysinfo_main, 1, app_type);
             sysinfo_open = 1;
             break;
+        }
 
         case MAXP_APP_MEM:
             inst->win_x = 80 + stagger; inst->win_y = 45 + stagger;
@@ -337,11 +346,20 @@ int maxp_spawn_instance(int app_type, const char* custom_title, const char* file
             return 0;
     }
 
-    inst->pid = task_create(inst->title, 0, 1, app_type);
+    if (inst->pid == 0) {
+        inst->pid = task_create(inst->title, 0, 1, app_type);
+    }
+    
     active_instance_id = inst->instance_id;
     active_app_id = app_type;
     drag = 1;
     taskbar_set_app_minimized(0);
+    
+    // Initial draw event
+    if (inst->pid > 0) {
+        task_push_event(inst->pid, EVENT_DRAW, inst->win_x, inst->win_y, inst->win_w, inst->win_h);
+    }
+    
     draw_window();
     play_sound(750); sleep(30); play_sound(1100); sleep(40); no_sound();
     return inst->instance_id;
@@ -445,13 +463,16 @@ void maxp_close_all_windows(void) {
     active_app_id = MAXP_APP_NONE;
 }
 
+extern unsigned short* _gfx_memory_backend;
+
 void maxp_draw_active_instance(void) {
     app_instance_t* inst = maxp_get_active_instance();
     if (inst && !inst->is_minimized) {
         if (inst->draw) {
             inst->draw(inst->state, inst->win_x, inst->win_y, inst->win_w, inst->win_h);
         } else if (inst->pid > 0) {
-            task_push_event(inst->pid, EVENT_DRAW, 0, 0, 0, 0);
+            // Async Ring 3 app: tell it to redraw itself
+            task_push_event(inst->pid, EVENT_DRAW, inst->win_x, inst->win_y, inst->win_w, inst->win_h);
         }
     }
 }
@@ -463,7 +484,7 @@ void maxp_draw_all_instances(void) {
             if (instances[i].draw) {
                 instances[i].draw(instances[i].state, instances[i].win_x, instances[i].win_y, instances[i].win_w, instances[i].win_h);
             } else if (instances[i].pid > 0) {
-                task_push_event(instances[i].pid, EVENT_DRAW, 0, 0, 0, 0);
+                task_push_event(instances[i].pid, EVENT_DRAW, instances[i].win_x, instances[i].win_y, instances[i].win_w, instances[i].win_h);
             }
         }
     }

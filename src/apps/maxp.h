@@ -70,6 +70,7 @@ void maxp_close_all_windows(void);
 int maxp_get_instance_count(void);
 app_instance_t* maxp_get_instance(int instance_id);
 app_instance_t* maxp_get_instance_by_index(int index);
+app_instance_t* maxp_get_instance_by_pid(int pid);
 app_instance_t* maxp_get_active_instance(void);
 int maxp_get_active_instance_id(void);
 void maxp_set_active_instance(int instance_id);

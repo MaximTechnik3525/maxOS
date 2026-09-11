@@ -118,66 +118,134 @@ static void draw_ui_btn(int x, int y, int w, int h, const char* label, unsigned 
     maxos_print_text(label, x + (w / 2) - (strlen(label) * 4), y + (h / 2) - 8, text_col);
 }
 
+static void calc_render_lcd(int cx, int cy, int cw, const char* buf) {
+    maxos_draw_rect(cx + 16, cy + 32, cw - 32, 48, 0x0000);
+    maxos_print_text(buf, cx + 26, cy + 48, 0xFFFF);
+}
+
+static void calc_render_window(int cx, int cy, int cw, int ch, calc_state_t* s) {
+    maxos_draw_rect(cx, cy, cw, ch, 0x0000);
+    maxos_draw_rect(cx + 1, cy + 1, cw - 2, ch - 2, 0xCE79);
+    maxos_draw_rect(cx + 3, cy + 3, cw - 6, 22, 0x11EB);
+    maxos_print_text("Calculator 3.5 - [Event Loop]", cx + 8, cy + 8, 0xFFFF);
+
+    draw_ui_btn(cx + cw - 44, cy + 5, 18, 16, "_", 0xCE79, 0x0000);
+    draw_ui_btn(cx + cw - 22, cy + 5, 18, 16, "X", 0xF800, 0xFFFF);
+    
+    // LCD
+    calc_render_lcd(cx, cy, cw, s->entry_buf);
+
+    for (int r = 0; r < 5; r++) {
+        for (int c = 0; c < 4; c++) {
+            int bx = cx + 16 + c * 80;
+            int by = cy + 90 + r * 56;
+            draw_ui_btn(bx, by, 68, 50, calc_labels[r][c], calc_fills[r][c], (r==4&&c==3)?0xFFFF:0x0000);
+        }
+    }
+}
+
 void calc_main(void) {
     calc_state_t state;
     calc_instance_init(&state);
     
-    // In future, maxos_create_window() will return win_x, win_y, etc.
-    // For now, since we are a built-in app spawned by maxp_spawn_instance,
-    // maxp has assigned us some coordinates, but we don't have them in our address space easily.
-    // Wait, in maxp.c: inst->pid = task_create("calc", calc_main, 1, app_type);
-    // So we don't know our coordinates yet! We need a syscall `SYS_GET_WINDOW_GEOMETRY` or we can hardcode.
-    // Let's hardcode for testing.
     int cx = 180, cy = 60, cw = 340, ch = 380;
+    maxos_debug_log("CALC", "Calculator app started in Ring 3 Event Loop");
 
     while (1) {
         maxos_event_t ev;
         if (maxos_get_event(&ev)) {
             if (ev.type == EVENT_DRAW) {
-                maxos_draw_rect(cx, cy, cw, ch, 0x0000);
-                maxos_draw_rect(cx + 1, cy + 1, cw - 2, ch - 2, 0xCE79);
-                maxos_draw_rect(cx + 3, cy + 3, cw - 6, 22, 0x11EB);
-                maxos_print_text("Calculator 3.5 - [Event Loop]", cx + 8, cy + 8, 0xFFFF);
-                
-                // LCD
-                maxos_draw_rect(cx + 16, cy + 32, cw - 32, 48, 0x0000);
-                maxos_print_text(state.entry_buf, cx + 26, cy + 48, 0xFFFF);
+                if (ev.x != 0 || ev.y != 0) {
+                    cx = ev.x; cy = ev.y; cw = ev.key; ch = ev.scan;
+                }
+                calc_render_window(cx, cy, cw, ch, &state);
+            } else if (ev.type == EVENT_CLICK) {
+                int mouse_x = ev.x;
+                int mouse_y = ev.y;
 
                 for (int r = 0; r < 5; r++) {
                     for (int c = 0; c < 4; c++) {
                         int bx = cx + 16 + c * 80;
                         int by = cy + 90 + r * 56;
-                        draw_ui_btn(bx, by, 68, 50, calc_labels[r][c], calc_fills[r][c], (r==4&&c==3)?0xFFFF:0x0000);
-                    }
-                }
-            }
-            if (ev.type == EVENT_CLICK) {
-                // Click parsing
-                for (int r = 0; r < 5; r++) {
-                    for (int c = 0; c < 4; c++) {
-                        int bx = cx + 16 + c * 80;
-                        int by = cy + 90 + r * 56;
-                        if (ev.x >= bx && ev.x <= bx + 68 && ev.y >= by && ev.y <= by + 50) {
+                        if (mouse_x >= bx && mouse_x <= bx + 68 && mouse_y >= by && mouse_y <= by + 50) {
                             if (r == 0 && c == 0) calc_clear_all(&state);
-                            if (r == 1 && c == 0) calc_input_digit(&state, 7);
-                            if (r == 1 && c == 1) calc_input_digit(&state, 8);
-                            if (r == 1 && c == 2) calc_input_digit(&state, 9);
-                            if (r == 2 && c == 0) calc_input_digit(&state, 4);
-                            if (r == 2 && c == 1) calc_input_digit(&state, 5);
-                            if (r == 2 && c == 2) calc_input_digit(&state, 6);
-                            if (r == 3 && c == 0) calc_input_digit(&state, 1);
-                            if (r == 3 && c == 1) calc_input_digit(&state, 2);
-                            if (r == 3 && c == 2) calc_input_digit(&state, 3);
-                            if (r == 4 && c == 1) calc_input_digit(&state, 0);
-                            
-                            if (r == 3 && c == 3) calc_input_op(&state, '+');
-                            if (r == 2 && c == 3) calc_input_op(&state, '-');
-                            if (r == 1 && c == 3) calc_input_op(&state, '*');
-                            if (r == 0 && c == 3) calc_input_op(&state, '/');
-                            if (r == 4 && c == 3) calc_input_equals(&state);
+                            else if (r == 0 && c == 1) calc_clear_all(&state);
+                            else if (r == 0 && c == 2) {
+                                int len = strlen(state.entry_buf);
+                                if (len > 1) {
+                                    state.entry_buf[len - 1] = '\0';
+                                } else {
+                                    state.entry_buf[0] = '0';
+                                    state.entry_buf[1] = '\0';
+                                    state.is_new_entry = 1;
+                                }
+                            }
+                            else if (r == 0 && c == 3) calc_input_op(&state, '/');
+                            else if (r == 1 && c == 0) calc_input_digit(&state, 7);
+                            else if (r == 1 && c == 1) calc_input_digit(&state, 8);
+                            else if (r == 1 && c == 2) calc_input_digit(&state, 9);
+                            else if (r == 1 && c == 3) calc_input_op(&state, '*');
+                            else if (r == 2 && c == 0) calc_input_digit(&state, 4);
+                            else if (r == 2 && c == 1) calc_input_digit(&state, 5);
+                            else if (r == 2 && c == 2) calc_input_digit(&state, 6);
+                            else if (r == 2 && c == 3) calc_input_op(&state, '-');
+                            else if (r == 3 && c == 0) calc_input_digit(&state, 1);
+                            else if (r == 3 && c == 1) calc_input_digit(&state, 2);
+                            else if (r == 3 && c == 2) calc_input_digit(&state, 3);
+                            else if (r == 3 && c == 3) calc_input_op(&state, '+');
+                            else if (r == 4 && c == 0) {
+                                if (state.entry_buf[0] == '-') {
+                                    int l = strlen(state.entry_buf);
+                                    for (int i = 0; i < l; i++) {
+                                        state.entry_buf[i] = state.entry_buf[i + 1];
+                                    }
+                                } else if (state.entry_buf[0] != '0') {
+                                    int l = strlen(state.entry_buf);
+                                    if (l < 14) {
+                                        for (int i = l; i >= 0; i--) {
+                                            state.entry_buf[i + 1] = state.entry_buf[i];
+                                        }
+                                        state.entry_buf[0] = '-';
+                                    }
+                                }
+                            }
+                            else if (r == 4 && c == 1) calc_input_digit(&state, 0);
+                            else if (r == 4 && c == 2) {
+                                int has_dot = 0;
+                                for (int i = 0; state.entry_buf[i]; i++) {
+                                    if (state.entry_buf[i] == '.') has_dot = 1;
+                                }
+                                if (!has_dot) {
+                                    int len = strlen(state.entry_buf);
+                                    if (len < 14) {
+                                        state.entry_buf[len] = '.';
+                                        state.entry_buf[len + 1] = '\0';
+                                    }
+                                }
+                            }
+                            else if (r == 4 && c == 3) calc_input_equals(&state);
                             maxos_play_sound(800, 15);
+                            calc_render_lcd(cx, cy, cw, state.entry_buf);
                         }
                     }
+                }
+            } else if (ev.type == EVENT_KEY) {
+                char ch = (char)ev.key;
+                if (ch >= '0' && ch <= '9') {
+                    calc_input_digit(&state, ch - '0');
+                    maxos_play_sound(800, 15);
+                    calc_render_lcd(cx, cy, cw, state.entry_buf);
+                } else if (ch == '+' || ch == '-' || ch == '*' || ch == '/') {
+                    calc_input_op(&state, ch);
+                    maxos_play_sound(900, 15);
+                    calc_render_lcd(cx, cy, cw, state.entry_buf);
+                } else if (ch == '=' || ch == '\n' || ev.scan == 0x1C) {
+                    calc_input_equals(&state);
+                    maxos_play_sound(1000, 20);
+                    calc_render_lcd(cx, cy, cw, state.entry_buf);
+                } else if (ch == 'c' || ch == 'C' || ev.scan == 0x53) {
+                    calc_clear_all(&state);
+                    calc_render_lcd(cx, cy, cw, state.entry_buf);
                 }
             }
         }

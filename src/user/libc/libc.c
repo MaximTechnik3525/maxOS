@@ -44,6 +44,10 @@ void maxos_yield(void) {
     u_yield();
 }
 
+void maxos_draw_window(void) {
+    u_draw_window();
+}
+
 void maxos_debug_log(const char* tag, const char* msg) {
     u_debug_log(tag, msg);
 }

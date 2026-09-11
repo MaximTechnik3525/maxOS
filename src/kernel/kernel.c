@@ -386,7 +386,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 clock_timer = 0;
                 taskbar_draw_clock();
             }
-            __asm__ __volatile__("pause");
+            if (maxp_get_instance_count() > 0) {
+                task_yield();
+            } else {
+                __asm__ __volatile__("pause");
+            }
         }
     }
 }

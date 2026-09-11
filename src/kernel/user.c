@@ -3,6 +3,9 @@
 #include "malloc.h"
 #include "idt.h"
 #include "task.h"
+#include "mmu.h"
+#include "../apps/maxp.h"
+#include "font.h"
 #include "maxp.h"
 #include "notepad.h"
 #include "explorer.h"
@@ -119,7 +122,11 @@ long syscall_dispatcher(long num, long a1, long a2, long a3, long a4, long a5) {
             return 0;
 
         case SYS_EXIT:
-            exit_to_kernel();
+            if (task_get_current() && task_get_current()->pid > 0) {
+                task_exit();
+            } else {
+                exit_to_kernel();
+            }
             return 0;
 
         case SYS_PRINT_STRING:

@@ -15,10 +15,8 @@ extern kernel_stack_top
 
 section .bss
 align 16
-saved_user_rsp:       resq 1
+scratch_rsp:          resq 1
 saved_kernel_rsp:     resq 1
-syscall_stack_bottom: resb 16384
-syscall_stack_top:
 
 section .text
 
@@ -113,13 +111,15 @@ exit_to_kernel:
 ;   SS  <- STAR[47:32] + 8 (0x10, Ring 0)
 ;   RIP <- LSTAR (this function)
 ; ------------------------------------------------------------------------------
+extern current_kstack_top
+
 syscall_entry_asm:
     ; 1. Switch from untrusted User RSP to trusted dedicated Kernel Syscall RSP
-    mov [saved_user_rsp], rsp
-    mov rsp, syscall_stack_top
+    mov [scratch_rsp], rsp
+    mov rsp, [current_kstack_top]
 
     ; 2. Preserve ALL user registers on kernel stack (15 quadwords = 120 bytes)
-    push qword [saved_user_rsp] ; Save original user RSP
+    push qword [scratch_rsp] ; Save original user RSP
     push r11                    ; Save user RFLAGS
     push rcx                    ; Save user RIP
     push rbx
@@ -183,10 +183,10 @@ syscall_entry_asm:
     pop rbx
     pop rcx                     ; Restore user RIP
     pop r11                     ; Restore user RFLAGS
-    pop qword [saved_user_rsp]
+    pop qword [scratch_rsp]
 
     ; 5. Restore user stack pointer and return to Ring 3
-    mov rsp, [saved_user_rsp]
+    mov rsp, [scratch_rsp]
 
     ; sysretq: restores RIP from RCX, RFLAGS from R11, CS=0x2B, SS=0x23
     o64 sysret
