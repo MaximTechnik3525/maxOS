@@ -115,22 +115,25 @@ static void calc_clear_all(calc_state_t* s) {
 static void draw_ui_btn(int x, int y, int w, int h, const char* label, unsigned short fill, unsigned short text_col) {
     maxos_draw_rect(x, y, w, h, 0x0000);
     maxos_draw_rect(x + 1, y + 1, w - 2, h - 2, fill);
-    maxos_print_text(label, x + (w / 2) - (strlen(label) * 4), y + (h / 2) - 8, text_col);
+    int len = strlen(label);
+    int tx = x + (w - len * 9) / 2;
+    int ty = y + (h - 8) / 2;
+    maxos_print_text(label, tx, ty, text_col);
 }
 
 static void calc_render_lcd(int cx, int cy, int cw, const char* buf) {
     maxos_draw_rect(cx + 16, cy + 32, cw - 32, 48, 0x0000);
-    maxos_print_text(buf, cx + 26, cy + 48, 0xFFFF);
+    maxos_print_text(buf, cx + 26, cy + 52, 0xFFFF);
 }
 
 static void calc_render_window(int cx, int cy, int cw, int ch, calc_state_t* s) {
     maxos_draw_rect(cx, cy, cw, ch, 0x0000);
     maxos_draw_rect(cx + 1, cy + 1, cw - 2, ch - 2, 0xCE79);
     maxos_draw_rect(cx + 3, cy + 3, cw - 6, 22, 0x11EB);
-    maxos_print_text("Calculator 3.5 - [Event Loop]", cx + 8, cy + 8, 0xFFFF);
+    maxos_print_text("Calculator 3.5 - [Event Loop]", cx + 8, cy + 10, 0xFFFF);
 
-    draw_ui_btn(cx + cw - 44, cy + 5, 18, 16, "_", 0xCE79, 0x0000);
-    draw_ui_btn(cx + cw - 22, cy + 5, 18, 16, "X", 0xF800, 0xFFFF);
+    draw_ui_btn(cx + cw - 44, cy + 6, 18, 16, "_", 0xCE79, 0x0000);
+    draw_ui_btn(cx + cw - 22, cy + 6, 18, 16, "X", 0xF800, 0xFFFF);
     
     // LCD
     calc_render_lcd(cx, cy, cw, s->entry_buf);
