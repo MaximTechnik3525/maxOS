@@ -8,6 +8,10 @@ struct ATADevice {
     unsigned int total_sectors;
     unsigned int size_mb;
     char model[41];
+    unsigned short base_port;
+    unsigned short ctrl_port;
+    unsigned char drive_sel;
+    char channel_name[20];
 };
 
 struct ATADebugStats {

@@ -87,7 +87,11 @@ static void sysinfo_render_overview(int sx, int sy, int sw, int sh) {
     if (ahci_is_available()) {
         maxos_print_text("Controller: SATA AHCI 1.0 (Bus Master DMA / MMIO)", sx + 25, row_y, 0x05E0);
     } else {
-        maxos_print_text("Controller: Legacy ATA Primary Master (IDE PIO)", sx + 25, row_y, 0x0000);
+        char ctrl_str[64];
+        strcpy(ctrl_str, "Controller: IDE ");
+        strcat(ctrl_str, ata_primary_master.present ? ata_primary_master.channel_name : "None");
+        strcat(ctrl_str, " (PIO 28-bit LBA)");
+        maxos_print_text(ctrl_str, sx + 25, row_y, 0x0000);
     }
     row_y += 13;
     maxos_print_text("Drive Model: ", sx + 25, row_y, 0x0000);
@@ -351,9 +355,9 @@ void sysinfo_main(void) {
                             sysinfo_render(sx, sy, sw, sh);
                         }
                     }
-                    // Rescan PCI
+                    // Refresh PCI view
                     if (mouse_x >= sx + 350 && mouse_x <= sx + 435 && mouse_y >= sy + sh - 34 && mouse_y <= sy + sh - 12) {
-                        pci_init();
+                        pci_page = 0;
                         sysinfo_render(sx, sy, sw, sh);
                     }
                     // Back to Overview
@@ -364,7 +368,7 @@ void sysinfo_main(void) {
                 }
             } else if (ev.type == EVENT_KEY) {
                 if (ev.key == 'r' || ev.key == 'R') {
-                    if (sysinfo_tab == 1) pci_init();
+                    if (sysinfo_tab == 1) pci_page = 0;
                     sysinfo_render(sx, sy, sw, sh);
                 } else if (ev.key == '1') {
                     sysinfo_tab = 0;

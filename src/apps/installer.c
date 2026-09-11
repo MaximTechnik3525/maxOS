@@ -1,6 +1,7 @@
 #include "installer.h"
 #include "maxfs.h"
 #include "ata.h"
+#include "ahci.h"
 #include "maxp.h"
 #include "kernel.h"
 #include "string.h"
@@ -68,7 +69,15 @@ void installer_instance_draw(installer_state_t* s, int inst_x, int inst_y, int i
     // Hardware Details
     print_string("Hardware Detection:", inst_x + 20, inst_y + 36, 0x24EE);
     if (ata_is_available()) {
-        print_string("Drive: Primary Master ATA (IDE PIO)", inst_x + 25, inst_y + 52, 0x0000);
+        char drv_line[64];
+        if (ahci_is_available()) {
+            strcpy(drv_line, "Drive: SATA AHCI Port 0 (DMA 48-bit)");
+        } else {
+            strcpy(drv_line, "Drive: ");
+            strcat(drv_line, ata_primary_master.channel_name);
+            strcat(drv_line, " (IDE PIO)");
+        }
+        print_string(drv_line, inst_x + 25, inst_y + 52, 0x0000);
         print_string("Model:", inst_x + 25, inst_y + 68, 0x0000);
         print_string(ata_primary_master.model, inst_x + 80, inst_y + 68, 0x0320);
 
