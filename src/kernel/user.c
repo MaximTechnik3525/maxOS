@@ -16,6 +16,7 @@
 #include "mem.h"
 #include "debug.h"
 #include "ata.h"
+#include "pci.h"
 #include "../user/libc/sys/syscall.h"
 
 // 64-bit Task State Segment (AMD64 Architecture Manual Vol 2)
@@ -227,6 +228,17 @@ long syscall_dispatcher(long num, long a1, long a2, long a3, long a4, long a5) {
             user_ev[4] = cur->eq.events[idx + 4];
             
             cur->eq.head = (cur->eq.head + 1) % 32;
+            return 1;
+        }
+
+        case 24: // SYS_PCI_COUNT
+            return pci_get_device_count();
+
+        case 25: { // SYS_PCI_GET_DEV
+            int idx = (int)a1;
+            pci_device_t* dev = pci_get_device(idx);
+            if (!dev || !a2) return 0;
+            memcpy((void*)a2, dev, sizeof(pci_device_t));
             return 1;
         }
 

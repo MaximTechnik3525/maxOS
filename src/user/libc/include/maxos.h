@@ -25,5 +25,7 @@ void maxos_yield(void);
 void maxos_draw_window(void);
 void maxos_debug_log(const char* tag, const char* msg);
 int maxos_get_event(maxos_event_t* ev);
+int maxos_pci_count(void);
+int maxos_pci_get_device(int index, void* out_dev);
 
 #endif

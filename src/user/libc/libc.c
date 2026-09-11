@@ -56,6 +56,14 @@ int maxos_get_event(maxos_event_t* ev) {
     return u_get_event(ev);
 }
 
+int maxos_pci_count(void) {
+    return u_pci_count();
+}
+
+int maxos_pci_get_device(int index, void* out_dev) {
+    return u_pci_get_dev(index, out_dev);
+}
+
 
 // -----------------------------------------------------------------------------
 // STDIO (Simple wrapper over maxos_debug_log for now)

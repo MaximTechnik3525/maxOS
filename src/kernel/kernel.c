@@ -39,6 +39,7 @@ struct multiboot_info {
 #include "installer.h"
 #include "explorer.h"
 #include "ata.h"
+#include "pci.h"
 #include "maxp.h"
 #include "taskbar.h"
 #include "calc.h"
@@ -207,6 +208,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 
     // Initialize Preemptive Task Scheduler (Ring 0 & Ring 3 Multitasking)
     task_init();
+
+    // Initialize PCI Bus Enumerator and Hardware Scanner
+    pci_init();
 
     // Splash screen
     for (int y = 0; y < 768; y++) {

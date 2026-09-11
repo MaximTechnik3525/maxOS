@@ -42,6 +42,7 @@ $CC -c src/kernel/idt.c -o build/idt.o $CFLAGS
 $CC -c src/kernel/user.c -o build/user.o $CFLAGS
 $CC -c src/kernel/task.c -o build/task.o $CFLAGS
 $CC -c src/drivers/ata.c -o build/ata.o $CFLAGS
+$CC -c src/drivers/pci.c -o build/pci.o $CFLAGS
 $CC -c src/fs/maxfs.c -o build/maxfs.o $CFLAGS
 $CC -c src/apps/maxp.c -o build/maxp.o $CFLAGS
 $CC -c src/kernel/taskbar.c -o build/taskbar.o $CFLAGS
@@ -62,7 +63,7 @@ $CC -c src/user/libc/libc.c -o build/libc.o $CFLAGS
 echo "=== [3/5] Линковка 64-битного ядра (ELF64) ==="
 $LD --no-warn-rwx-segments -T src/linker.ld -o build/mykernel.bin \
     build/entry.o build/mbr_data.o build/syscall_asm.o build/idt_asm.o \
-    build/string.o build/dialog.o build/debug.o build/mmu.o build/pmm.o build/malloc.o build/elf.o build/idt.o build/user.o build/task.o build/kernel.o build/ata.o build/libc.o \
+    build/string.o build/dialog.o build/debug.o build/mmu.o build/pmm.o build/malloc.o build/elf.o build/idt.o build/user.o build/task.o build/kernel.o build/ata.o build/pci.o build/libc.o \
     build/maxfs.o build/maxp.o build/taskbar.o build/notepad.o \
     build/installer.o build/explorer.o build/calc.o build/sysinfo.o build/pong.o build/mem.o \
     build/app_binaries.o

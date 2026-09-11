@@ -23,6 +23,11 @@
 #define SYS_KILL          18 // sys_kill(int pid) -> status
 #define SYS_GETPID        19 // sys_getpid(void) -> pid
 #define SYS_TASKLIST      20 // sys_tasklist(void* buf, int max) -> count
+#define SYS_MALLOC        21 // sys_malloc(unsigned int bytes) -> ptr
+#define SYS_FREE          22 // sys_free(void* ptr)
+#define SYS_GET_EVENT     23 // sys_get_event(int* out_ev) -> 1 or 0
+#define SYS_PCI_COUNT     24 // sys_pci_count(void) -> count of detected PCI devices
+#define SYS_PCI_GET_DEV   25 // sys_pci_get_dev(int index, void* out_pci_dev) -> 1 or 0
 
 // Privilege Levels & GDT Selectors (x86_64 Long Mode)
 #define KERNEL_CS         0x08

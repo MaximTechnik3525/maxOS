@@ -26,6 +26,8 @@
 #define SYS_MALLOC        21
 #define SYS_FREE          22
 #define SYS_GET_EVENT     23
+#define SYS_PCI_COUNT     24
+#define SYS_PCI_GET_DEV   25
 
 // Low-level 64-bit SYSCALL wrappers (System V AMD64 ABI)
 static inline long syscall0(long num) {
@@ -184,6 +186,14 @@ static inline void u_free(void* ptr) {
 
 static inline int u_get_event(void* ev_ptr) {
     return (int)syscall1(SYS_GET_EVENT, (long)ev_ptr);
+}
+
+static inline int u_pci_count(void) {
+    return (int)syscall0(SYS_PCI_COUNT);
+}
+
+static inline int u_pci_get_dev(int index, void* out_dev) {
+    return (int)syscall2(SYS_PCI_GET_DEV, (long)index, (long)out_dev);
 }
 
 #endif // USER_SYSCALL_H
