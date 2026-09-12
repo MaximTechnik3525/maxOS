@@ -18,7 +18,7 @@ align 4
     dd 0
     dd 1024
     dd 768
-    dd 16
+    dd 32
 
 section .text
 [bits 32]

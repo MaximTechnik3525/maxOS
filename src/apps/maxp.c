@@ -486,8 +486,6 @@ void maxp_close_all_windows(void) {
     active_app_id = MAXP_APP_NONE;
 }
 
-extern unsigned short* _gfx_memory_backend;
-
 void maxp_draw_active_instance(void) {
     app_instance_t* inst = maxp_get_active_instance();
     if (inst && !inst->is_minimized) {

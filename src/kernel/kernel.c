@@ -58,6 +58,7 @@ struct multiboot_info {
 #include "font.h"
 #include "string.h"
 #include "verbose_boot.h"
+#include "../drivers/video.h"
 
 extern char _kernel_start[];
 extern char _kernel_end[];
@@ -181,13 +182,53 @@ static inline void process_mouse_byte(unsigned char b) {
 
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     (void)magic;
+    debug_init();
+    
     struct multiboot_info* mbi = (struct multiboot_info*) multiboot_info_address;
-    _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
-    if (mbi->framebuffer_pitch > 0) { REAL_PITCH = mbi->framebuffer_pitch / 2; }
+    debug_log("BOOT", "maxOS Kernel entered kmain");
+    debug_puts("  MBI Address: 0x"); debug_print_num(multiboot_info_address, 16); debug_puts("\n");
+    debug_puts("  MBI Flags: 0x"); debug_print_num(mbi->flags, 16); debug_puts("\n");
+    debug_puts("  FB Address: 0x"); debug_print_num((unsigned long)mbi->framebuffer_addr, 16); debug_puts("\n");
+    debug_puts("  FB Pitch: "); debug_print_num(mbi->framebuffer_pitch, 10); debug_puts("\n");
+    debug_puts("  FB Width: "); debug_print_num(mbi->framebuffer_width, 10); debug_puts("\n");
+    debug_puts("  FB Height: "); debug_print_num(mbi->framebuffer_height, 10); debug_puts("\n");
+    debug_puts("  FB BPP: "); debug_print_num(mbi->framebuffer_bpp, 10); debug_puts("\n");
+    debug_puts("  FB Type: "); debug_print_num(mbi->framebuffer_type, 10); debug_puts("\n");
+
+    // Initialize Unified Video Driver (GOP for UEFI / VBE for BIOS)
+    video_init(mbi);
+    _gfx_memory_backend = (unsigned short*)g_video.fb;
+    REAL_PITCH = g_video.pitch / ((g_video.bpp == 16) ? 2 : 4);
     if (mbi->flags & 0x01) {
         mb_mem_lower = mbi->mem_lower;
         mb_mem_upper = mbi->mem_upper;
     }
+    if (mbi->flags & (1 << 6)) {
+        unsigned long mmap_curr = (unsigned long)mbi->mmap_addr;
+        unsigned long mmap_end = mmap_curr + mbi->mmap_length;
+        unsigned long max_available_ram = 0;
+        while (mmap_curr < mmap_end) {
+            unsigned int entry_size = *(unsigned int*)mmap_curr;
+            if (entry_size == 0) break;
+            unsigned long long base = *(unsigned long long*)(mmap_curr + 4);
+            unsigned long long len = *(unsigned long long*)(mmap_curr + 12);
+            unsigned int type = *(unsigned int*)(mmap_curr + 20);
+            if (type == 1) { // Available
+                unsigned long long end = base + len;
+                if (end > max_available_ram) max_available_ram = (unsigned long)end;
+            }
+            mmap_curr += (entry_size + 4);
+        }
+        if (max_available_ram > 1024 * 1024) {
+            unsigned int upper_kb = (unsigned int)((max_available_ram - 1024 * 1024) / 1024);
+            if (upper_kb > mb_mem_upper) mb_mem_upper = upper_kb;
+        }
+    }
+    if (mb_mem_upper == 0) {
+        mb_mem_upper = 128 * 1024; // 128MB safe fallback
+    }
+
+    debug_puts("  Calculated Upper RAM (KB): "); debug_print_num(mb_mem_upper, 10); debug_puts("\n");
 
     // Parse Multiboot command line for verbose boot flags
     int verbose_mode = 0;
@@ -205,9 +246,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         }
     }
 
-    // Initialize Diagnostic Serial Debugger (COM1 38400 baud)
-    debug_init();
-    
     // Initialize Verbose Boot subsystem (Onscreen Diagnostic Console)
     verbose_boot_init(verbose_mode, mb_mem_upper);
     verbose_boot_step("SYSTEM", "Starting maxOS v4.0 EventUpdate (x86_64 Long Mode)", BOOT_STATUS_INFO, 5);
@@ -241,19 +279,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 
     if (!verbose_boot_is_active()) {
         // Splash screen
-        for (int y = 0; y < 768; y++) {
-            for (int x = 0; x < 1024; x++) {
-                if (y <= 387 && y >= 384) {
-                    gfx_memory[y * 1024 + x] = 0x0DE5;
-                } else if (y <= 393 && y > 387) {
-                    gfx_memory[y * 1024 + x] = 0x03EA;
-                } else if (y <= 400 && y > 393) {
-                    gfx_memory[y * 1024 + x] = 0x01A4;
-                } else {
-                    gfx_memory[y * 1024 + x] = 0x0000;
-                }
-            }
-        }
+        video_clear(0x0000);
+        video_draw_rect(0, 384, g_video.width, 4, 0x0DE5);
+        video_draw_rect(0, 388, g_video.width, 6, 0x03EA);
+        video_draw_rect(0, 394, g_video.width, 7, 0x01A4);
         print_string("maxOS v4.0 EventUpdate x86_64", 380, 420, 0x0DE5);
         print_string("by maxTech", 10, 10, 0x24EE);
         print_string("Press [V] or [ESC] for Verbose Boot (Подробная загрузка)", 265, 520, 0x5ACB);
@@ -574,21 +603,10 @@ void system_reboot() {
     while (1) { __asm__ volatile("hlt"); }
 }
 void shutdown() {
-    for (int y = 0; y < 768; y++) {
-        for (int x = 0; x < 1024; x++) {
-            if (y <= 387 && y >= 384) {
-                gfx_memory[y * 1024 + x] = 0xB269;
-            }
-            else if (y <= 393 && y > 387) {
-                gfx_memory[y * 1024 + x] = 0x81C6;
-            }
-            else if (y <= 400 && y > 393) {
-                gfx_memory[y * 1024 + x] = 0x4924;
-            }
-            else { gfx_memory[y * 1024 + x] = 0x0000; }
-
-        }
-    }
+    video_clear(0x0000);
+    video_draw_rect(0, 384, g_video.width, 4, 0xB269);
+    video_draw_rect(0, 388, g_video.width, 6, 0x81C6);
+    video_draw_rect(0, 394, g_video.width, 7, 0x4924);
     print_string("maxOS is shutting down...", 420, 420, 0xB269);
     play_sound(200); sleep(150); no_sound();
     play_sound(100); sleep(150); no_sound();
@@ -603,11 +621,7 @@ void shutdown() {
 }
 void error(char* err) {
     drag = 2;
-    for (int y = 0; y < 768; y++) {
-        for (int x = 0; x < 1024; x++) {
-            gfx_memory[y * 1024 + x] = 0xB269;
-        }
-    }
+    video_clear(0xB269);
     print_string("maxOS error!", 470, 10, 0xFFFF);
     print_string(err, 10, 30, 0xFFFF);
     print_string("Restart or off your PC :(", 10, 50, 0xFFFF);
@@ -657,7 +671,7 @@ void prev_cursor() {
                 int cur_x = cursor_saved_x + x;
                 int cur_y = cursor_saved_y + y;
                 if (cur_x >= 0 && cur_x < 1024 && cur_y >= 0 && cur_y < 768) {
-                    gfx_memory[cur_y * 1024 + cur_x] = cursor_bg[y][x];
+                    video_put_pixel(cur_x, cur_y, cursor_bg[y][x]);
                 }
             }
         }
@@ -748,7 +762,6 @@ void draw_rect(int rx, int ry, int rw, int rh, unsigned short color) {
     }
 
     for (int y = ry; y < ry + rh; y++) {
-        int row = y * SCREEN_WIDTH;
         for (int x = rx; x < rx + rw; x++) {
             if (cursor_bg_saved &&
                 x >= cursor_saved_x && x < cursor_saved_x + 12 &&
@@ -756,7 +769,7 @@ void draw_rect(int rx, int ry, int rw, int rh, unsigned short color) {
                 mouse_arrow[y - cursor_saved_y][x - cursor_saved_x] != 0) {
                 continue;
             }
-            gfx_memory[row + x] = color;
+            video_put_pixel(x, y, color);
         }
     }
 }
@@ -774,7 +787,7 @@ void draw_cursor(int mouse_x, int mouse_y) {
             int screen_x = mouse_x + x;
             int screen_y = mouse_y + y;
             if (screen_x >= 0 && screen_x < 1024 && screen_y >= 0 && screen_y < 768) {
-                cursor_bg[y][x] = gfx_memory[screen_y * 1024 + screen_x];
+                cursor_bg[y][x] = video_get_pixel(screen_x, screen_y);
             } else {
                 cursor_bg[y][x] = 0x0000;
             }
@@ -809,9 +822,9 @@ void draw_cursor(int mouse_x, int mouse_y) {
             int screen_x = mouse_x + x;
             int screen_y = mouse_y + y;
             if (screen_x >= 0 && screen_x < 1024 && screen_y >= 0 && screen_y < 768) {
-                if (pixel_type == 1) { gfx_memory[screen_y * 1024 + screen_x] = cur_c1; }
-                else if (pixel_type == 2) { gfx_memory[screen_y * 1024 + screen_x] = cur_c2; }
-                else if (pixel_type == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3; }
+                if (pixel_type == 1) { video_put_pixel(screen_x, screen_y, cur_c1); }
+                else if (pixel_type == 2) { video_put_pixel(screen_x, screen_y, cur_c2); }
+                else if (pixel_type == 3) { video_put_pixel(screen_x, screen_y, 0x9CD3); }
             }
         }
     }
@@ -902,17 +915,15 @@ void draw_char(char c, int start_x, int start_y, unsigned short color) {
             if ((row & (0x80 >> x)) != 0) {
                 int px = start_x + x;
                 int py = start_y + y;
-                if (px >= 0 && px < 1024 && py >= 0 && py < 768) {
-                    if (cursor_bg_saved &&
-                        px >= cursor_saved_x && px < cursor_saved_x + 12 &&
-                        py >= cursor_saved_y && py < cursor_saved_y + 12) {
-                        cursor_bg[py - cursor_saved_y][px - cursor_saved_x] = color;
-                        if (mouse_arrow[py - cursor_saved_y][px - cursor_saved_x] != 0) {
-                            continue;
-                        }
+                if (cursor_bg_saved &&
+                    px >= cursor_saved_x && px < cursor_saved_x + 12 &&
+                    py >= cursor_saved_y && py < cursor_saved_y + 12) {
+                    cursor_bg[py - cursor_saved_y][px - cursor_saved_x] = color;
+                    if (mouse_arrow[py - cursor_saved_y][px - cursor_saved_x] != 0) {
+                        continue;
                     }
-                    gfx_memory[py * 1024 + px] = color;
                 }
+                video_put_pixel(px, py, color);
             }
         }
     }
@@ -1184,12 +1195,7 @@ void draw_window() {
     unsigned short wp_c1 = theme_wallpapers[t_wp].c1;
     unsigned short wp_c2 = theme_wallpapers[t_wp].c2;
 
-    for (int y = 0; y < 730; y++) {
-        int row_offset = y << 10;
-        for (int x = 0; x < 1024; x++) {
-            gfx_memory[row_offset + x] = (((x ^ y) & 16) == 0) ? wp_c1 : wp_c2;
-        }
-    }
+    video_render_wallpaper(wp_c1, wp_c2);
 
     // 2. Desktop icons on the left side
     taskbar_draw_desktop_icons();
@@ -1198,17 +1204,9 @@ void draw_window() {
     int active_app = maxp_get_active_app();
     if (maxp_get_instance_count() == 0 || taskbar_is_app_minimized()) {
         int card_x = 220, card_y = 150, card_w = 640, card_h = 370;
-        for (int y = card_y; y < card_y + card_h; y++) {
-            for (int x = card_x; x < card_x + card_w; x++) {
-                if (y == card_y || y == card_y + card_h - 1 || x == card_x || x == card_x + card_w - 1) {
-                    gfx_memory[y * 1024 + x] = 0x0000;
-                } else if (y < card_y + 24) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                } else {
-                    gfx_memory[y * 1024 + x] = 0xEF59;
-                }
-            }
-        }
+        draw_rect(card_x, card_y, card_w, card_h, 0x0000);
+        draw_rect(card_x + 1, card_y + 1, card_w - 2, 23, 0x11EB);
+        draw_rect(card_x + 1, card_y + 24, card_w - 2, card_h - 25, 0xEF59);
         print_string("Welcome to maxOS v4.0 EventUpdate x86_64", card_x + 14, card_y + 6, 0xFFFF);
         print_string("Desktop & Applications Environment", card_x + 25, card_y + 36, 0x11EB);
         print_string("Modular applications use .maxP executable files on maxFS 2.0", card_x + 25, card_y + 58, 0x0000);

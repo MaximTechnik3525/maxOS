@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "string.h"
 #include "idt.h"
+#include "../drivers/video.h"
 
 extern void get_cpu(char* buffer);
 extern void draw_rect(int rx, int ry, int rw, int rh, unsigned short color);
@@ -23,8 +24,8 @@ static int verbose_active = 0;
 static int verbose_paused = 0;
 static int verbose_line_y = 52;
 static int current_percent = 0;
-static unsigned int ram_mb = 128;
-static char cpu_name[50] = "x86_64 Processor";
+static unsigned long ram_mb = 0;
+static char cpu_name[64] = "x86_64 Processor";
 
 static int contains_str(const char* haystack, const char* needle) {
     if (!haystack || !needle) return 0;
@@ -46,62 +47,57 @@ int verbose_boot_is_active(void) {
 }
 
 static unsigned short get_tag_color(const char* tag) {
-    if (strcmp(tag, "MMU") == 0 || strcmp(tag, "PMM") == 0 || strcmp(tag, "HEAP") == 0) {
-        return 0x257F; // Bright Cyan
-    }
-    if (strcmp(tag, "SCHED") == 0 || strcmp(tag, "TASK") == 0 || strcmp(tag, "USER") == 0 || strcmp(tag, "IDT") == 0) {
-        return 0xB3DF; // Lavender Purple
-    }
-    if (strcmp(tag, "PCI") == 0) {
-        return 0xFDE0; // Amber Gold
-    }
-    if (strcmp(tag, "AHCI") == 0 || strcmp(tag, "SATA") == 0 || strcmp(tag, "ATA") == 0 || strcmp(tag, "STORAGE") == 0) {
-        return 0x3DF2; // Spring Green
-    }
-    if (strcmp(tag, "FS") == 0 || strcmp(tag, "maxFS") == 0) {
-        return 0x07BF; // Sky Blue
-    }
-    if (strcmp(tag, "APPS") == 0 || strcmp(tag, "GUI") == 0 || strcmp(tag, "APP") == 0) {
-        return 0xFD20; // Warm Orange
-    }
-    return 0xFFFF; // Clean White
+    if (strcmp(tag, "SYSTEM") == 0)  return 0x03EA; // Cyan
+    if (strcmp(tag, "MMU") == 0)     return 0x05BF; // Sky Blue
+    if (strcmp(tag, "PMM") == 0)     return 0x07E0; // Green
+    if (strcmp(tag, "IDT") == 0)     return 0xCE79; // Light Gray
+    if (strcmp(tag, "USER") == 0)    return 0x11EB; // Blue
+    if (strcmp(tag, "SCHED") == 0)   return 0xFDF3; // Pink/Purple
+    if (strcmp(tag, "PCI") == 0)     return 0xFBE0; // Orange
+    if (strcmp(tag, "AHCI") == 0)    return 0x07FF; // Cyan
+    if (strcmp(tag, "ATA") == 0)     return 0xF621; // Gold
+    if (strcmp(tag, "STORAGE") == 0) return 0xF621; // Gold
+    if (strcmp(tag, "FS") == 0)      return 0x9CD3; // Light Slate
+    if (strcmp(tag, "APPS") == 0)    return 0x07E0; // Emerald
+    if (strcmp(tag, "INIT") == 0)    return 0xFFFF; // White
+    return 0xCE79;
 }
 
-static void draw_badge(int x, int y, int status_code) {
-    const char* label = "[  OK  ]";
-    unsigned short col = 0x07E0;
-    unsigned short bg_col = 0x01E0;
+static void draw_badge(int x, int y, int status) {
+    const char* label = " INFO ";
+    unsigned short col = 0x07FF;
+    unsigned short bg_col = 0x0168;
 
-    switch (status_code) {
+    switch (status) {
         case BOOT_STATUS_OK:
-            label = "[  OK  ]";
-            col = 0x07E0;
-            bg_col = 0x01A0;
-            break;
-        case BOOT_STATUS_SKIP:
-            label = "[ SKIP ]";
-            col = 0xFDE0;
-            bg_col = 0x31A0;
+            label = "  OK  ";
+            col = 0x07E0;      // Bright green
+            bg_col = 0x0200;   // Dark green bg
             break;
         case BOOT_STATUS_INFO:
-            label = "[ INFO ]";
-            col = 0x05BF;
-            bg_col = 0x0188;
+            label = " INFO ";
+            col = 0x07FF;      // Cyan
+            bg_col = 0x0168;
             break;
         case BOOT_STATUS_WARN:
-            label = "[ WARN ]";
-            col = 0xFD20;
-            bg_col = 0x4100;
+            label = " WARN ";
+            col = 0xFBE0;      // Yellow/amber
+            bg_col = 0x4962;
             break;
         case BOOT_STATUS_FAIL:
-            label = "[ FAIL ]";
-            col = 0xF800;
-            bg_col = 0x3800;
+            label = " FAIL ";
+            col = 0xF800;      // Red
+            bg_col = 0x4000;
+            break;
+        case BOOT_STATUS_SKIP:
+            label = " SKIP ";
+            col = 0x8410;      // Muted gray
+            bg_col = 0x2104;
             break;
         case BOOT_STATUS_DONE:
-            label = "[ DONE ]";
-            col = 0xFFFF;
-            bg_col = 0x0400;
+            label = " DONE ";
+            col = 0x07E0;
+            bg_col = 0x0200;
             break;
         default:
             return;
@@ -115,27 +111,13 @@ static void verbose_boot_scroll(void) {
     const int top = 52;
     const int bottom = 685;
     const int line_h = 15;
-
-    for (int y = top; y <= bottom - line_h; y++) {
-        unsigned short* dst = &gfx_memory[y * 1024 + 10];
-        unsigned short* src = &gfx_memory[(y + line_h) * 1024 + 10];
-        memcpy(dst, src, (1024 - 20) * sizeof(unsigned short));
-    }
-    for (int y = bottom - line_h + 1; y <= bottom; y++) {
-        for (int x = 10; x < 1014; x++) {
-            gfx_memory[y * 1024 + x] = COLOR_BG;
-        }
-    }
+    video_scroll(10, top, 1024 - 20, bottom - top + 1, line_h, COLOR_BG);
     verbose_line_y = bottom - line_h + 1;
 }
 
 static void verbose_boot_draw_chrome(void) {
     // Clear entire screen to terminal black
-    for (int y = 0; y < 768; y++) {
-        for (int x = 0; x < 1024; x++) {
-            gfx_memory[y * 1024 + x] = COLOR_BG;
-        }
-    }
+    video_clear(COLOR_BG);
 
     // Top Header Banner
     draw_rect(0, 0, 1024, 44, COLOR_HEADER_BG);
@@ -150,7 +132,9 @@ static void verbose_boot_draw_chrome(void) {
     char ram_str[16];
     int_to_str((int)ram_mb, ram_str);
     strcat(sub, ram_str);
-    strcat(sub, " MB | Display: 1024x768x16 VBE | Kernel: ELF64");
+    strcat(sub, " MB | Display: ");
+    strcat(sub, video_get_mode_name());
+    strcat(sub, " | Kernel: ELF64");
     print_string(sub, 20, 24, COLOR_SUBTITLE);
 
     // Footer divider and hotkeys
