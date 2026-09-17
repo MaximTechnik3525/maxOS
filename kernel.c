@@ -1,4 +1,3 @@
-// Упакованная структура, чтобы компилятор не добавлял лишних скрытых байт (alignment padding)
 #pragma pack(push, 1)
 struct multiboot_info {
     unsigned int flags;
@@ -22,7 +21,6 @@ struct multiboot_info {
     unsigned short vbe_interface_seg;
     unsigned short vbe_interface_off;
     unsigned short vbe_interface_len;
-
     // Графический фреймбуфер (начиная с 88-го байта структуры)
     unsigned long long framebuffer_addr; 
     unsigned int framebuffer_pitch;     // Длина строки в БАЙТАХ
@@ -33,7 +31,6 @@ struct multiboot_info {
     unsigned char framebuffer_color_info[6];
 };
 #pragma pack(pop)
-
 struct VirtualFile {
     char name[12];
     int size;
@@ -74,6 +71,7 @@ void filew();
 void open_explorer();
 void error(char* err);
 unsigned short bg_col = 0x18C3;
+unsigned short text_col = 0x0000;
 void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
 int create_file(char* name, char* text);
@@ -760,7 +758,7 @@ void save_open() {
                 gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
                 print_string(ram_disk[fid].name, win_x + 28, win_y + 28, 0x0000);
                 print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
-                print_string(ram_disk[fid].content, win_x + 30, win_y + 45, 0x0000);
+                print_string(ram_disk[fid].content, win_x + 30, win_y + 45, text_col);
                 print_string("Press c to close this window.", win_x + 30, win_y + 60, 0x0000);
     }
     if (fid < 5) {
@@ -1002,7 +1000,7 @@ void filew() {
             print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
         }
         print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-        print_string(ftext, win_x + 30, help_col, 0x0000);
+        print_string(ftext, win_x + 30, help_col, text_col);
         while (1) {
             unsigned char status = inb(0x64);
             if (status & 0x01) {
@@ -1052,7 +1050,7 @@ void filew() {
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-                            print_string(ftext, win_x + 30, help_col, 0x0000);
+                            print_string(ftext, win_x + 30, help_col, text_col);
                             if (str_cmp(ftext, ram_disk[fid - 1].content)) {
                                 print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
                                 print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
@@ -1061,7 +1059,7 @@ void filew() {
                                 print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
                                 print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
                             }
-                            print_string(ftext, win_x + 30, help_col, 0x0000);
+                            print_string(ftext, win_x + 30, help_col, text_col);
                         }
                     }
                     else if (ascii_char == 'B') {
@@ -1100,7 +1098,7 @@ void filew() {
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-                            print_string(ftext, win_x + 30, help_col, 0x0000);
+                            print_string(ftext, win_x + 30, help_col, text_col);
                             if (str_cmp(ftext, ram_disk[fid - 1].content)) {
                                 print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
                                 print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
@@ -1163,6 +1161,26 @@ void filew() {
                                 textid++;
                                 ftext[textid] = '\0';
                             }
+                            if (ascii_char == 'F') {
+                                text_col = 0x0000;
+                                print_string(ftext, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'S') {
+                                text_col = 0x0112;
+                                print_string(ftext, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'T') {
+                                text_col = 0x9000;
+                                print_string(ftext, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'G') {
+                                text_col = 0x9400;
+                                print_string(ftext, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'C') {
+                                text_col = 0x0320;
+                                print_string(ftext, win_x + 30, help_col, text_col);
+                            }
                             for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
                                 for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
                                     if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
@@ -1195,7 +1213,7 @@ void filew() {
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-                            print_string(ftext, win_x + 30, help_col, 0x0000);
+                            print_string(ftext, win_x + 30, help_col, text_col);
                             if (str_cmp(ftext, ram_disk[fid - 1].content)) {
                                 print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
                                 print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
@@ -1204,7 +1222,7 @@ void filew() {
                                 print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
                                 print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
                             }
-                            print_string(ftext, win_x + 30, help_col, 0x0000);
+                            print_string(ftext, win_x + 30, help_col, text_col);
                         }
                     }
                     else if (ascii_char == 'F') {
