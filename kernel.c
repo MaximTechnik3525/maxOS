@@ -721,7 +721,7 @@ void pong() {
     }
 }
 void save_open() {
-    if (str_in(ftext, ".mapp")) { 
+    if (str_in(ftext, "!mapp!")) { 
         create_file("App.mapp", ftext);
         drag = 0; 
     }
@@ -765,7 +765,7 @@ void save_open() {
         fid ++;
     }
     repeats = 1;
-    if (str_in(ftext, ".mapp")) {
+    if (str_in(ftext, "!mapp!")) {
         if (str_in(ftext, "repeat0")) { repeats = 0; }
         if (str_in(ftext, "repeat5")) { repeats = 5; }
         if (str_in(ftext, "repeat10")) { repeats = 10; }
@@ -1000,6 +1000,7 @@ void filew() {
             print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
         }
         print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+        print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
         print_string(ftext, win_x + 30, help_col, text_col);
         while (1) {
             unsigned char status = inb(0x64);
@@ -1050,6 +1051,7 @@ void filew() {
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
                             if (str_cmp(ftext, ram_disk[fid - 1].content)) {
                                 print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
@@ -1098,6 +1100,7 @@ void filew() {
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
                             if (str_cmp(ftext, ram_disk[fid - 1].content)) {
                                 print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
@@ -1213,6 +1216,7 @@ void filew() {
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
                             if (str_cmp(ftext, ram_disk[fid - 1].content)) {
                                 print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
