@@ -194,7 +194,7 @@ int win_w = 740;
 int win_h = 550;
 int pos_x = 512;
 int pos_y = 384;
-int theme = 10;
+int theme = 5;
 int w_mode = 0;
 int km_mode = 0;
 // PONG
@@ -245,7 +245,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         }
     }
     print_string("maxOS TextExplorer", 440, 420, 0x0DE5);
-    print_string("by maximTechnik3525", 10, 10, 0x24EE);
+    print_string("by MaximTechnik3525", 10, 10, 0x24EE);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
     unsigned char packet[3];
@@ -424,6 +424,14 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (ascii_char == '9' && drag == 0) {
                         bg_col = 0x0110;
                         theme = 9;
+                        draw_window();
+                        play_sound(700);
+                        sleep(100);
+                        no_sound();
+                    }
+                    if (ascii_char == '0' && drag == 0) {
+                        bg_col = 0x10A2;
+                        theme = 10;
                         draw_window();
                         play_sound(700);
                         sleep(100);
@@ -835,6 +843,12 @@ void save_open() {
                 draw_window();
                 drag = 0;
                 bg_col = 0x0110;
+            }
+            if (str_in(ftext, "theme10")) {
+                theme = 10;
+                draw_window();
+                drag = 0;
+                bg_col = 0x10A2;
             }
             if (str_in(ftext, "clear")) {
                 explorer_opened = 0;
