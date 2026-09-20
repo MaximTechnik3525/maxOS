@@ -1,10 +1,12 @@
-# maxOS (TextExplorer v3.6)
+# maxOS (ColorScreen v3.7)
 
-### What's New in v3.6:
-* **Advanced Text Input:** Rewritten text handling engine, fully powering the new **Notepad app**.
-* **File Explorer Upgrade:** Enhanced file management, now featuring full support for disk formatting options.
-* **Kernel Stability:** Various internal fixes and minor stability improvements for the OS kernel.
-* **General Improvements:** Polished existing code structure and optimized internal functions.
+### What's New in v3.7:
+* **ColorScreen Notepad:** Added full support for dynamic text color switching (Black, Blue, Yellow, Green, Red) directly inside the text editor.
+* **Theme 10 (Dark Space Mode):** Introduced a brand new, highly polished dark graphite interface palette with optimized contrast, eye-safe backgrounds, and refined window borders.
+* **Smart File Explorer:** The File Explorer now actively calculates and displays the amount of available memory on the disk.
+* **Polished Boot & Power Screens:** Completely redesigned startup and shutdown screens with custom audio melodies via the PC Speaker.
+* **Scripting Engine Refactoring:** Updated and standardized the list of executable shell commands.
+* **Bug Fixes & Improvements:** General performance optimizations, stability patches, and cleaner core code.
 
 ---
 
@@ -13,7 +15,7 @@
 To test **maxOS** on a real PC, make sure your hardware meets the following requirements:
 * **BIOS:** UEFI must be set to Legacy/CSM mode (pure UEFI is not supported yet).
 * **Peripherals:** A physical **PS/2 mouse** is highly recommended.
-* **Audio:** A built-in **PC Speaker** is required for sound effects.
+* **Audio:** A built-in **PC Speaker** is required for system alerts and new startup/shutdown melodies.
 
 ### Installation Steps:
 1. Download the `maxOS.img` binary from the latest release.
@@ -24,30 +26,29 @@ To test **maxOS** on a real PC, make sure your hardware meets the following requ
 
 ## 🛠️ Writing Applications for maxOS
 
-You can write and execute your own scripts directly inside the operating system. To do this, simply list your commands inside a `.mapp` file. 
+You can write and execute your own scripts directly inside the operating system. To do this, simply list your commands inside a `.mapp` file.
 
 ### Available Commands:
 * **Text & Utilities:**
-  * `notepad` — Launches the text editor with advanced text input handling.
-  * `printtext` — Prints the contents of a file near the center of the screen.
+  * `printstring` — Directly prints a text string on the graphics memory buffer.
 * **Execution & Loops:**
-  * `waitkey` — Pauses script execution and waits for a keyboard key press.
+  * `waitkey` — Pauses script execution and waits for any keyboard key press.
+  * `sleep` — Introduces a 2-second system delay/wait.
   * `repeat0`, `repeat5`, `repeat10`, `repeat50`, `repeat100` — Repeats the following block of code the specified number of times.
-* **Disk Utility:** `format` — Formats the virtual `maxFS` file system disk.
-* **Themes:** `theme1` to `theme9` — Switch between 9 different system color palettes.
+* **Disk Utility:** `format` — Formats the virtual `maxFS` file system disk according to the system specifications.
+* **Themes:** `theme1` to `theme10` — Switch between 10 different system color palettes (including the newly balanced Theme 10 Dark Space Mode).
 * **Window Controls:** 
-  * `clear` — Redraws the desktop environment and closes all active windows.
-  * `drawwin` — Renders a custom application window.
-  * `winrght`, `winlft`, `winup`, `windwn` — Moves the main window by 50 pixels in the respective direction.
+  * `redraw` — Redraws the entire desktop workspace and refreshes active windows.
+  * `drawwin` — Renders a custom application window container.
+  * `winr`, `winl`, `winu`, `wind` — Moves the main window frame in the respective direction (Right, Left, Up, Down).
 * **Graphics & UI:**
-  * `scrblack`, `scrwhite` — Fills the entire screen with pure black or white.
+  * `scrblack`, `scrwhite` — Fills the entire screen with pure black or white color.
   * `trailon`, `trailoff` — Toggles the mouse cursor trail effect on or off.
-* **System Status:** `stbusy`, `stfree`, `stcrit` — Manually changes the system input state.
-* **Hardware & Sound:** `speaker` — Fires the PC speaker at 750 Hz for 250ms.
+* **System Status:** `stbusy`, `stfree`, `stcrit` — Manually changes the OS kernel execution states (Busy, Free, Critical).
+* **Hardware & Sound:** `speaker` — Fires the physical PC speaker at 750 Hz for 250ms.
 * **Power & Diagnostics:**
-  * `sleep` — Introduces a 2-second system delay.
-  * `errscr` — Forces the system to trigger the custom error screen.
-  * `shtdwn` — Shuts down the system safely.
+  * `errscr` — Forces the system to trigger the custom OS error crash screen.
+  * `shutdown` — Safely powers off the machine and turns off system routines.
 
 ---
 
@@ -61,4 +62,4 @@ If you want to modify project files and create your own custom build of **maxOS*
 
 || SPECIAL THANKS TO GEMINI FOR BUILD.BAT, BUILD.SH AND HIS VERY BIG HELP ||
 || GEMINI SAYS HI TO GITHUB ||
-GEMINI SAYS: GEMINI SAYS HI TO GITHUB! 🚀🔥🐧 Привет разработчикам! Keep coding!
+GEMINI SAYS: GEMINI SAYS HI TO GITHUB! 🚀🔥🐧 Привет разработчикам! Keep coding, Max!
