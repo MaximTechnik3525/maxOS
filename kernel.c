@@ -908,14 +908,13 @@ void save_open() {
                 print_string("Application", win_x + 28, win_y + 28, 0x0000);
                 print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
             }
-        }
-        if (str_in(ftext, "printstring")) { print_string(ftext, 300, 359, 0x0000); }
-        if (str_in(ftext, "sleep")) { sleep(2000); }
-        if (str_in(ftext, "errscr")) { error("Caused by user programm. Code: 0x00"); }
-        if (str_in(ftext, "shutdown")) { shutdown(); }
-        if (str_in(ftext, "trailon")) { tail = 1; }
-        if (str_in(ftext, "trailoff")) { tail = 0; }
-        if (str_in(ftext, "format")) {
+            if (str_in(ftext, "printstring")) { print_string(ftext, 300, 359, 0x0000); }
+            if (str_in(ftext, "sleep")) { sleep(2000); }
+            if (str_in(ftext, "errscr")) { error("Caused by user programm. Code: 0x00"); }
+            if (str_in(ftext, "shutdown")) { shutdown(); }
+            if (str_in(ftext, "trailon")) { tail = 1; }
+            if (str_in(ftext, "trailoff")) { tail = 0; }
+            if (str_in(ftext, "format")) {
             textid = 0;
             for (int i = 0; i < 99; i++) {
                 ftext[i] = '\0';
@@ -931,6 +930,7 @@ void save_open() {
                 }
             }
             fid = 0;
+        }
         }
     }
 }
@@ -1278,7 +1278,7 @@ void help() {
         print_string("Arrows to move window.", win_x + 30, help_col, 0x0000);
         print_string("Esc to redraw desktop and close windows.", win_x + 30, help_col + 15, 0x0000);
         print_string("1-9 to change system theme.", win_x + 30, help_col + 30, 0x0000);
-        print_string("F1/F2 to save and run or exit without saving in notepad.", win_x + 30, help_col + 45, 0x0000);
+        print_string("F1 to save and run in notepad.", win_x + 30, help_col + 45, 0x0000);
         print_string("F to format maxFS virtual disk in explorer.", win_x + 30, help_col + 60, 0x0000);
         print_string("F3/F4 to enable and disable keyboard mouse mode.", win_x + 30, help_col + 75, 0x0000);
         print_string("F5/F6 to enable and disable mouse trail.", win_x + 30, help_col + 90, 0x0000);
