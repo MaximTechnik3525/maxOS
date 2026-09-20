@@ -850,28 +850,28 @@ void save_open() {
                 drag = 0;
                 bg_col = 0x10A2;
             }
-            if (str_in(ftext, "clear")) {
+            if (str_in(ftext, "redraw")) {
                 explorer_opened = 0;
                 drag = 0;
                 help_col = 65;
                 draw_window();
             }
-            if (str_in(ftext, "winrght")) {
+            if (str_in(ftext, "winr")) {
                 drag = 0;
                 win_x += 50;
                 draw_window();
             }
-            if (str_in(ftext, "winlft")) {
+            if (str_in(ftext, "winl")) {
                 drag = 0;
                 win_x -= 50;
                 draw_window();
             }
-            if (str_in(ftext, "winup")) {
+            if (str_in(ftext, "winu")) {
                 drag = 0;
                 win_y -= 50;
                 draw_window();
             }
-            if (str_in(ftext, "windwn")) {
+            if (str_in(ftext, "wind")) {
                 drag = 0;
                 win_y += 50;
                 draw_window();
@@ -934,10 +934,10 @@ void save_open() {
                 print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
             }
         }
-        if (str_in(ftext, "printtext")) { print_string(ftext, 300, 359, 0x0000); }
+        if (str_in(ftext, "printstring")) { print_string(ftext, 300, 359, 0x0000); }
         if (str_in(ftext, "sleep")) { sleep(2000); }
         if (str_in(ftext, "errscr")) { error("Caused by user programm. Code: 0x00"); }
-        if (str_in(ftext, "shtdwn")) { shutdown(); }
+        if (str_in(ftext, "shutdown")) { shutdown(); }
         if (str_in(ftext, "trailon")) { tail = 1; }
         if (str_in(ftext, "trailoff")) { tail = 0; }
         if (str_in(ftext, "format")) {
