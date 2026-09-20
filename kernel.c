@@ -234,19 +234,19 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             if (y <= 387 && y >= 384) {
                 gfx_memory[y * 1024 + x] = 0x05E5;
             }
-            else if (y <= 393 && y > 387) {
+            else if (y <= 393 && y > 386) {
                 gfx_memory[y * 1024 + x] = 0x03E3;
             }
-            else if (y <= 400 && y > 393) {
+            else if (y <= 400 && y > 388) {
                 gfx_memory[y * 1024 + x] = 0x01E1;
             }
             else { gfx_memory[y * 1024 + x] = 0x0000; }
 
         }
     }
-    print_string("maxOS TextExplorer", 440, 420, 0x05E5);
+    print_string("maxOS ColorScreen", 440, 420, 0x05E5);
     print_string("By MaximTechnik3525", 10, 10, 0x05E5);
-    play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
+    play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(750); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
     unsigned char packet[3];
     for (int i = 0; i < 5; i++) {
@@ -1470,10 +1470,10 @@ void shutdown() {
             if (y <= 387 && y >= 384) {
                 gfx_memory[y * 1024 + x] = 0xFBEF;
             }
-            else if (y <= 393 && y > 387) {
+            else if (y <= 393 && y > 386) {
                 gfx_memory[y * 1024 + x] = 0xF800;
             }
-            else if (y <= 400 && y > 393) {
+            else if (y <= 400 && y > 388) {
                 gfx_memory[y * 1024 + x] = 0x5000;
             }
             else { gfx_memory[y * 1024 + x] = 0x0000; }
@@ -2022,14 +2022,14 @@ void draw_window() {
     }
     if (corners == 1) { win_corners(); }
     if (theme == 3) {
-        print_string("maxOS TextExplorer Abrikos", win_x + 11, win_y + 6, 0x0000);
-        print_string("maxOS TextExplorer Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS ColorScreen Abrikos", win_x + 11, win_y + 6, 0x0000);
+        print_string("maxOS ColorScreen Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
     if (theme == 4) {
-        print_string("maxOS TextExplorer Tora", win_x + 11, win_y + 6, 0x0000);
-        print_string("maxOS TextExplorer Tora", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS ColorScreen Tora", win_x + 11, win_y + 6, 0x0000);
+        print_string("maxOS ColorScreen Tora", win_x + 10, win_y + 5, 0xFFFF); }
     else {
-        print_string("maxOS TextExplorer", win_x + 11, win_y + 6, 0x0000); 
-        print_string("maxOS TextExplorer", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS ColorScreen", win_x + 11, win_y + 6, 0x0000); 
+        print_string("maxOS ColorScreen", win_x + 10, win_y + 5, 0xFFFF); }
     clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
