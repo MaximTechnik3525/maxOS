@@ -239,7 +239,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             else if (y <= 402 && y >= 397) {
                 gfx_memory[y * 1024 + x] = 0x01A4;
             }
-            else { gfx_memory[y * 1024 + x] = 0x0000; }
+            else { gfx_memory[y * 1024 + x] = 0x0040; }
         }
     }
     print_string("maxOS ColorScreen", 440, 420, 0x05E5);
@@ -1283,6 +1283,7 @@ void help() {
         print_string("F3/F4 to enable and disable keyboard mouse mode.", win_x + 30, help_col + 75, 0x0000);
         print_string("F5/F6 to enable and disable mouse trail.", win_x + 30, help_col + 90, 0x0000);
         print_string("F7/F8 to enable and disable main window corner.", win_x + 30, help_col + 105, 0x0000);
+        print_string("maxOS ColorScreen (v3.7).", win_x + 30, help_col + 120, 0x0000);
     }
 }
 
@@ -1451,7 +1452,7 @@ void shutdown() {
             else if (y <= 402 && y >= 397) {
                 gfx_memory[y * 1024 + x] = 0x5000;
             }
-            else { gfx_memory[y * 1024 + x] = 0x0000; }
+            else { gfx_memory[y * 1024 + x] = 0x1000; }
 
         }
     }
