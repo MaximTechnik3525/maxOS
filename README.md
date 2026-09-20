@@ -3,8 +3,8 @@
 ### What's New in v3.7:
 * **ColorScreen Notepad:** Added full support for dynamic text color switching (Black, Blue, Yellow, Green, Red) directly inside the text editor.
 * **Theme 10 (Dark Space Mode):** Introduced a brand new, highly polished dark graphite interface palette with optimized contrast, eye-safe backgrounds, and refined window borders.
-* **Smart File Explorer:** The File Explorer now actively calculates and displays the amount of available memory on the disk.
-* **Polished Boot & Power Screens:** Completely redesigned startup and shutdown screens with custom audio melodies via the PC Speaker.
+* **Smart File Explorer:** The File Explorer now displays the amount of available memory on the disk.
+* **Polished Boot & Power Screens:** Updated startup and shutdown screens with custom audio melodies via the PC Speaker.
 * **Scripting Engine Refactoring:** Updated and standardized the list of executable shell commands.
 * **Bug Fixes & Improvements:** General performance optimizations, stability patches, and cleaner core code.
 
