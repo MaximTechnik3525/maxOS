@@ -75,6 +75,7 @@ unsigned short text_col = 0x0000;
 void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
 int create_file(char* name, char* text);
+unsigned short cursor_back[12][12] = {0};
 unsigned char mouse_arrow[12][12] = {
     {1,1,3,0,0,0,0,0,0,0,0,0},
     {1,2,1,3,0,0,0,0,0,0,0,0},
@@ -187,7 +188,6 @@ const unsigned char max_font[] = {
     0x70,0x18,0x18,0x0C,0x18,0x18,0x70,0x00, // 125 }
     0x76,0xDC,0x00,0x00,0x00,0x00,0x00,0x00  // 126 ~
 };
-
 int win_x = 150;
 int win_y = 140;
 int win_w = 740;
@@ -197,7 +197,6 @@ int pos_y = 384;
 int theme = 5;
 int w_mode = 0;
 int km_mode = 0;
-// PONG
 int pad_x = 0;
 int pad_y = 0;
 int pad_w = 60, pad_h = 20;
@@ -283,10 +282,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x += delta_x / 2;
                         pos_y -= delta_y / 2;
-                        if (pos_x > win_x + 710) {pos_x = win_x + 710;}
-                        if (pos_x < win_x + 12) {pos_x = win_x + 12;}
-                        if (pos_y > win_y + 518) {pos_y = win_y + 518;}
-                        if (pos_y < win_y + 22) {pos_y = win_y + 22;}
+                        if (pos_x > 1012) {pos_x = 1012;}
+                        if (pos_x < 0) {pos_x = 0;}
+                        if (pos_y > 756) {pos_y = 756;}
+                        if (pos_y < 0) {pos_y = 0;}
                         draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
                         draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
                         draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
@@ -306,6 +305,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 }   
             }
             else {
+                unsigned char check_mouse = inb(0x64);
+                if (check_mouse & 0x20) {
+                    inb(0x60);
+                    continue;
+                }
                 unsigned char scan_code = inb(0x60);
                 if (scan_code < 0x80 && w_mode == 0 && drag != 2) { // KEYBOARD CLICKS
                     char ascii_char = scan_code_to_ascii(scan_code);
@@ -348,7 +352,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         win_y -= 20;
                         draw_window();
                     }
-                    if (ascii_char == 'c') {
+                    if (ascii_char == 'E') {
                         drag = 0;
                         explorer_opened = 0;
                         help_col = 65;
@@ -443,52 +447,24 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         sleep(100);
                         no_sound();
                     }
-                    if (ascii_char == 'U' && km_mode == 1 && pos_y > win_y + 30 && drag == 0) {
+                    if (ascii_char == 'U' && km_mode == 1 && pos_y > 15 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
                         pos_y -= 15;
                         draw_cursor(pos_x, pos_y);
-                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
-                        draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
-                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
-                        draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
-                        draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'D' && km_mode == 1 && pos_y < win_y + 515 && drag == 0) {
+                    if (ascii_char == 'D' && km_mode == 1 && pos_y < 741 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
                         pos_y += 15;
                         draw_cursor(pos_x, pos_y);
-                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
-                        draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
-                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
-                        draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
-                        draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'R' && km_mode == 1 && pos_x < win_x + 715 && drag == 0) {
+                    if (ascii_char == 'R' && km_mode == 1 && pos_x < 997 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x += 15;
                         draw_cursor(pos_x, pos_y);
-                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
-                        draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
-                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
-                        draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
-                        draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'L' && km_mode == 1 && pos_x > win_x + 15 && drag == 0) {
+                    if (ascii_char == 'L' && km_mode == 1 && pos_x > 15 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x -= 15;
-                        draw_cursor(pos_x, pos_y);
-                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
-                        draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
-                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
-                        draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'G' && km_mode == 1 && drag == 0) {
@@ -576,12 +552,12 @@ void pong() {
         print_string("Pong score:", win_x + 27, win_y + 27, 0xFFFF);
         while (1) {
             unsigned char scan_code = inb(0x60);
-            if (scan_code < 0x80 && w_mode == 0) { // KEYBOARD CLICKS
+            if (scan_code < 0x80 && w_mode == 0) {
                 char ascii_char = scan_code_to_ascii(scan_code);
-                if (ascii_char == 'c') {
+                if (ascii_char == 'E') {
                     drag = 0;
                     draw_window();
-                    draw_cursor(pos_x, pos_y);
+                    play_sound(900); sleep(100); no_sound();
                     break;
                 }
                 if (ascii_char == 'd' && pad_x <= win_x + 630) {
@@ -767,7 +743,7 @@ void save_open() {
                 print_string(ram_disk[fid].name, win_x + 28, win_y + 28, 0x0000);
                 print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
                 print_string(ram_disk[fid].content, win_x + 30, win_y + 45, text_col);
-                print_string("Press c to close this window.", win_x + 30, win_y + 60, 0x0000);
+                print_string("Press Esc to close this window.", win_x + 30, win_y + 60, 0x0000);
     }
     if (fid < 5) {
         fid ++;
@@ -1013,7 +989,7 @@ void filew() {
             print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
             print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
         }
-        print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+        print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
         print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
         print_string(ftext, win_x + 30, help_col, text_col);
         while (1) {
@@ -1028,7 +1004,7 @@ void filew() {
                 else if (scan_code == 0xAA || scan_code == 0xB6) { shift_p = 0; }
                 if (scan_code < 0x80 && w_mode == 1 && drag != 2 && scan_code != 0x2A && scan_code != 0x36 && scan_code != 0xAA && scan_code != 0xB6) {
                     char ascii_char = scan_code_to_ascii(scan_code);
-                    if (shift_p == 0 && ascii_char != 'F' && ascii_char != 'B' && ascii_char != 'S' && ascii_char != 'U' && ascii_char != 'D' && ascii_char != 'L' && ascii_char != 'R' && ascii_char != 'T' && ascii_char != 'G' && ascii_char != 'C' && ascii_char != 'O' && ascii_char != 'M' && ascii_char != 'N') {
+                    if (shift_p == 0 && ascii_char != 'E' && ascii_char != 'F' && ascii_char != 'B' && ascii_char != 'S' && ascii_char != 'U' && ascii_char != 'D' && ascii_char != 'L' && ascii_char != 'R' && ascii_char != 'T' && ascii_char != 'G' && ascii_char != 'C' && ascii_char != 'O' && ascii_char != 'M' && ascii_char != 'N') {
                         if (textid < 76) {
                             ftext[textid] = ascii_char;
                             textid++;
@@ -1064,7 +1040,7 @@ void filew() {
                             gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
                             print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
                             if (str_cmp(ftext, ram_disk[fid - 1].content)) {
@@ -1113,7 +1089,7 @@ void filew() {
                             gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
                             print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
                             if (str_cmp(ftext, ram_disk[fid - 1].content)) {
@@ -1229,7 +1205,7 @@ void filew() {
                             gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Press F1 to save and run. Press F2 to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
                             print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
                             if (str_cmp(ftext, ram_disk[fid - 1].content)) {
@@ -1251,7 +1227,7 @@ void filew() {
                         w_mode = 0;
                         break;
                     }
-                    else if (ascii_char == 'S') {
+                    else if (ascii_char == 'E') {
                         play_sound(150); sleep(100); no_sound();
                         w_mode = 0;
                         drag = 0;
@@ -1301,7 +1277,7 @@ void help() {
         print_string("Help", win_x + 28, win_y + 28, 0x0000);
         print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Arrows to move window.", win_x + 30, help_col, 0x0000);
-        print_string("C to redraw desktop and close windows.", win_x + 30, help_col + 15, 0x0000);
+        print_string("Esc to redraw desktop and close windows.", win_x + 30, help_col + 15, 0x0000);
         print_string("1-9 to change system theme.", win_x + 30, help_col + 30, 0x0000);
         print_string("F1/F2 to save and run or exit without saving in notepad.", win_x + 30, help_col + 45, 0x0000);
         print_string("F to format maxFS virtual disk in explorer.", win_x + 30, help_col + 60, 0x0000);
@@ -1350,7 +1326,7 @@ void cpu_win() {
         print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Your CPU:", win_x + 30, help_col, 0x0000);
         print_string(cpu_name, win_x + 120, help_col, 0x0000);
-        print_string("Press c to close this window.", win_x + 30, help_col + 15, 0x0000);
+        print_string("Press Esc to close this window.", win_x + 30, help_col + 15, 0x0000);
     }
 }
 void progressbar(char* file_des, int xend) {
@@ -1409,8 +1385,8 @@ void open_explorer() {
         gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
         gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
 
-        print_string("Explorer: f to format, c to close", win_x + 28, win_y + 28, 0x0000);
-        print_string("Explorer: f to format, c to close", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("Explorer: F to format, Esc to close", win_x + 28, win_y + 28, 0x0000);
+        print_string("Explorer: F to format, Esc to close", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Name:", win_x + 35, win_y + 45, 0x0000);
         print_string("Size:", (win_x + win_h) - 14, win_y + 45, 0x0000);
 
@@ -1570,7 +1546,9 @@ void prev_cursor() {
         for (int x = 0; x < 12; x++) {
             int erase_x = prev_x + x;
             int erase_y = prev_y + y;
-            gfx_memory[erase_y * 1024 + erase_x] = 0xFFFF;
+            if (erase_x < 1024 && erase_y < 768 && erase_x >= 0 && erase_y >= 0) {
+                gfx_memory[erase_y * 1024 + erase_x] = cursor_back[y][x];
+            }
         }
     }
 }
@@ -1719,10 +1697,11 @@ void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
-            unsigned char pixel_type = mouse_arrow[y][x];
             int screen_x = mouse_x + x;
             int screen_y = mouse_y + y;
-            if (screen_x < 1024 && screen_y < 768) {
+            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
+                cursor_back[y][x] = gfx_memory[screen_y * 1024 + screen_x];
+                unsigned char pixel_type = mouse_arrow[y][x];
                 if (theme == 1) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x0000;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xFFFF;}
@@ -1786,6 +1765,7 @@ unsigned char inb(unsigned short port) {
 
 char scan_code_to_ascii(unsigned char scan_code) {
     switch (scan_code) {
+        case 0x01: return 'E';
         case 0x33: return ',';
         case 0x34: return '.';
         case 0x35: return '/';
