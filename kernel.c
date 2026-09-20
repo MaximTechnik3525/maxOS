@@ -230,17 +230,16 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     init_mouse();
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
-            if (y <= 387 && y >= 384) {
-                gfx_memory[y * 1024 + x] = 0x05E5;
+            if (y <= 390 && y >= 388) {
+                gfx_memory[y * 1024 + x] = 0x0DE5;
             }
-            else if (y <= 393 && y > 386) {
-                gfx_memory[y * 1024 + x] = 0x03E3;
+            else if (y <= 396 && y >= 391) {
+                gfx_memory[y * 1024 + x] = 0x03EA;
             }
-            else if (y <= 400 && y > 388) {
-                gfx_memory[y * 1024 + x] = 0x01E1;
+            else if (y <= 402 && y >= 397) {
+                gfx_memory[y * 1024 + x] = 0x01A4;
             }
             else { gfx_memory[y * 1024 + x] = 0x0000; }
-
         }
     }
     print_string("maxOS ColorScreen", 440, 420, 0x05E5);
@@ -1443,13 +1442,13 @@ void shutdown() {
     drag = 2;
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
-            if (y <= 387 && y >= 384) {
+            if (y <= 390 && y >= 388) {
                 gfx_memory[y * 1024 + x] = 0xFBEF;
             }
-            else if (y <= 393 && y > 386) {
+            else if (y <= 396 && y >= 391) {
                 gfx_memory[y * 1024 + x] = 0xF800;
             }
-            else if (y <= 400 && y > 388) {
+            else if (y <= 402 && y >= 397) {
                 gfx_memory[y * 1024 + x] = 0x5000;
             }
             else { gfx_memory[y * 1024 + x] = 0x0000; }
@@ -1458,7 +1457,7 @@ void shutdown() {
     }
     print_string("maxOS is shutting down...", 420, 420, 0xF800);
     play_sound(200); sleep(150); no_sound();
-    play_sound(100); sleep(150); no_sound();
+    play_sound(100); sleep(250); no_sound();
     play_sound(200); sleep(150); no_sound();
     play_sound(100); sleep(150); no_sound();
     play_sound(70); sleep(300); no_sound();
