@@ -70,8 +70,12 @@ void cpu_win();
 void filew();
 void open_explorer();
 void error(char* err);
+void open_file(int file_id);
 unsigned short bg_col = 0x18C3;
 unsigned short text_col = 0x0000;
+unsigned int ram_mb = 0;
+char* bootloader = "Unknown";
+unsigned short apm_supp = 0;
 void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
 int create_file(char* name, char* text);
@@ -222,6 +226,13 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     if (mbi->framebuffer_pitch > 0) { REAL_PITCH = mbi->framebuffer_pitch / 2; }
     unsigned short width = mbi->framebuffer_width;
     unsigned short height = mbi->framebuffer_height;
+    ram_mb = (mbi->mem_upper / 1024) + 1;
+    if (mbi->flags & (1 << 9)) {
+        bootloader = (char*)(unsigned long)mbi->boot_loader_name;
+    }
+    if (mbi->flags & (1 << 10)) {
+        apm_supp = 1;
+    }
     draw_window();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
@@ -312,6 +323,21 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 unsigned char scan_code = inb(0x60);
                 if (scan_code < 0x80 && w_mode == 0 && drag != 2) { // KEYBOARD CLICKS
                     char ascii_char = scan_code_to_ascii(scan_code);
+                    if (explorer_opened == 1 && ascii_char == '1') {
+                        open_file(0);
+                    }
+                    if (explorer_opened == 1 && ascii_char == '2') {
+                        open_file(1);
+                    }
+                    if (explorer_opened == 1 && ascii_char == '3') {
+                        open_file(2);
+                    }
+                    if (explorer_opened == 1 && ascii_char == '4') {
+                        open_file(3);
+                    }
+                    if (explorer_opened == 1 && ascii_char == '5') {
+                        open_file(4);
+                    }
                     if (ascii_char == 'M' && drag == 0 && corners == 0) {
                         corners = 1;
                         draw_window();
@@ -934,7 +960,49 @@ void save_open() {
         }
     }
 }
-
+void open_file(int file_id) {
+drag = 1;
+                for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                    for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                        if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+                            gfx_memory[y * 1024 + x] = 0x0320;
+                        }
+                        else if (y < win_y + 25) {
+                            gfx_memory[y * 1024 + x] = 0x3DEF;
+                        }
+                        else if (y < win_y + 31) {
+                            gfx_memory[y * 1024 + x] = 0x24EE;
+                        }
+                        else if (y < win_y + 37) {
+                            gfx_memory[y * 1024 + x] = 0x11EB;
+                        }
+                        else {
+                            gfx_memory[y * 1024 + x] = 0xFFFF;
+                        }
+                    }
+                }
+                int swin_x = win_x + 20;
+                int swin_y = win_y + 22;
+                int swin_w = win_w - 40;
+                gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
+                gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
+                int right_edges = swin_x + swin_w - 1;
+                gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
+                gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+                if (ram_disk[file_id].exists == 1) {
+                    print_string(ram_disk[file_id].name, win_x + 28, win_y + 28, 0x0000);
+                    print_string(ram_disk[file_id].name, win_x + 27, win_y + 27, 0xFFFF);
+                    print_string(ram_disk[file_id].content, win_x + 30, win_y + 45, text_col);
+                }
+                else {
+                    print_string("No file", win_x + 28, win_y + 28, 0x0000);
+                    print_string("No file", win_x + 27, win_y + 27, 0xFFFF);
+                    print_string("This file does not exists!", win_x + 30, win_y + 45, 0x0000);
+                }
+                print_string("Press Esc to close this window.", win_x + 30, win_y + 60, 0x0000);
+}
 int str_cmp(char* str1, char* str2) {
     int i = 0;
     while(str1[i] != '\0' && str2[i] != '\0') {
@@ -1283,7 +1351,6 @@ void help() {
         print_string("F3/F4 to enable and disable keyboard mouse mode.", win_x + 30, help_col + 75, 0x0000);
         print_string("F5/F6 to enable and disable mouse trail.", win_x + 30, help_col + 90, 0x0000);
         print_string("F7/F8 to enable and disable main window corner.", win_x + 30, help_col + 105, 0x0000);
-        print_string("maxOS ColorScreen (v3.7).", win_x + 30, help_col + 120, 0x0000);
     }
 }
 
@@ -1322,11 +1389,25 @@ void cpu_win() {
         gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
         char cpu_name[49];
         get_cpu(cpu_name);
-        print_string("CPU", win_x + 28, win_y + 28, 0x0000);
-        print_string("CPU", win_x + 27, win_y + 27, 0xFFFF);
+        char ram[32];
+        int_str(ram_mb, ram);
+        print_string("System info", win_x + 28, win_y + 28, 0x0000);
+        print_string("System info", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Your CPU:", win_x + 30, help_col, 0x0000);
         print_string(cpu_name, win_x + 120, help_col, 0x0000);
-        print_string("Press Esc to close this window.", win_x + 30, help_col + 15, 0x0000);
+        print_string("Total RAM:", win_x + 30, help_col + 15, 0x0000);
+        print_string(ram, win_x + 130, help_col + 15, 0x0000);
+        print_string("Bootloader:", win_x + 30, help_col + 30, 0x0000);
+        print_string(bootloader, win_x + 135, help_col + 30, 0x0000);
+        print_string("APM support:", win_x + 30, help_col + 45, 0x0000);
+        if (apm_supp == 1) {
+            print_string("Yes", win_x + 145, help_col + 45, 0x0320);
+        }
+        else {
+            print_string("No", win_x + 145, help_col + 45, 0x9000);
+        }
+        print_string("OS: maxOS ColorScreen (v3.7)", win_x + 30, help_col + 60, 0x0000);
+        print_string("Press Esc to close this window.", win_x + 30, help_col + 75, 0x0000);
     }
 }
 void progressbar(char* file_des, int xend) {
@@ -1385,9 +1466,15 @@ void open_explorer() {
         gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
         gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
 
-        print_string("Explorer: F to format, Esc to close", win_x + 28, win_y + 28, 0x0000);
-        print_string("Explorer: F to format, Esc to close", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("Explorer: F to format, Esc to close. Press 1-5 to open the file.", win_x + 28, win_y + 28, 0x0000);
+        print_string("Explorer: F to format, Esc to close. Press 1-5 to open the file.", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Name:", win_x + 35, win_y + 45, 0x0000);
+        print_string("ID:", win_x + 300, win_y + 45, 0x0000);
+        print_string("1", win_x + 300, win_y + 65, 0x0000);
+        print_string("2", win_x + 300, win_y + 80, 0x0000);
+        print_string("3", win_x + 300, win_y + 95, 0x0000);
+        print_string("4", win_x + 300, win_y + 110, 0x0000);
+        print_string("5", win_x + 300, win_y + 125, 0x0000);
         print_string("Size:", (win_x + win_h) - 14, win_y + 45, 0x0000);
 
         for (int i = 0; i < 5; i++) {
@@ -1640,7 +1727,7 @@ void draw_cpubtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
             gfx_memory[y * 1024 + x] = 0xC618;
         }
     }
-    print_string("CPU", txt_pos_x, txt_pos_y, 0x0000);
+    print_string("Arch", txt_pos_x, txt_pos_y, 0x0000);
 }
 void draw_filebtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
