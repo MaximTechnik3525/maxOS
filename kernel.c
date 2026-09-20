@@ -736,272 +736,283 @@ void save_open() {
     }
     else { 
         create_file("Unnamed.txt", ftext);
-                for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                    for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                        if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                            gfx_memory[y * 1024 + x] = 0x0320;
-                        }
-                        else if (y < win_y + 25) {
-                            gfx_memory[y * 1024 + x] = 0x3DEF;
-                        }
-                        else if (y < win_y + 31) {
-                            gfx_memory[y * 1024 + x] = 0x24EE;
-                        }
-                        else if (y < win_y + 37) {
-                            gfx_memory[y * 1024 + x] = 0x11EB;
-                        }
-                        else {
-                            gfx_memory[y * 1024 + x] = 0xFFFF;
-                        }
-                    }
-                }
-                int swin_x = win_x + 20;
-                int swin_y = win_y + 22;
-                int swin_w = win_w - 40;
-                gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-                gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-                int right_edges = swin_x + swin_w - 1;
-                gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-                gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
-                print_string(ram_disk[fid].name, win_x + 28, win_y + 28, 0x0000);
-                print_string(ram_disk[fid].name, win_x + 27, win_y + 27, 0xFFFF);
-                print_string(ram_disk[fid].content, win_x + 30, win_y + 45, text_col);
-                print_string("Press Esc to close this window.", win_x + 30, win_y + 60, 0x0000);
     }
+    open_file(fid);
     if (fid < 5) {
         fid ++;
     }
-    repeats = 1;
-    if (str_in(ftext, "!mapp!")) {
-        if (str_in(ftext, "repeat0")) { repeats = 0; }
-        if (str_in(ftext, "repeat5")) { repeats = 5; }
-        if (str_in(ftext, "repeat10")) { repeats = 10; }
-        if (str_in(ftext, "repeat50")) { repeats = 50; }
-        if (str_in(ftext, "repeat100")) { repeats = 100; }
+}
+void open_file(int file_id) 
+{
+    drag = 1;
+    if (str_in(ram_disk[file_id].content, "!mapp!")) 
+    {
+        repeats = 1;
+        if (str_in(ram_disk[file_id].content, "!mapp!"))
+        {
+            if (str_in(ram_disk[file_id].content, "repeat0"))   { repeats = 0; }
+            if (str_in(ram_disk[file_id].content, "repeat5"))   { repeats = 5; }
+            if (str_in(ram_disk[file_id].content, "repeat10"))  { repeats = 10; }
+            if (str_in(ram_disk[file_id].content, "repeat50"))  { repeats = 50; }
+            if (str_in(ram_disk[file_id].content, "repeat100")) { repeats = 100; }
 
-        for (int range = 0; range < repeats; range++) {
-            if (str_in(ftext, "waitkey")) {
-                while (1) {
-                    unsigned char scan_code = inb(0x60);
-                    if (scan_code < 0x80) {
-                        char ascii_char = scan_code_to_ascii(scan_code);
-                        if (ascii_char != '10') { break; }
+            for (int range = 0; range < repeats; range++) 
+            {
+                if (str_in(ram_disk[file_id].content, "waitkey")) 
+                {
+                    while (1) 
+                    {
+                        unsigned char scan_code = inb(0x60);
+                        if (scan_code < 0x80) 
+                        {
+                            char ascii_char = scan_code_to_ascii(scan_code);
+                            if (ascii_char != '10') { break; }
+                        }
                     }
                 }
-            }
-            if (str_in(ftext, "theme1")) {
-                theme = 1;
-                draw_window();
-                drag = 0;
-                bg_col = 0x18C3;
-            }
-            if (str_in(ftext, "theme2")) {
-                theme = 2;
-                draw_window();
-                drag = 0;
-                bg_col = 0x2000;
-            }
-            if (str_in(ftext, "theme3")) {
-                theme = 3;
-                draw_window();
-                drag = 0;
-                bg_col = 0x1041;
-            }
-            if (str_in(ftext, "theme4")) {
-                theme = 4;
-                draw_window();
-                drag = 0;
-                bg_col = 0x10A2;
-            }
-            if (str_in(ftext, "theme5")) {
-                theme = 5;
-                draw_window();
-                drag = 0;
-                bg_col = 0x01C8;
-            }
-            if (str_in(ftext, "theme6")) {
-                theme = 6;
-                draw_window();
-                drag = 0;
-                bg_col = 0x00A1;
-            }
-            if (str_in(ftext, "theme7")) {
-                theme = 7;
-                draw_window();
-                drag = 0;
-                bg_col = 0x4083;
-            }
-            if (str_in(ftext, "theme8")) {
-                theme = 8;
-                draw_window();
-                drag = 0;
-                bg_col = 0x7BE0;
-            }
-            if (str_in(ftext, "theme9")) {
-                theme = 9;
-                draw_window();
-                drag = 0;
-                bg_col = 0x0110;
-            }
-            if (str_in(ftext, "theme10")) {
-                theme = 10;
-                draw_window();
-                drag = 0;
-                bg_col = 0x10A2;
-            }
-            if (str_in(ftext, "redraw")) {
-                explorer_opened = 0;
-                drag = 0;
-                help_col = 65;
-                draw_window();
-            }
-            if (str_in(ftext, "winr")) {
-                drag = 0;
-                win_x += 50;
-                draw_window();
-            }
-            if (str_in(ftext, "winl")) {
-                drag = 0;
-                win_x -= 50;
-                draw_window();
-            }
-            if (str_in(ftext, "winu")) {
-                drag = 0;
-                win_y -= 50;
-                draw_window();
-            }
-            if (str_in(ftext, "wind")) {
-                drag = 0;
-                win_y += 50;
-                draw_window();
-            }
-            if (str_in(ftext, "speaker")) {
-                play_sound(750);
-                sleep(250);
-                no_sound();
-            }
-            if (str_in(ftext, "scrblack")) {
-                for (int y = 0; y < 768; y++) {
-                    for (int x = 0; x < 1024; x++) {
-                        gfx_memory[y * 1024 + x] = 0x0000;
+                if (str_in(ram_disk[file_id].content, "theme1")) 
+                {
+                    theme = 1;
+                    draw_window();
+                    bg_col = 0x18C3;
+                }
+                if (str_in(ram_disk[file_id].content, "theme2")) 
+                {
+                    theme = 2;
+                    draw_window();
+                    bg_col = 0x2000;
+                }
+                if (str_in(ram_disk[file_id].content, "theme3")) 
+                {
+                    theme = 3;
+                    draw_window();
+                    bg_col = 0x1041;
+                }
+                if (str_in(ram_disk[file_id].content, "theme4")) 
+                {
+                    theme = 4;
+                    draw_window();
+                    bg_col = 0x10A2;
+                }
+                if (str_in(ram_disk[file_id].content, "theme5")) 
+                {
+                    theme = 5;
+                    draw_window();
+                    bg_col = 0x01C8;
+                }
+                if (str_in(ram_disk[file_id].content, "theme6")) 
+                {
+                    theme = 6;
+                    draw_window();
+                    bg_col = 0x05E0;
+                }
+                if (str_in(ram_disk[file_id].content, "theme7")) 
+                {
+                    theme = 7;
+                    draw_window();
+                    bg_col = 0xFBEF;
+                }
+                if (str_in(ram_disk[file_id].content, "theme8")) 
+                {
+                    theme = 8;
+                    draw_window();
+                    bg_col = 0x8B04;
+                }
+                if (str_in(ram_disk[file_id].content, "theme9")) 
+                {
+                    theme = 9;
+                    draw_window();
+                    bg_col = 0x1000;
+                }
+                if (str_in(ram_disk[file_id].content, "theme10")) 
+                {
+                    theme = 10;
+                    draw_window();
+                    bg_col = 0x0841;
+                }
+                if (str_in(ram_disk[file_id].content, "redraw")) 
+                {
+                    drag = 0;
+                    help_col = 65;
+                    draw_window();
+                }
+                if (str_in(ram_disk[file_id].content, "winr")) 
+                {
+                    drag = 0;
+                    win_x += 50;
+                    draw_window();
+                }
+                if (str_in(ram_disk[file_id].content, "winl")) 
+                {
+                    drag = 0;
+                    win_x -= 50;
+                    draw_window();
+                }
+                if (str_in(ram_disk[file_id].content, "winu")) 
+                {
+                    drag = 0;
+                    win_y -= 50;
+                    draw_window();
+                }
+                if (str_in(ram_disk[file_id].content, "wind")) 
+                {
+                    drag = 0;
+                    win_y += 50;
+                    draw_window();
+                }
+                if (str_in(ram_disk[file_id].content, "speaker")) 
+                {
+                    play_sound(750);
+                    sleep(250);
+                    no_sound();
+                }
+                if (str_in(ram_disk[file_id].content, "scrblack")) 
+                {
+                    for (int y = 0; y < 768; y++) 
+                    {
+                        for (int x = 0; x < 1024; x++) 
+                        {
+                            gfx_memory[y * 1024 + x] = 0x0000;
+                        }
                     }
                 }
-            }
-            if (str_in(ftext, "scrwhite")) {
-                for (int y = 0; y < 768; y++) {
-                    for (int x = 0; x < 1024; x++) {
-                        gfx_memory[y * 1024 + x] = 0xFFFF;
-                    }
-                }
-            }
-            if (str_in(ftext, "stbusy")) {
-                drag = 1;
-            }
-            if (str_in(ftext, "stfree")) { drag = 0; }
-            if (str_in(ftext, "stcrit")) { drag = 2; }
-            if (str_in(ftext, "drawwin")) {
-                for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                    for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                        if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                            gfx_memory[y * 1024 + x] = 0x0320;
-                        }
-                        else if (y < win_y + 25) {
-                            gfx_memory[y * 1024 + x] = 0x3DEF;
-                        }
-                        else if (y < win_y + 31) {
-                            gfx_memory[y * 1024 + x] = 0x24EE;
-                        }
-                        else if (y < win_y + 37) {
-                            gfx_memory[y * 1024 + x] = 0x11EB;
-                        }
-                        else {
+                if (str_in(ram_disk[file_id].content, "scrwhite")) 
+                {
+                    for (int y = 0; y < 768; y++) 
+                    {
+                        for (int x = 0; x < 1024; x++) 
+                        {
                             gfx_memory[y * 1024 + x] = 0xFFFF;
                         }
                     }
                 }
-                int swin_x = win_x + 20;
-                int swin_y = win_y + 22;
-                int swin_w = win_w - 40;
-                gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-                gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-                int right_edges = swin_x + swin_w - 1;
-                gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-                gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
-                print_string("Application", win_x + 28, win_y + 28, 0x0000);
-                print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
-            }
-            if (str_in(ftext, "printstring")) { print_string(ftext, 300, 359, 0x0000); }
-            if (str_in(ftext, "sleep")) { sleep(2000); }
-            if (str_in(ftext, "errscr")) { error("Caused by user programm. Code: 0x00"); }
-            if (str_in(ftext, "shutdown")) { shutdown(); }
-            if (str_in(ftext, "trailon")) { tail = 1; }
-            if (str_in(ftext, "trailoff")) { tail = 0; }
-            if (str_in(ftext, "format")) {
-            textid = 0;
-            for (int i = 0; i < 99; i++) {
-                ftext[i] = '\0';
-            }
-            for (int i = 0; i < 5; i++) {
-                ram_disk[i].exists = 0;
-                ram_disk[i].size = 0;
-                for (int n = 0; n < 12; n++) {
-                    ram_disk[i].name[n] = '\0';
+                if (str_in(ram_disk[file_id].content, "stbusy")) { drag = 1; }
+                if (str_in(ram_disk[file_id].content, "stfree")) { drag = 0; }
+                if (str_in(ftext, "stcrit")) { drag = 2; }
+                
+                if (str_in(ram_disk[file_id].content, "drawwin")) 
+                {
+                    for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) 
+                    {
+                        for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) 
+                        {
+                            if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) 
+                            {
+                                gfx_memory[y * 1024 + x] = 0x0320;
+                            }
+                            else if (y < win_y + 25) 
+                            {
+                                gfx_memory[y * 1024 + x] = 0x3DEF;
+                            }
+                            else if (y < win_y + 31) 
+                            {
+                                gfx_memory[y * 1024 + x] = 0x24EE;
+                            }
+                            else if (y < win_y + 37) 
+                            {
+                                gfx_memory[y * 1024 + x] = 0x11EB;
+                            }
+                            else 
+                            {
+                                gfx_memory[y * 1024 + x] = 0xFFFF;
+                            }
+                        }
+                    }
+                    int swin_x = win_x + 20;
+                    int swin_y = win_y + 22;
+                    int swin_w = win_w - 40;
+                    gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+                    gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
+                    gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
+                    int right_edges = swin_x + swin_w - 1;
+                    gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+                    gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
+                    gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+                    print_string("Application", win_x + 28, win_y + 28, 0x0000);
+                    print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
                 }
-                for (int t = 0; t < 100; t++) {
-                    ram_disk[i].content[t] = '\0';
+                if (str_in(ram_disk[file_id].content, "printstring")) { print_string(ram_disk[file_id].content, 300, 359, 0x0000); }
+                if (str_in(ram_disk[file_id].content, "sleep")) { sleep(2000); }
+                if (str_in(ram_disk[file_id].content, "errscr")) { error("Caused by user programm. Code: 0x00"); }
+                if (str_in(ram_disk[file_id].content, "shutdown")) { shutdown(); }
+                if (str_in(ram_disk[file_id].content, "trailon")) { tail = 1; }
+                if (str_in(ram_disk[file_id].content, "trailoff")) { tail = 0; }
+                
+                if (str_in(ram_disk[file_id].content, "format")) 
+                {
+                    textid = 0;
+                    for (int i = 0; i < 99; i++) 
+                    {
+                        ftext[i] = '\0';
+                    }
+                    for (int i = 0; i < 5; i++) 
+                    {
+                        ram_disk[i].exists = 0;
+                        ram_disk[i].size = 0;
+                        for (int n = 0; n < 12; n++) 
+                        {
+                            ram_disk[i].name[n] = '\0';
+                        }
+                        for (int t = 0; t < 100; t++) 
+                        {
+                            ram_disk[i].content[t] = '\0';
+                        }
+                    }
+                    fid = 0;
                 }
             }
-            fid = 0;
-        }
         }
     }
-}
-void open_file(int file_id) {
-drag = 1;
-                for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                    for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                        if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                            gfx_memory[y * 1024 + x] = 0x0320;
-                        }
-                        else if (y < win_y + 25) {
-                            gfx_memory[y * 1024 + x] = 0x3DEF;
-                        }
-                        else if (y < win_y + 31) {
-                            gfx_memory[y * 1024 + x] = 0x24EE;
-                        }
-                        else if (y < win_y + 37) {
-                            gfx_memory[y * 1024 + x] = 0x11EB;
-                        }
-                        else {
-                            gfx_memory[y * 1024 + x] = 0xFFFF;
-                        }
-                    }
+    else 
+    {
+        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) 
+        {
+            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) 
+            {
+                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) 
+                {
+                    gfx_memory[y * 1024 + x] = 0x0320;
                 }
-                int swin_x = win_x + 20;
-                int swin_y = win_y + 22;
-                int swin_w = win_w - 40;
-                gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-                gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-                int right_edges = swin_x + swin_w - 1;
-                gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-                gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
-                if (ram_disk[file_id].exists == 1) {
-                    print_string(ram_disk[file_id].name, win_x + 28, win_y + 28, 0x0000);
-                    print_string(ram_disk[file_id].name, win_x + 27, win_y + 27, 0xFFFF);
-                    print_string(ram_disk[file_id].content, win_x + 30, win_y + 45, text_col);
+                else if (y < win_y + 25) 
+                {
+                    gfx_memory[y * 1024 + x] = 0x3DEF;
                 }
-                else {
-                    print_string("No file", win_x + 28, win_y + 28, 0x0000);
-                    print_string("No file", win_x + 27, win_y + 27, 0xFFFF);
-                    print_string("This file does not exists!", win_x + 30, win_y + 45, 0x0000);
+                else if (y < win_y + 31) 
+                {
+                    gfx_memory[y * 1024 + x] = 0x24EE;
                 }
-                print_string("Press Esc to close this window.", win_x + 30, win_y + 60, 0x0000);
+                else if (y < win_y + 37) 
+                {
+                    gfx_memory[y * 1024 + x] = 0x11EB;
+                }
+                else 
+                {
+                    gfx_memory[y * 1024 + x] = 0xFFFF;
+                }
+            }
+        }
+        int swin_x = win_x + 20;
+        int swin_y = win_y + 22;
+        int swin_w = win_w - 40;
+        gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+        gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
+        gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
+        int right_edges = swin_x + swin_w - 1;
+        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+        gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
+        gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+        if (ram_disk[file_id].exists == 1) {
+            print_string(ram_disk[file_id].name, win_x + 28, win_y + 28, 0x0000);
+            print_string(ram_disk[file_id].name, win_x + 27, win_y + 27, 0xFFFF);
+            print_string(ram_disk[file_id].content, win_x + 30, win_y + 45, text_col);
+        }
+        else {
+            print_string("No file", win_x + 28, win_y + 28, 0x0000);
+            print_string("No file", win_x + 27, win_y + 27, 0xFFFF);
+            print_string("This file does not exists!", win_x + 30, win_y + 45, 0x0000);
+        }
+        print_string("Press Esc to close this window.", win_x + 30, win_y + 60, 0x0000);
+    }
 }
 int str_cmp(char* str1, char* str2) {
     int i = 0;
@@ -1171,6 +1182,11 @@ void filew() {
                     }
                     if (shift_p == 1 && ascii_char != '00') {
                         if (textid < 76) {
+                            if (ascii_char == '=') {
+                                ftext[textid] = '+';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
                             if (ascii_char == '1') {
                                 ftext[textid] = '!';
                                 textid++;
@@ -1424,6 +1440,7 @@ void progressbar(char* file_des, int xend) {
         print_string(file_des, win_x + 290, win_y + 435, 0x0000);
 }
 void open_explorer() {
+    explorer_opened = 1;
     if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
         int help_col = win_y + 45;
         int line = win_y + 65;
@@ -1852,6 +1869,9 @@ unsigned char inb(unsigned short port) {
 
 char scan_code_to_ascii(unsigned char scan_code) {
     switch (scan_code) {
+        case 0x0D: return '=';
+        case 0x0C: return '-';
+        case 0x4A: return '-';
         case 0x01: return 'E';
         case 0x33: return ',';
         case 0x34: return '.';
