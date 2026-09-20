@@ -232,20 +232,20 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
             if (y <= 387 && y >= 384) {
-                gfx_memory[y * 1024 + x] = 0x0DE5;
+                gfx_memory[y * 1024 + x] = 0x05E5;
             }
             else if (y <= 393 && y > 387) {
-                gfx_memory[y * 1024 + x] = 0x03EA;
+                gfx_memory[y * 1024 + x] = 0x03E3;
             }
             else if (y <= 400 && y > 393) {
-                gfx_memory[y * 1024 + x] = 0x01A4;
+                gfx_memory[y * 1024 + x] = 0x01E1;
             }
             else { gfx_memory[y * 1024 + x] = 0x0000; }
 
         }
     }
-    print_string("maxOS TextExplorer", 440, 420, 0x0DE5);
-    print_string("by MaximTechnik3525", 10, 10, 0x24EE);
+    print_string("maxOS TextExplorer", 440, 420, 0x05E5);
+    print_string("By MaximTechnik3525", 10, 10, 0x05E5);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
     unsigned char packet[3];
@@ -1464,25 +1464,28 @@ void sleep(unsigned int ms) {
 }
 void outw(unsigned short port, unsigned short val) { __asm__ volatile("outw %0, %1" : : "a"(val), "Nd"(port)); }
 void shutdown() {
+    drag = 2;
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
             if (y <= 387 && y >= 384) {
-                gfx_memory[y * 1024 + x] = 0xB269;
+                gfx_memory[y * 1024 + x] = 0xFBEF;
             }
             else if (y <= 393 && y > 387) {
-                gfx_memory[y * 1024 + x] = 0x81C6;
+                gfx_memory[y * 1024 + x] = 0xF800;
             }
             else if (y <= 400 && y > 393) {
-                gfx_memory[y * 1024 + x] = 0x4924;
+                gfx_memory[y * 1024 + x] = 0x5000;
             }
             else { gfx_memory[y * 1024 + x] = 0x0000; }
 
         }
     }
-    print_string("maxOS is shutting down...", 420, 420, 0xB269);
+    print_string("maxOS is shutting down...", 420, 420, 0xF800);
     play_sound(200); sleep(150); no_sound();
     play_sound(100); sleep(150); no_sound();
-    play_sound(50); sleep(250); no_sound();
+    play_sound(200); sleep(150); no_sound();
+    play_sound(100); sleep(150); no_sound();
+    play_sound(70); sleep(300); no_sound();
     sleep(3000);
     outw(0xB004, 0x2000);
     outw(0x604, 0x2000);
