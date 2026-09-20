@@ -1407,8 +1407,8 @@ void cpu_win() {
         get_cpu(cpu_name);
         char ram[32];
         int_str(ram_mb, ram);
-        print_string("System info", win_x + 28, win_y + 28, 0x0000);
-        print_string("System info", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("System information", win_x + 28, win_y + 28, 0x0000);
+        print_string("System information", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Your CPU:", win_x + 30, help_col, 0x0000);
         print_string(cpu_name, win_x + 120, help_col, 0x0000);
         print_string("Total RAM:", win_x + 30, help_col + 15, 0x0000);
