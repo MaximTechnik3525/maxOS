@@ -31,13 +31,6 @@ struct multiboot_info {
     unsigned char framebuffer_color_info[6];
 };
 #pragma pack(pop)
-struct VirtualFile {
-    char name[12];
-    int size;
-    char content[100];
-    int exists;
-};
-struct VirtualFile ram_disk[5];
 void print_string(char* str, int x, int y, unsigned short color);
 void draw_char(char c, int start_x, int start_y, unsigned short color);
 unsigned char inb(unsigned short port);
@@ -72,7 +65,7 @@ void open_explorer();
 void error(char* err);
 void ata_read_sector(unsigned int lba, unsigned short* buffer);
 void ata_write_sector(unsigned int lba, unsigned short* buffer);
-void open_file(int file_id);
+void open_file(int sector);
 unsigned short bg_col = 0x18C3;
 unsigned short text_col = 0x0000;
 unsigned int ram_mb = 0;
@@ -80,7 +73,8 @@ char* bootloader = "Unknown";
 unsigned short apm_supp = 0;
 void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
-int create_file(char* name, char* text);
+void write(char* msg, int sector);
+void read(int sector, char* output);
 unsigned short cursor_back[12][12] = {0};
 unsigned char mouse_arrow[12][12] = {
     {1,1,3,0,0,0,0,0,0,0,0,0},
@@ -222,6 +216,8 @@ int corners = 0;
 int help_pressed = 0;
 int help_col;
 int explorer_opened = 0;
+int sectors = 5000;
+int createdFiles = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
@@ -241,7 +237,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     draw_cursor(pos_x, pos_y);
     help_col = win_y + 35;
     init_mouse();
-    print_string((char*)read_buffer, 220, 50, 0x0000);
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
             if (y <= 390 && y >= 388) {
@@ -260,18 +255,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     print_string("By MaximTechnik3525", 10, 10, 0x05E5);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(750); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
-    print_string((char*)read_buffer, 220, 50, 0x0000);
     unsigned char packet[3];
-    for (int i = 0; i < 5; i++) {
-        ram_disk[i].size = 0;
-        ram_disk[i].exists = 0;
-        for (int n = 0; n < 12; n++) {
-            ram_disk[i].name[n] = '\0';
-        }
-        for (int t = 0; t < 100; t++) {
-            ram_disk[i].content[t] = '\0';
-        }
-    }
     while(1) {
         unsigned char status = inb(0x64);
         if (status & 0x01) {
@@ -328,19 +312,34 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 if (scan_code < 0x80 && w_mode == 0 && drag != 2) { // KEYBOARD CLICKS
                     char ascii_char = scan_code_to_ascii(scan_code);
                     if (explorer_opened == 1 && ascii_char == '1') {
-                        open_file(0);
+                        open_file(5000);
                     }
                     if (explorer_opened == 1 && ascii_char == '2') {
-                        open_file(1);
+                        open_file(5001);
                     }
                     if (explorer_opened == 1 && ascii_char == '3') {
-                        open_file(2);
+                        open_file(5002);
                     }
                     if (explorer_opened == 1 && ascii_char == '4') {
-                        open_file(3);
+                        open_file(5003);
                     }
                     if (explorer_opened == 1 && ascii_char == '5') {
-                        open_file(4);
+                        open_file(5004);
+                    }
+                    if (explorer_opened == 1 && ascii_char == '6') {
+                        open_file(5005);
+                    }
+                    if (explorer_opened == 1 && ascii_char == '7') {
+                        open_file(5006);
+                    }
+                    if (explorer_opened == 1 && ascii_char == '8') {
+                        open_file(5007);
+                    }
+                    if (explorer_opened == 1 && ascii_char == '9') {
+                        open_file(5008);
+                    }
+                    if (explorer_opened == 1 && ascii_char == '0') {
+                        open_file(5009);
                     }
                     if (ascii_char == 'M' && drag == 0 && corners == 0) {
                         corners = 1;
@@ -512,21 +511,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30 && pos_y >= win_y + 20) { open_explorer(); }
                     }
                     if (ascii_char == 'f' && explorer_opened == 1) {
-                        textid = 0;
-                        for (int i = 0; i < 99; i++) {
-                            ftext[i] = '\0';}
-                        for (int i = 0; i < 5; i++) {
-                            ram_disk[i].exists = 0;
-                            ram_disk[i].size = 0;
-                            for (int n = 0; n < 12; n++) {
-                                ram_disk[i].name[n] = '\0';
-                            }
-                            for (int t = 0; t < 100; t++) {
-                                ram_disk[i].content[t] = '\0';
-                            }
+                        createdFiles = 0;
+                        for (int i = 5000; i < 5011; i++) {
+                            write("", i);
                         }
-                        fid = 0;
-                        play_sound(800);
+                        sectors = 5000;
+                        play_sound(1000);
                         sleep(100);
                         no_sound();
                         open_explorer();
@@ -733,36 +723,27 @@ void pong() {
         }
     }
 }
-void save_open() {
-    if (str_in(ftext, "!mapp!")) { 
-        create_file("App.mapp", ftext);
-        drag = 0; 
-    }
-    else { 
-        create_file("Unnamed.txt", ftext);
-    }
-    open_file(fid);
-    if (fid < 5) {
-        fid ++;
-    }
-}
-void open_file(int file_id) 
+void open_file(int sector) 
 {
     drag = 1;
-    if (str_in(ram_disk[file_id].content, "!mapp!")) 
+    char file_output[77];
+    read(sector, file_output);
+    if (file_output[0] != '\0') {
+    if (str_in(file_output, "!mapp!")) 
     {
+        drag = 0;
         repeats = 1;
-        if (str_in(ram_disk[file_id].content, "!mapp!"))
+        if (str_in(file_output, "!mapp!"))
         {
-            if (str_in(ram_disk[file_id].content, "repeat0"))   { repeats = 0; }
-            if (str_in(ram_disk[file_id].content, "repeat5"))   { repeats = 5; }
-            if (str_in(ram_disk[file_id].content, "repeat10"))  { repeats = 10; }
-            if (str_in(ram_disk[file_id].content, "repeat50"))  { repeats = 50; }
-            if (str_in(ram_disk[file_id].content, "repeat100")) { repeats = 100; }
+            if (str_in(file_output, "repeat0"))   { repeats = 0; }
+            if (str_in(file_output, "repeat5"))   { repeats = 5; }
+            if (str_in(file_output, "repeat10"))  { repeats = 10; }
+            if (str_in(file_output, "repeat50"))  { repeats = 50; }
+            if (str_in(file_output, "repeat100")) { repeats = 100; }
 
             for (int range = 0; range < repeats; range++) 
             {
-                if (str_in(ram_disk[file_id].content, "waitkey")) 
+                if (str_in(file_output, "waitkey")) 
                 {
                     while (1) 
                     {
@@ -774,103 +755,103 @@ void open_file(int file_id)
                         }
                     }
                 }
-                if (str_in(ram_disk[file_id].content, "theme1")) 
+                if (str_in(file_output, "theme1")) 
                 {
                     theme = 1;
                     draw_window();
                     bg_col = 0x18C3;
                 }
-                if (str_in(ram_disk[file_id].content, "theme2")) 
+                if (str_in(file_output, "theme2")) 
                 {
                     theme = 2;
                     draw_window();
                     bg_col = 0x2000;
                 }
-                if (str_in(ram_disk[file_id].content, "theme3")) 
+                if (str_in(file_output, "theme3")) 
                 {
                     theme = 3;
                     draw_window();
                     bg_col = 0x1041;
                 }
-                if (str_in(ram_disk[file_id].content, "theme4")) 
+                if (str_in(file_output, "theme4")) 
                 {
                     theme = 4;
                     draw_window();
                     bg_col = 0x10A2;
                 }
-                if (str_in(ram_disk[file_id].content, "theme5")) 
+                if (str_in(file_output, "theme5")) 
                 {
                     theme = 5;
                     draw_window();
                     bg_col = 0x01C8;
                 }
-                if (str_in(ram_disk[file_id].content, "theme6")) 
+                if (str_in(file_output, "theme6")) 
                 {
                     theme = 6;
                     draw_window();
                     bg_col = 0x05E0;
                 }
-                if (str_in(ram_disk[file_id].content, "theme7")) 
+                if (str_in(file_output, "theme7")) 
                 {
                     theme = 7;
                     draw_window();
                     bg_col = 0xFBEF;
                 }
-                if (str_in(ram_disk[file_id].content, "theme8")) 
+                if (str_in(file_output, "theme8")) 
                 {
                     theme = 8;
                     draw_window();
                     bg_col = 0x8B04;
                 }
-                if (str_in(ram_disk[file_id].content, "theme9")) 
+                if (str_in(file_output, "theme9")) 
                 {
                     theme = 9;
                     draw_window();
                     bg_col = 0x1000;
                 }
-                if (str_in(ram_disk[file_id].content, "theme10")) 
+                if (str_in(file_output, "theme10")) 
                 {
                     theme = 10;
                     draw_window();
                     bg_col = 0x0841;
                 }
-                if (str_in(ram_disk[file_id].content, "redraw")) 
+                if (str_in(file_output, "redraw")) 
                 {
                     drag = 0;
                     help_col = 65;
                     draw_window();
                 }
-                if (str_in(ram_disk[file_id].content, "winr")) 
+                if (str_in(file_output, "winr")) 
                 {
                     drag = 0;
                     win_x += 50;
                     draw_window();
                 }
-                if (str_in(ram_disk[file_id].content, "winl")) 
+                if (str_in(file_output, "winl")) 
                 {
                     drag = 0;
                     win_x -= 50;
                     draw_window();
                 }
-                if (str_in(ram_disk[file_id].content, "winu")) 
+                if (str_in(file_output, "winu")) 
                 {
                     drag = 0;
                     win_y -= 50;
                     draw_window();
                 }
-                if (str_in(ram_disk[file_id].content, "wind")) 
+                if (str_in(file_output, "wind")) 
                 {
                     drag = 0;
                     win_y += 50;
                     draw_window();
                 }
-                if (str_in(ram_disk[file_id].content, "speaker")) 
+                if (str_in(file_output, "speaker")) 
                 {
                     play_sound(750);
                     sleep(250);
                     no_sound();
                 }
-                if (str_in(ram_disk[file_id].content, "scrblack")) 
+                if (str_in(file_output, "scrblack")) 
                 {
                     for (int y = 0; y < 768; y++) 
                     {
@@ -880,7 +861,7 @@ void open_file(int file_id)
                         }
                     }
                 }
-                if (str_in(ram_disk[file_id].content, "scrwhite")) 
+                if (str_in(file_output, "scrwhite")) 
                 {
                     for (int y = 0; y < 768; y++) 
                     {
@@ -890,11 +871,11 @@ void open_file(int file_id)
                         }
                     }
                 }
-                if (str_in(ram_disk[file_id].content, "stbusy")) { drag = 1; }
-                if (str_in(ram_disk[file_id].content, "stfree")) { drag = 0; }
-                if (str_in(ftext, "stcrit")) { drag = 2; }
+                if (str_in(file_output, "stbusy")) { drag = 1; }
+                if (str_in(file_output, "stfree")) { drag = 0; }
+                if (str_in(file_output, "stcrit")) { drag = 2; }
                 
-                if (str_in(ram_disk[file_id].content, "drawwin")) 
+                if (str_in(file_output, "drawwin")) 
                 {
                     for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) 
                     {
@@ -935,39 +916,29 @@ void open_file(int file_id)
                     print_string("Application", win_x + 28, win_y + 28, 0x0000);
                     print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
                 }
-                if (str_in(ram_disk[file_id].content, "printstring")) { print_string(ram_disk[file_id].content, 300, 359, 0x0000); }
-                if (str_in(ram_disk[file_id].content, "sleep")) { sleep(2000); }
-                if (str_in(ram_disk[file_id].content, "errscr")) { error("Caused by user programm. Code: 0x00"); }
-                if (str_in(ram_disk[file_id].content, "shutdown")) { shutdown(); }
-                if (str_in(ram_disk[file_id].content, "trailon")) { tail = 1; }
-                if (str_in(ram_disk[file_id].content, "trailoff")) { tail = 0; }
+                if (str_in(file_output, "printstring")) { print_string(file_output, 300, 359, 0x0000); }
+                if (str_in(file_output, "sleep")) { sleep(2000); }
+                if (str_in(file_output, "errscr")) { error("Caused by user programm. Code: 0x00"); }
+                if (str_in(file_output, "shutdown")) { shutdown(); }
+                if (str_in(file_output, "trailon")) { tail = 1; }
+                if (str_in(file_output, "trailoff")) { tail = 0; }
                 
-                if (str_in(ram_disk[file_id].content, "format")) 
+                if (str_in(file_output, "format")) 
                 {
-                    textid = 0;
-                    for (int i = 0; i < 99; i++) 
-                    {
-                        ftext[i] = '\0';
+                    createdFiles = 0;
+                    for (int i = 5000; i < 5011; i++) {
+                        write("", i);
                     }
-                    for (int i = 0; i < 5; i++) 
-                    {
-                        ram_disk[i].exists = 0;
-                        ram_disk[i].size = 0;
-                        for (int n = 0; n < 12; n++) 
-                        {
-                            ram_disk[i].name[n] = '\0';
-                        }
-                        for (int t = 0; t < 100; t++) 
-                        {
-                            ram_disk[i].content[t] = '\0';
-                        }
-                    }
-                    fid = 0;
+                    sectors = 5000;
+                    play_sound(1000);
+                    sleep(100);
+                    no_sound();
+                    open_explorer();
                 }
             }
         }
     }
-    else 
+    else
     {
         for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) 
         {
@@ -1005,18 +976,54 @@ void open_file(int file_id)
         gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
         gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
         gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
-        if (ram_disk[file_id].exists == 1) {
-            print_string(ram_disk[file_id].name, win_x + 28, win_y + 28, 0x0000);
-            print_string(ram_disk[file_id].name, win_x + 27, win_y + 27, 0xFFFF);
-            print_string(ram_disk[file_id].content, win_x + 30, win_y + 45, text_col);
-        }
-        else {
-            print_string("No file", win_x + 28, win_y + 28, 0x0000);
-            print_string("No file", win_x + 27, win_y + 27, 0xFFFF);
-            print_string("This file does not exists!", win_x + 30, win_y + 45, 0x0000);
-        }
+        print_string("Text file", win_x + 28, win_y + 28, 0x0000);
+        print_string("Text file", win_x + 27, win_y + 27, 0xFFFF);
+        print_string(file_output, win_x + 30, win_y + 45, text_col);
         print_string("Press Esc to close this window.", win_x + 30, win_y + 60, 0x0000);
     }
+}
+else {
+        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) 
+        {
+            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) 
+            {
+                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) 
+                {
+                    gfx_memory[y * 1024 + x] = 0x0320;
+                }
+                else if (y < win_y + 25) 
+                {
+                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                }
+                else if (y < win_y + 31) 
+                {
+                    gfx_memory[y * 1024 + x] = 0x24EE;
+                }
+                else if (y < win_y + 37) 
+                {
+                    gfx_memory[y * 1024 + x] = 0x11EB;
+                }
+                else 
+                {
+                    gfx_memory[y * 1024 + x] = 0xFFFF;
+                }
+            }
+        }
+        int swin_x = win_x + 20;
+        int swin_y = win_y + 22;
+        int swin_w = win_w - 40;
+        gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+        gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
+        gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
+        int right_edges = swin_x + swin_w - 1;
+        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+        gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
+        gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+        print_string("No file", win_x + 28, win_y + 28, 0x0000);
+        print_string("No file", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("File not found!", win_x + 30, win_y + 45, text_col);
+        print_string("Press Esc to close this window.", win_x + 30, win_y + 60, 0x0000);
+}
 }
 int str_cmp(char* str1, char* str2) {
     int i = 0;
@@ -1030,7 +1037,7 @@ int str_cmp(char* str1, char* str2) {
     return 1;
 }
 int shift_p = 0;
-void write(char* msg, int sector) { //DEF SECTOR IS 5000, MSG IN ""
+void write(char* msg, int sector) {
     unsigned short write_buffer[256] = {0};
     char* msg_ptr = (char*)write_buffer;
     int msg_id = 0;
@@ -1040,7 +1047,7 @@ void write(char* msg, int sector) { //DEF SECTOR IS 5000, MSG IN ""
     }
     ata_write_sector(sector, write_buffer);
 }
-void read(int sector, char* output, int text_x, int text_y) {
+void read(int sector, char* output) {
     unsigned short read_buffer[256] = {0};
     ata_read_sector(sector, read_buffer);
     char* disk_ptr = (char*)read_buffer;
@@ -1050,10 +1057,11 @@ void read(int sector, char* output, int text_x, int text_y) {
         i++;
     }
     output[i] = '\0';
-    print_string(output, text_x, text_y, 0x0000);
 }
 void filew() {
-    if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) {
+    if (1 != 0) {
+        char str[77];
+        read((sectors - 1), str);
         int help_col = win_y + 45;
         w_mode = 1;
         for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
@@ -1085,7 +1093,7 @@ void filew() {
         gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
         gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
         gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
-        if (str_cmp(ftext, ram_disk[fid - 1].content)) {
+        if (str_cmp(ftext, str)) {
             print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
             print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
         }
@@ -1147,7 +1155,8 @@ void filew() {
                             print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
                             print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
-                            if (str_cmp(ftext, ram_disk[fid - 1].content)) {
+                            read((sectors - 1), str);
+                            if (str_cmp(ftext, str)) {
                                 print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
                                 print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
                             }
@@ -1196,7 +1205,8 @@ void filew() {
                             print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
                             print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
-                            if (str_cmp(ftext, ram_disk[fid - 1].content)) {
+                            read((sectors - 1), str);
+                            if (str_cmp(ftext, str)) {
                                 print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
                                 print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
                             }
@@ -1317,7 +1327,8 @@ void filew() {
                             print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
                             print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
-                            if (str_cmp(ftext, ram_disk[fid - 1].content)) {
+                            read((sectors - 1), str);
+                            if (str_cmp(ftext, str)) {
                                 print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
                                 print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
                             }
@@ -1329,12 +1340,19 @@ void filew() {
                         }
                     }
                     else if (ascii_char == 'F') {
-                        drag = 1;
-                        play_sound(800); sleep(100); no_sound();
-                        draw_window();
-                        save_open();
-                        w_mode = 0;
-                        break;
+                        if (createdFiles < 10) {
+                            write(ftext, sectors);
+                            play_sound(750); sleep(100); no_sound();
+                            w_mode = 0;
+                            draw_window();
+                            open_file(sectors);
+                            sectors++;
+                            createdFiles++;
+                            break;
+                        }
+                        else {
+                            play_sound(150); sleep(100); no_sound();
+                        }
                     }
                     else if (ascii_char == 'E') {
                         play_sound(150); sleep(100); no_sound();
@@ -1452,19 +1470,6 @@ void cpu_win() {
         print_string("Press Esc to close this window.", win_x + 30, help_col + 75, 0x0000);
     }
 }
-void progressbar(char* file_des, int xend) {
-        for (int y = win_y + 410; y < win_y + 425; y++) {
-            for (int x = win_x + 300; x < win_x + 450; x++) {
-                gfx_memory[y * 1024 + x] = 0x3186;
-            }
-        }
-        for (int y = win_y + 412; y < win_y + 423; y++) {
-            for (int x = win_x + 302; x < xend; x++) {
-                gfx_memory[y * 1024 + x] = 0x0DE5;
-            }
-        }
-        print_string(file_des, win_x + 290, win_y + 435, 0x0000);
-}
 void open_explorer() {
     explorer_opened = 1;
     if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
@@ -1509,31 +1514,50 @@ void open_explorer() {
         gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
         gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
 
-        print_string("Explorer: F to format, Esc to close. Press 1-5 to open the file.", win_x + 28, win_y + 28, 0x0000);
-        print_string("Explorer: F to format, Esc to close. Press 1-5 to open the file.", win_x + 27, win_y + 27, 0xFFFF);
-        print_string("Name:", win_x + 35, win_y + 45, 0x0000);
-        print_string("ID:", win_x + 300, win_y + 45, 0x0000);
-        print_string("1", win_x + 300, win_y + 65, 0x0000);
-        print_string("2", win_x + 300, win_y + 80, 0x0000);
-        print_string("3", win_x + 300, win_y + 95, 0x0000);
-        print_string("4", win_x + 300, win_y + 110, 0x0000);
-        print_string("5", win_x + 300, win_y + 125, 0x0000);
+        print_string("Explorer: F to format, Esc to close. Press 1-0 to open the file.", win_x + 28, win_y + 28, 0x0000);
+        print_string("Explorer: F to format, Esc to close. Press 1-0 to open the file.", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("File:", win_x + 35, win_y + 45, 0x0000);
+        print_string("ID/sector:", win_x + 300, win_y + 45, 0x0000);
         print_string("Size:", (win_x + win_h) - 14, win_y + 45, 0x0000);
-
-        for (int i = 0; i < 5; i++) {
-            print_string(ram_disk[i].name, win_x + 30, line, 0x0000);
-            char size_str[16];
-            int_str(ram_disk[i].size, size_str);
-            print_string(size_str, (win_x + win_h) - 8, line, 0x0000);
+        int file_id = 1;
+        for (int i = 0; i < (sectors - 5000); i++) {
+            char str[77];
+            int currentFile = 5000 + i;
+            read(currentFile, str);
+            if (str[0] != '\0') {
+                char fileName[11];
+                for (int i = 0; i < 10; i++) {
+                    fileName[i] = '\0';
+                }
+                for (int char_id = 0; char_id < 10; char_id++) {
+                    if (str[char_id] == '\0') {
+                        break;
+                    }
+                    fileName[char_id] = str[char_id];
+                    fileName[10] = '\0';
+                }
+                print_string(fileName, win_x + 30, line, 0x0000);
+            }
+            int real_size = 0;
+            char real_size_str[16];
+            char ss[16];
+            read(currentFile, ss);
+            for (int char_id = 0; char_id < 77; char_id++) {
+                if (ss[char_id] == '\0') { break; }
+                real_size++;
+            }
+            int_str(real_size, real_size_str);
+            print_string(real_size_str, (win_x + win_h) - 8, line, 0x0000);
             print_string("b", (win_x + win_h) + 12, line, 0x0000);
+            char file_id_str[70];
+            char sector_str[10];
+            int_str(file_id, file_id_str);
+            int_str(currentFile, sector_str);
+            print_string(file_id_str, win_x + 300, line, 0x0000);
+            print_string("/", win_x + 310, line, 0x0000);
+            print_string(sector_str, win_x + 320, line, 0x0000);
             line += 15;
         }
-        if (fid == 0) { progressbar("5/5 can be created.", win_x + 305); }
-        if (fid == 1) { progressbar("4/5 can be created.", win_x + 333); }
-        if (fid == 2) { progressbar("3/5 can be created.", win_x + 363); }
-        if (fid == 3) { progressbar("2/5 can be created.", win_x + 393); }
-        if (fid == 4) { progressbar("1/5 can be created.", win_x + 423); }
-        if (fid == 5) { progressbar("0/5 can be created.", win_x + 448); }
     }
 }
 
@@ -1645,29 +1669,6 @@ void play_sound(unsigned int nfreq) {
 void no_sound() {
     unsigned char tmp = inb(0x61) & 0xFC;
     outb(0x61, tmp);
-}
-int create_file(char* name, char* text) {
-    for (int i = 0; i < 5; i++) {
-        if (ram_disk[i].exists == 0) {
-            int n = 0;
-            while (name[n] != '\0' && n < 11) {
-                ram_disk[i].name[n] = name[n];
-                n++;
-            }
-            ram_disk[i].name[n] = '\0';
-            int t = 0;
-            while (text[t] != '\0' && t < 99) {
-                ram_disk[i].content[t] = text[t];
-                t++;
-            }
-            ram_disk[i].content[t] = '\0';
-            ram_disk[i].size = t;
-            ram_disk[i].exists = 1;
-            return i;
-        }
-    }
-    error("No more space for file creation. Code: 0x02");
-    while(1);
 }
 void prev_cursor() {
     int prev_x = pos_x;
