@@ -1,12 +1,18 @@
 #!/bin/bash
 set -e
 
-echo "=== [1/3] Компиляция исходного кода  maxOS ==="
+echo "=== [1/3] Компиляция исходного кода maxOS ==="
 nasm -f elf32 entry.asm -o entry.o
+
+# Компилируем главное ядро
 gcc -m32 -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
+# ИСПРАВЛЕНО: Добавили компиляцию нашего нового драйвера жесткого диска ATA!
+gcc -m32 -c ata.c -o ata.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+
 echo "=== [2/3] Линковка бинарного файла ядра ==="
-ld -m elf_i386 --no-warn-rwx-segments -T linker.ld entry.o kernel.o -o mykernel.bin
+# ИСПРАВЛЕНО: Добавили ata.o в цепочку линковщика ld, чтобы склеить файлы вместе
+ld -m elf_i386 --no-warn-rwx-segments -T linker.ld entry.o kernel.o ata.o -o mykernel.bin
 
 echo "=== [3/3] Создание структуры и генерация загрузочного диска ==="
 mkdir -p iso/boot/grub
@@ -27,7 +33,6 @@ set gfxmode=1024x768x16
 set gfxpayload=keep
 
 menuentry "maxOS ColorScreen" {
-    # Ищем файл ядра по всему диску, игнорируя "буквы" и скобочки приводов
     search --no-floppy --set=root --file /boot/mykernel.bin
     multiboot /boot/mykernel.bin
     boot
@@ -35,7 +40,6 @@ menuentry "maxOS ColorScreen" {
 EOF
 
 # Используем grub-mkrescue, чтобы упаковать всё в правильный гибридный образ диска maxos.img
-# Этот инструмент создаст и файловую систему, и правильный MBR-загрузчик в начале файла!
 grub-mkrescue -o maxos.img iso
 
 echo "============================================="

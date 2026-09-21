@@ -70,6 +70,8 @@ void cpu_win();
 void filew();
 void open_explorer();
 void error(char* err);
+void ata_read_sector(unsigned int lba, unsigned short* buffer);
+void ata_write_sector(unsigned int lba, unsigned short* buffer);
 void open_file(int file_id);
 unsigned short bg_col = 0x18C3;
 unsigned short text_col = 0x0000;
@@ -239,6 +241,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     draw_cursor(pos_x, pos_y);
     help_col = win_y + 35;
     init_mouse();
+    print_string((char*)read_buffer, 220, 50, 0x0000);
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
             if (y <= 390 && y >= 388) {
@@ -257,6 +260,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     print_string("By MaximTechnik3525", 10, 10, 0x05E5);
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(750); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(2000); draw_window(); drag = 0;
+    print_string((char*)read_buffer, 220, 50, 0x0000);
     unsigned char packet[3];
     for (int i = 0; i < 5; i++) {
         ram_disk[i].size = 0;
@@ -1026,6 +1030,28 @@ int str_cmp(char* str1, char* str2) {
     return 1;
 }
 int shift_p = 0;
+void write(char* msg, int sector) { //DEF SECTOR IS 5000, MSG IN ""
+    unsigned short write_buffer[256] = {0};
+    char* msg_ptr = (char*)write_buffer;
+    int msg_id = 0;
+    while (msg[msg_id] != '\0' && msg_id < 510) {
+        msg_ptr[msg_id] = msg[msg_id];
+        msg_id++;
+    }
+    ata_write_sector(sector, write_buffer);
+}
+void read(int sector, char* output, int text_x, int text_y) {
+    unsigned short read_buffer[256] = {0};
+    ata_read_sector(sector, read_buffer);
+    char* disk_ptr = (char*)read_buffer;
+    int i = 0;
+    while (disk_ptr[i] != '\0' && i < 76) {
+        output[i] = disk_ptr[i];
+        i++;
+    }
+    output[i] = '\0';
+    print_string(output, text_x, text_y, 0x0000);
+}
 void filew() {
     if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0) {
         int help_col = win_y + 45;
