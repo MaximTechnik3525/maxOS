@@ -42,3 +42,20 @@ void ata_read_sector(unsigned int lba, unsigned short* buffer) {
         buffer[i] = data;
     }
 }
+void ata_write_sector(unsigned int lba, unsigned short* buffer) {
+    ata_wait_bsy();
+    outb(ATA_REG_DRIVE, 0xE0 | ((lba >> 24) & 0x0F));
+    outb(ATA_REG_SECCOUNT, 1);
+    outb(ATA_REG_LBA_LO, (unsigned char)lba);
+    outb(ATA_REG_LBA_MID, (unsigned char)(lba >> 8));
+    outb(ATA_REG_LBA_HI, (unsigned char)(lba >> 16));
+    outb(ATA_REG_COMMAND, ATA_CMD_WRITE_PIO);
+    ata_wait_bsy();
+    ata_wait_drq();
+    for (int i = 0; i < 256; i++) {
+        unsigned short data = buffer[i];
+        __asm__ __volatile__("outw %0, %1" : : "a"(data), "Nd"(ATA_REG_DATA));
+    }
+    outb(ATA_REG_COMMAND, ATA_CMD_CACHE_FLUSH);
+    ata_wait_bsy();
+}
