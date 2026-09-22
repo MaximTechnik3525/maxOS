@@ -1,11 +1,12 @@
-# maxOS (ColorScreen v3.7)
+# maxOS (v3.8 Placeholder)
 
-### What's New in v3.7:
-* **ColorScreen Notepad:** Added full support for dynamic text color switching (Black, Blue, Yellow, Green, Red) directly inside the text editor.
-* **Theme 10 (Dark Space Mode):** Introduced a brand new, highly polished dark graphite interface palette with optimized contrast, eye-safe backgrounds, and refined window borders.
-* **Smart File Explorer:** The File Explorer now displays the amount of available memory on the disk.
-* **Polished Boot & Power Screens:** Updated startup and shutdown screens with custom audio melodies via the PC Speaker.
-* **Scripting Engine Refactoring:** Updated and standardized the list of executable shell commands.
+### What's New in v3.8:
+* **ATA/IDE Hardware Driver & maxFS2:** Fully integrated a custom ATA/IDE PIO driver. Data is now written directly into the OS disk image (`maxos.img`), and the system has been upgraded to **maxFS2** with a limit of up to **10 files**.
+* **Dynamic File Explorer:** The File Explorer now reads metadata directly from the HDD sectors. It calculates file sizes in bytes and displays rows strictly for existing files.
+* **Full-Screen Cursor Freedom:** The cursor can now move smoothly across the entire 1024x768 screen canvas, even when system windows are active.
+* **Keyboard Special Characters:** Added support for printing `-`, `+`, and `=` special characters directly inside the Notepad.
+* **System Profiler Overhaul:** Overhauled the old CPU utility into an architecture monitor that displays CPUID data, total RAM, bootloader info, and disk status.
+* **Escape Window Closing:** All open application window frames can now be closed by pressing the **Escape (Esc)** key.
 * **Bug Fixes & Improvements:** General performance optimizations, stability patches, and cleaner core code.
 
 ---
@@ -35,7 +36,7 @@ You can write and execute your own scripts directly inside the operating system.
   * `waitkey` — Pauses script execution and waits for any keyboard key press.
   * `sleep` — Introduces a 2-second system delay/wait.
   * `repeat0`, `repeat5`, `repeat10`, `repeat50`, `repeat100` — Repeats the following block of code the specified number of times.
-* **Disk Utility:** `format` — Formats the virtual `maxFS` file system disk according to the system specifications.
+* **Disk Utility:** `format` — Formats the HDD disk sectors according to the **maxFS2** system specifications.
 * **Themes:** `theme1` to `theme10` — Switch between 10 different system color palettes (including the newly balanced Theme 10 Dark Space Mode).
 * **Window Controls:** 
   * `redraw` — Redraws the entire desktop workspace and refreshes active windows.
