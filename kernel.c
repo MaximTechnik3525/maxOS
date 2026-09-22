@@ -75,6 +75,10 @@ void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
 void write(char* msg, int sector);
 void read(int sector, char* output);
+__attribute__((aligned(4096))) unsigned char audio_buffer[16384];
+int init_sb16();
+void play(unsigned int sample, unsigned int length);
+void sb16_write(unsigned char reg);
 unsigned short cursor_back[12][12] = {0};
 unsigned char mouse_arrow[12][12] = {
     {1,1,3,0,0,0,0,0,0,0,0,0},
@@ -261,8 +265,25 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     }
     print_string("maxOS SystemDisk", 440, 420, 0x05E5);
     print_string("Author: MaximTechnik3525", 10, 10, 0x05E5);
-    play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(750); sleep(150); play_sound(50); sleep(200); no_sound();
-    sleep(2000); draw_window(); drag = 0;
+    sleep(100);
+    if (init_sb16() == 1) {
+        int period = 16;
+        for (int i = 0; i < 16384; i++){
+            if ((i % 2048 == 0)) {
+                period += 4;
+            }
+
+            if ((i / period) % 2 == 0) {
+                audio_buffer[i] = 255;
+            }
+            else {
+                audio_buffer[i] = 0;
+            }
+        }
+        play(11025, 16384);
+    }
+    //play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(750); sleep(150); play_sound(50); sleep(200); no_sound();
+    sleep(1500); draw_window(); drag = 0;
     unsigned char packet[3];
     while(1) {
         unsigned char status = inb(0x64);
