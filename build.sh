@@ -32,7 +32,7 @@ insmod ext2
 set gfxmode=1024x768x16
 set gfxpayload=keep
 
-menuentry "maxOS ColorScreen" {
+menuentry "maxOS SystemDisk" {
     search --no-floppy --set=root --file /boot/mykernel.bin
     multiboot /boot/mykernel.bin
     boot
