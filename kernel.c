@@ -1521,7 +1521,7 @@ void cpu_win() {
         else {
             print_string("Error", win_x + 90, help_col + 60, 0x9000);
         }
-        print_string("OS: maxOS SystemDisk (v3.8)", win_x + 30, help_col + 75, 0x0000);
+        print_string("OS: maxOS (v3.9)", win_x + 30, help_col + 75, 0x0000);
         pci_scan(win_x + 30, help_col + 90);
     }
 }
