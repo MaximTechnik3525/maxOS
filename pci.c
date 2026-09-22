@@ -2,6 +2,7 @@ unsigned int inl(unsigned short port);
 void outl(unsigned short port, unsigned int data);
 void print_string(char* str, int x, int y, unsigned short color);
 void int_str(int num, char* str);
+extern win_y;
 unsigned int pci_read_config(unsigned char bus, unsigned char slot, unsigned char func, unsigned char offset) {
     unsigned int address;
     unsigned int lbus = (unsigned int)bus;
@@ -27,7 +28,7 @@ void pci_scan(int txt_x, int txt_y) {
                     int_str(dev_count, dev_str);
                     print_string("PCI Device found! Vendor ID:", txt_x, txt_y, 0x0000);
                     print_string(ven_str, txt_x + 260, txt_y, 0x0000);
-                    if (txt_y < 700) { txt_y += 16; }
+                    if (txt_y < win_y + 400) { txt_y += 15; }
                 }
             }
         }

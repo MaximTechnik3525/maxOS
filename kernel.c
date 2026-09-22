@@ -275,17 +275,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             if ((i % 2048 == 0)) {
                 period += 4;
             }
-
-            if ((i / period) % 2 == 0) {
-                audio_buffer[i] = 255;
-            }
-            else {
-                audio_buffer[i] = 0;
-            }
+            audio_buffer[i] = (unsigned char)((i % period) * (255 / period));
         }
         play(11025, 16384);
     }
-    //play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(750); sleep(150); play_sound(50); sleep(200); no_sound();
     sleep(1500); draw_window(); drag = 0;
     unsigned char packet[3];
     while(1) {
