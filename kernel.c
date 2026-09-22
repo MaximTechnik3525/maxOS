@@ -231,6 +231,14 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     if (mbi->flags & (1 << 10)) {
         apm_supp = 1;
     }
+    for (int i = 0; i < 11; i++) {
+        int checkSector = 4999 + i;
+        char fileText[77];
+        read(checkSector, fileText);
+        if (fileText[0] != '\0') {
+            sectors++;
+        }
+    }
     draw_window();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
@@ -726,6 +734,7 @@ void pong() {
 void open_file(int sector) 
 {
     drag = 1;
+    explorer_opened = 0;
     char file_output[77];
     read(sector, file_output);
     if (file_output[0] != '\0') {
@@ -1407,11 +1416,24 @@ void help() {
         print_string("Esc to redraw desktop and close windows.", win_x + 30, help_col + 15, 0x0000);
         print_string("1-9 to change system theme.", win_x + 30, help_col + 30, 0x0000);
         print_string("F1 to save and run in notepad.", win_x + 30, help_col + 45, 0x0000);
-        print_string("F to format maxFS virtual disk in explorer.", win_x + 30, help_col + 60, 0x0000);
+        print_string("F to format disk to maxFS2 in explorer.", win_x + 30, help_col + 60, 0x0000);
         print_string("F3/F4 to enable and disable keyboard mouse mode.", win_x + 30, help_col + 75, 0x0000);
         print_string("F5/F6 to enable and disable mouse trail.", win_x + 30, help_col + 90, 0x0000);
         print_string("F7/F8 to enable and disable main window corner.", win_x + 30, help_col + 105, 0x0000);
     }
+}
+void progressbar(char* file_des, int xend) {
+        for (int y = win_y + 410; y < win_y + 425; y++) {
+            for (int x = win_x + 300; x < win_x + 450; x++) {
+                gfx_memory[y * 1024 + x] = 0x3186;
+            }
+        }
+        for (int y = win_y + 412; y < win_y + 423; y++) {
+            for (int x = win_x + 302; x < xend; x++) {
+                gfx_memory[y * 1024 + x] = 0x0DE5;
+            }
+        }
+        print_string(file_des, win_x + 280, win_y + 435, 0x0000);
 }
 
 void cpu_win() {
@@ -1451,6 +1473,9 @@ void cpu_win() {
         get_cpu(cpu_name);
         char ram[32];
         int_str(ram_mb, ram);
+        write("ATA driver and maxFS OK!", 5011);
+        char fs_msg[30];
+        read(5011, fs_msg);
         print_string("System information", win_x + 28, win_y + 28, 0x0000);
         print_string("System information", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Your CPU:", win_x + 30, help_col, 0x0000);
@@ -1461,13 +1486,20 @@ void cpu_win() {
         print_string(bootloader, win_x + 135, help_col + 30, 0x0000);
         print_string("APM support:", win_x + 30, help_col + 45, 0x0000);
         if (apm_supp == 1) {
-            print_string("Yes", win_x + 145, help_col + 45, 0x0320);
+            print_string("OK", win_x + 145, help_col + 45, 0x0320);
         }
         else {
             print_string("No", win_x + 145, help_col + 45, 0x9000);
         }
-        print_string("OS: maxOS ColorScreen (v3.7)", win_x + 30, help_col + 60, 0x0000);
-        print_string("Press Esc to close this window.", win_x + 30, help_col + 75, 0x0000);
+        print_string("Disk:", win_x + 30, help_col + 60, 0x0000);
+        if (fs_msg[0] != '\0') {
+            print_string(fs_msg, win_x + 90, help_col + 60, 0x0320);
+        }
+        else {
+            print_string("Error", win_x + 90, help_col + 60, 0x9000);
+        }
+        print_string("OS: maxOS PLACEHOLDER (v3.8)", win_x + 30, help_col + 75, 0x0000);
+        print_string("Press Esc to close this window.", win_x + 30, help_col + 90, 0x0000);
     }
 }
 void open_explorer() {
@@ -1558,6 +1590,17 @@ void open_explorer() {
             print_string(sector_str, win_x + 320, line, 0x0000);
             line += 15;
         }
+        if (createdFiles == 0) { progressbar("You can save 10 files", win_x + 305); }
+        if (createdFiles == 1) { progressbar("You can save 9 files", win_x + 319); }
+        if (createdFiles == 2) { progressbar("You can save 8 files", win_x + 334); }
+        if (createdFiles == 3) { progressbar("You can save 7 files", win_x + 347); }
+        if (createdFiles == 4) { progressbar("You can save 6 files", win_x + 360); }
+        if (createdFiles == 5) { progressbar("You can save 5 files", win_x + 373); }
+        if (createdFiles == 6) { progressbar("You can save 4 files", win_x + 386); }
+        if (createdFiles == 7) { progressbar("You can save 3 files", win_x + 399); }
+        if (createdFiles == 8) { progressbar("You can save 2 files", win_x + 412); }
+        if (createdFiles == 9) { progressbar("You can save 1 files", win_x + 425); }
+        if (createdFiles == 10) { progressbar("You can save 0 files", win_x + 448); }
     }
 }
 
