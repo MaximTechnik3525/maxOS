@@ -1,4 +1,4 @@
-# maxOS (v3.8 Placeholder)
+# maxOS (v3.8 SystemDisk)
 
 ### What's New in v3.8:
 * **ATA/IDE Hardware Driver & maxFS2:** Fully integrated a custom ATA/IDE PIO driver. Data is now written directly into the OS disk image (`maxos.img`), and the system has been upgraded to **maxFS2** with a limit of up to **10 files**.
