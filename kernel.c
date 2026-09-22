@@ -79,6 +79,9 @@ __attribute__((aligned(4096))) unsigned char audio_buffer[16384];
 int init_sb16();
 void play(unsigned int sample, unsigned int length);
 void sb16_write(unsigned char reg);
+unsigned int inl(unsigned short port);
+void outl(unsigned short port, unsigned int data);
+void pci_scan(int txt_x, int txt_y);
 unsigned short cursor_back[12][12] = {0};
 unsigned char mouse_arrow[12][12] = {
     {1,1,3,0,0,0,0,0,0,0,0,0},
@@ -1496,8 +1499,8 @@ void cpu_win() {
         write("ATA driver and maxFS OK!", 5011);
         char fs_msg[30];
         read(5011, fs_msg);
-        print_string("System information", win_x + 28, win_y + 28, 0x0000);
-        print_string("System information", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("System information. Press Esc to close.", win_x + 28, win_y + 28, 0x0000);
+        print_string("System information. Press Esc to close.", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Your CPU:", win_x + 30, help_col, 0x0000);
         print_string(cpu_name, win_x + 120, help_col, 0x0000);
         print_string("Total RAM:", win_x + 30, help_col + 15, 0x0000);
@@ -1519,7 +1522,7 @@ void cpu_win() {
             print_string("Error", win_x + 90, help_col + 60, 0x9000);
         }
         print_string("OS: maxOS SystemDisk (v3.8)", win_x + 30, help_col + 75, 0x0000);
-        print_string("Press Esc to close this window.", win_x + 30, help_col + 90, 0x0000);
+        pci_scan(win_x + 30, help_col + 90);
     }
 }
 void open_explorer() {
@@ -2223,4 +2226,14 @@ void print_string(char* str, int x, int y, unsigned short color) {
         x += 9;
         str++;
     }
+}
+
+unsigned int inl(unsigned short port) {
+    unsigned int result;
+    __asm__ __volatile__("inl %1, %0" : "=a"(result) : "Nd"(port));
+    return result;
+}
+
+void outl(unsigned short port, unsigned int data) {
+    __asm__ __volatile__("outl %0, %1" : : "a"(data), "Nd"(port));
 }

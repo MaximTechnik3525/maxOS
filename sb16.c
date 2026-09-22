@@ -7,13 +7,22 @@ void sleep(unsigned int ms);
 #define SB_READ_DATA    0x22A
 #define SB_WRITE_DATA   0x22C
 #define SB_READ_STATUS  0x22E
+void sb16_volume(){
+    outb(SB_MIXER_ADDR, 0x22);
+    outb(SB_MIXER_DATA, 0xFF);
+    outb(SB_MIXER_ADDR, 0x04);
+    outb(SB_MIXER_DATA, 0xFF);
+}
 int init_sb16(){
     outb(SB_RESET, 1);
     sleep(5);
     outb(SB_RESET, 0);
     sleep(5);
     if ((inb(SB_READ_STATUS) & 0x80) != 0) {
-        if (inb(SB_READ_DATA) == 0xAA) { return 1; }
+        if (inb(SB_READ_DATA) == 0xAA) {
+            sb16_volume();
+            return 1;
+        }
     }
     return 0;
 }

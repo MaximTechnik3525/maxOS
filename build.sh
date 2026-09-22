@@ -10,20 +10,21 @@ gcc -m32 -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 # Компилируем драйвер жесткого диска ATA
 gcc -m32 -c ata.c -o ata.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-# === ИСПРАВЛЕНО 1: Добавили компиляцию нашего нового звукового драйвера! ===
+# Компилируем звуковой драйвер
 gcc -m32 -c sb16.c -o sb16.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
+# === ИСПРАВЛЕНО 1: Добавили компиляцию нашего нового PCI-драйвера! ===
+gcc -m32 -c pci.c -o pci.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+
 echo "=== [2/3] Линковка бинарного файла ядра ==="
-# === ИСПРАВЛЕНО 2: Добавили sb16.o в цепочку линковщика ld, чтобы склеить его с ядром! ===
-ld -m elf_i386 --no-warn-rwx-segments -T linker.ld entry.o kernel.o ata.o sb16.o -o mykernel.bin
+# === ИСПРАВЛЕНО 2: Добавили pci.o в цепочку линковщика ld ===
+ld -m elf_i386 --no-warn-rwx-segments -T linker.ld entry.o kernel.o ata.o sb16.o pci.o -o mykernel.bin
 
 echo "=== [3/3] Создание структуры и генерация загрузочного диска ==="
 mkdir -p iso/boot/grub
 
-# Копируем ядро
 cp mykernel.bin iso/boot/
 
-# Генерируем правильный универсальный grub.cfg
 cat << 'EOF' > iso/boot/grub/grub.cfg
 insmod vbe
 insmod vga
@@ -42,7 +43,6 @@ menuentry "maxOS SystemDisk" {
 }
 EOF
 
-# Используем grub-mkrescue, чтобы упаковать всё в правильный гибридный образ диска maxos.img
 grub-mkrescue -o maxos.img iso
 
 echo "============================================="
@@ -50,5 +50,4 @@ echo " Сборка завершена успешно!"
 echo " maxOS запускается в QEMU!"
 echo "============================================="
 
-# === ИСПРАВЛЕНО 3: Добавили виртуальную звуковую плату (-device sb16,audiodev=snd0) ===
 qemu-system-i386 -hda maxos.img -m 256M -vga qxl -machine pc,pcspk-audiodev=snd0 -device sb16,audiodev=snd0 -audiodev alsa,id=snd0
