@@ -153,6 +153,34 @@ unsigned char exp_icon[12][12] = {
     {0,0,0,0,4,4,4,4,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0},
 };
+unsigned char pong_icon[12][12] = {
+    {0,0,0,0,0,3,3,3,3,3,0,0},
+    {0,0,0,0,0,3,2,2,2,3,0,0},
+    {0,0,0,0,0,3,2,2,2,3,0,0},
+    {0,0,0,0,0,3,2,2,2,3,0,0},
+    {0,0,0,0,0,3,3,3,3,3,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+    {3,3,3,3,3,3,3,3,3,3,3,3},
+    {3,1,1,1,1,1,1,1,1,1,1,3},
+    {3,1,1,1,1,1,1,1,1,1,1,3},
+    {3,1,1,1,1,1,1,1,1,1,1,3},
+    {3,3,3,3,3,3,3,3,3,3,3,3},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+};
+unsigned char off_icon[12][12] = {
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,1,1,0,0,0,0,0},
+    {0,0,0,2,0,1,1,0,2,0,0,0},
+    {0,0,2,1,2,1,1,2,1,2,0,0},
+    {0,2,1,2,0,1,1,0,2,1,2,0},
+    {0,2,1,2,0,1,1,0,2,1,2,0},
+    {2,3,2,0,0,3,3,0,0,2,3,2},
+    {2,3,2,0,0,3,3,0,0,2,3,2},
+    {0,2,3,2,0,0,0,0,2,3,2,0},
+    {0,2,3,2,2,2,2,2,2,3,2,0},
+    {0,0,2,3,3,3,3,3,3,2,0,0},
+    {0,0,0,2,2,2,2,2,2,0,0,0},
+};
 const unsigned char max_font[] = {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 32 (пробел)
     0x18,0x18,0x18,0x18,0x18,0x00,0x18,0x00, // 33 !
@@ -275,8 +303,6 @@ char ftext[100] = {0};
 int fid = 0;
 int tail = 0;
 int repeats = 1;
-int corners = 0;
-int help_pressed = 0;
 int help_col;
 int explorer_opened = 0;
 int sectors = 5000;
@@ -421,16 +447,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (explorer_opened == 1 && ascii_char == '0') {
                         open_file(5009);
-                    }
-                    if (ascii_char == 'M' && drag == 0 && corners == 0) {
-                        corners = 1;
-                        draw_window();
-                        play_sound(700); sleep(100); no_sound();
-                    }
-                    if (ascii_char == 'N' && drag == 0 && corners == 1) {
-                        corners = 0;
-                        draw_window();
-                        play_sound(500); sleep(100); no_sound();
                     }
                     if (ascii_char == 'C' && drag == 0 && tail == 0) {
                         tail = 1;
@@ -1373,7 +1389,6 @@ void filew() {
 void help() {
     if (pos_x <= win_x + 50 && pos_y <= win_y + 30 && drag == 0) {
         int help_col = win_y + 45;
-        help_pressed = 1;
         drag = 1;
         for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
             for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
@@ -1413,7 +1428,6 @@ void help() {
         print_string("F to format disk to maxFS2 in explorer.", win_x + 30, help_col + 60, 0x0000);
         print_string("F3/F4 to enable and disable keyboard mouse mode.", win_x + 30, help_col + 75, 0x0000);
         print_string("F5/F6 to enable and disable mouse trail.", win_x + 30, help_col + 90, 0x0000);
-        print_string("F7/F8 to enable and disable main window corner.", win_x + 30, help_col + 105, 0x0000);
     }
 }
 void progressbar(char* file_des, int xend) {
@@ -1477,7 +1491,7 @@ void cpu_win() {
         }
         print_string("Disk:", win_x + 30, help_col + 60, 0x0000);
         if (fs_msg[0] != '\0') {
-            print_string(fs_msg, win_x + 90, help_col + 60, 0x0320);
+            print_string(fs_msg, win_x + 86, help_col + 60, 0x0320);
         }
         else {
             print_string("Error", win_x + 90, help_col + 60, 0x9000);
@@ -1757,30 +1771,16 @@ void draw_btn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn
             }
         }
     }
-    if (2 == 1) {
-    for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
-        for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
-            gfx_memory[y * 1024 + x] = 0x7BEF;
-        }
-    }
-    for (int y = btn_y; y < btn_y + btn_h; y++) {
-        for (int x = btn_x; x < btn_x + btn_w; x++) {
-            gfx_memory[y * 1024 + x] = 0xC618;
-        }
-    }
-    }
-    else if (3 == 1){
-        for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
-        for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
-            gfx_memory[y * 1024 + x] = 0x03E0;
-        }
-    }
-    for (int y = btn_y; y < btn_y + btn_h; y++) {
-        for (int x = btn_x; x < btn_x + btn_w; x++) {
-            gfx_memory[y * 1024 + x] = 0x07E0;
-        }
-    }
-    }
+    // for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
+    //     for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
+    //         gfx_memory[y * 1024 + x] = 0x7BEF;
+    //     }
+    // }
+    // for (int y = btn_y; y < btn_y + btn_h; y++) {
+    //     for (int x = btn_x; x < btn_x + btn_w; x++) {
+    //         gfx_memory[y * 1024 + x] = 0xC618;
+    //     }
+    // }
     print_string("Help", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
 }
 
@@ -1833,30 +1833,34 @@ void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
     print_string("Exp", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
 }
 void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
-    for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
-        for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
-            gfx_memory[y * 1024 + x] = 0x7BEF;
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = (win_x + 263) + x;
+            int screen_y = (win_y + 22) + y;
+            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = pong_icon[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0xB269; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0x7E1F; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0x0000; }
+            }
         }
     }
-    for (int y = btn_y; y < btn_y + btn_h; y++) {
-        for (int x = btn_x; x < btn_x + btn_w; x++) {
-            gfx_memory[y * 1024 + x] = 0xC618;
-        }
-    }
-    print_string("Pong", txt_pos_x, txt_pos_y, 0x0000);
+    print_string("Pong", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
 }
 void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
-    for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
-        for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
-            gfx_memory[y * 1024 + x] = 0x7BEF;
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = (win_x + 318) + x;
+            int screen_y = (win_y + 22) + y;
+            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = off_icon[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0xF800; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0x10A2; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0x5000; }
+            }
         }
     }
-    for (int y = btn_y; y < btn_y + btn_h; y++) {
-        for (int x = btn_x; x < btn_x + btn_w; x++) {
-            gfx_memory[y * 1024 + x] = 0xC618;
-        }
-    }
-    print_string("Off", txt_pos_x, txt_pos_y, 0x0000);
+    print_string("Off", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
 }
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
@@ -2026,15 +2030,6 @@ void clock() {
     print_string(":", win_x + 710, win_y + 6, 0xFFFF);
     print_string(m, win_x + 720, win_y + 6, 0xFFFF);
 }
-void win_corners() {
-    gfx_memory[win_y * 1024 + win_x] = bg_col;
-    gfx_memory[win_y * 1024 + (win_x+1)] = bg_col;
-    gfx_memory[(win_y+1) * 1024 + win_x] = bg_col;
-    int right_edge = win_x + win_w - 1;
-    gfx_memory[win_y * 1024 + right_edge] = bg_col;
-    gfx_memory[win_y * 1024 + (right_edge+1)] = bg_col;
-    gfx_memory[(win_y+1) * 1024 + right_edge] = bg_col;
-}
 void draw_window() {
     for (int y = 0; y < 768; y++) {
         int row_offset = y << 10;
@@ -2167,7 +2162,6 @@ void draw_window() {
             }
        }
     }
-    if (corners == 1) { win_corners(); }
     if (theme == 3) {
         print_string("maxOS SystemDisk Abrikos", win_x + 11, win_y + 6, 0x0000);
         print_string("maxOS SystemDisk Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
