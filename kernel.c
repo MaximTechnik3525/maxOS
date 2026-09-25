@@ -125,6 +125,34 @@ unsigned char arch_icon[12][12] = {
     {0,0,0,0,0,2,2,0,0,0,0,0},
     {0,0,2,2,2,2,2,2,2,2,0,0},
 };
+unsigned char note_icon[12][12] = {
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,1,1,1,1,1,1,1,1,1,1,0},
+    {0,1,3,3,3,3,3,3,3,3,1,0},
+    {0,1,2,2,2,2,2,2,2,2,1,0},
+    {0,1,3,3,3,3,3,3,3,3,1,0},
+    {0,1,2,2,2,2,2,2,2,2,1,0},
+    {0,1,4,4,4,4,4,4,4,4,1,0},
+    {0,1,2,2,2,2,2,2,2,2,1,0},
+    {0,1,4,4,4,4,4,4,4,4,1,0},
+    {0,1,2,2,2,2,2,2,2,2,1,0},
+    {0,1,1,1,1,1,1,1,1,1,1,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+};
+unsigned char exp_icon[12][12] = {
+    {0,0,0,4,4,4,4,4,4,0,0,0},
+    {0,0,4,1,1,1,1,1,1,4,0,0},
+    {0,4,1,1,1,1,1,1,1,1,4,0},
+    {4,1,1,1,1,2,2,1,1,1,1,4},
+    {4,1,1,1,2,0,0,2,1,1,1,4},
+    {4,3,3,2,0,0,0,0,2,3,3,4},
+    {4,3,3,3,2,0,0,2,3,3,3,4},
+    {0,4,3,3,2,2,2,3,3,3,4,0},
+    {0,0,4,3,3,3,3,3,3,4,0,0},
+    {0,0,0,4,3,3,3,3,4,0,0,0},
+    {0,0,0,0,4,4,4,4,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+};
 const unsigned char max_font[] = {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 32 (пробел)
     0x18,0x18,0x18,0x18,0x18,0x00,0x18,0x00, // 33 !
@@ -1773,30 +1801,36 @@ void draw_cpubtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
     print_string("Arch", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
 }
 void draw_filebtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
-    for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
-        for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
-            gfx_memory[y * 1024 + x] = 0x7BEF;
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = (win_x + 142) + x;
+            int screen_y = (win_y + 22) + y;
+            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = note_icon[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0xA4AC; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0xD612; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0xFFBB; }
+                else if (pixel_type2 == 4) { gfx_memory[screen_y * 1024 + screen_x] = 0xF737; }
+            }
         }
     }
-    for (int y = btn_y; y < btn_y + btn_h; y++) {
-        for (int x = btn_x; x < btn_x + btn_w; x++) {
-            gfx_memory[y * 1024 + x] = 0xC618;
-        }
-    }
-    print_string("Note", txt_pos_x, txt_pos_y, 0x0000);
+    print_string("Note", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
 }
 void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
-    for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
-        for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
-            gfx_memory[y * 1024 + x] = 0x7BEF;
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = (win_x + 198) + x;
+            int screen_y = (win_y + 22) + y;
+            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = exp_icon[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0xCE79; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0x4A49; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0x7BEF; }
+                else if (pixel_type2 == 4) { gfx_memory[screen_y * 1024 + screen_x] = 0x2104; }
+            }
         }
     }
-    for (int y = btn_y; y < btn_y + btn_h; y++) {
-        for (int x = btn_x; x < btn_x + btn_w; x++) {
-            gfx_memory[y * 1024 + x] = 0xC618;
-        }
-    }
-    print_string("Exp", txt_pos_x, txt_pos_y, 0x0000);
+    print_string("Exp", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
 }
 void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
