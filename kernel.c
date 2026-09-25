@@ -107,10 +107,10 @@ unsigned char help_icon[12][12] = {
     {4,1,1,1,1,1,2,2,1,1,1,4},
     {4,3,3,3,3,2,2,3,3,3,3,4},
     {4,3,3,3,3,3,3,3,3,3,3,4},
+    {4,3,3,3,3,2,2,3,3,3,3,4},
     {0,4,3,3,3,2,2,3,3,3,4,0},
-    {0,0,4,3,3,2,2,3,3,4,0,0},
-    {0,0,0,4,3,3,3,3,4,0,0,0},
-    {0,0,0,0,4,4,4,4,0,0,0,0},
+    {0,0,4,3,3,3,3,3,3,4,0,0},
+    {0,0,0,4,4,4,4,4,4,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0},
 };
 unsigned char arch_icon[12][12] = {
@@ -149,10 +149,10 @@ unsigned char exp_icon[12][12] = {
     {4,1,1,1,2,0,0,2,1,1,1,4},
     {4,3,3,2,0,0,0,0,2,3,3,4},
     {4,3,3,3,2,0,0,2,3,3,3,4},
-    {0,4,3,3,2,2,2,3,3,3,4,0},
+    {4,3,3,3,2,2,2,3,3,3,3,4},
+    {0,4,3,3,3,3,3,3,3,3,4,0},
     {0,0,4,3,3,3,3,3,3,4,0,0},
-    {0,0,0,4,3,3,3,3,4,0,0,0},
-    {0,0,0,0,4,4,4,4,0,0,0,0},
+    {0,0,0,4,4,4,4,4,4,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0},
 };
 unsigned char pong_icon[12][12] = {
@@ -351,8 +351,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             else { gfx_memory[y * 1024 + x] = 0x0040; }
         }
     }
-    print_string("maxOS SystemDisk", 440, 420, 0x05E5);
-    print_string("Author: MaximTechnik3525", 10, 10, 0x05E5);
+    print_string("maxOS Ultimate", 460, 420, 0x05E5);
+    print_string("By MaximTechnik3525", 10, 10, 0x05E5);
     sleep(100);
     if (init_sb16() == 1) {
         int period = 16;
@@ -369,7 +369,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     while(1) {
         unsigned char raw_min = read_rtc_register(0x02);
         int m = bcd_to_binary(raw_min);
-        if (currentMin != m) {
+        if (currentMin != m && drag == 0) {
             currentMin = m;
             draw_window();
         }
@@ -666,8 +666,8 @@ void pong() {
         }
         int swin_x = win_x + 20;
         int swin_y = win_y + 22;
-        print_string("Pong score:", win_x + 28, win_y + 28, 0x0000);
-        print_string("Pong score:", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("Pong - score:", win_x + 28, win_y + 28, 0x0000);
+        print_string("Pong - score:", win_x + 27, win_y + 27, 0xFFFF);
         while (1) {
             unsigned char scan_code = inb(0x60);
             if (scan_code < 0x80 && w_mode == 0) {
@@ -770,8 +770,8 @@ void pong() {
                             }
                         }
                     }
-                    print_string("Pong score:", win_x + 28, win_y + 28, 0x0000);
-                    print_string("Pong score:", win_x + 27, win_y + 27, 0xFFFF);
+                    print_string("Pong - score:", win_x + 28, win_y + 28, 0x0000);
+                    print_string("Pong - score:", win_x + 27, win_y + 27, 0xFFFF);
                     print_string(str_score, win_x + 148, win_y + 28, 0x0000);
                     print_string(str_score, win_x + 147, win_y + 27, 0xFFFF);
                     if (collisions == 5) {
@@ -794,7 +794,6 @@ void pong() {
                 ball_dx = 3;
                 ball_dy = 3;
                 draw_window();
-                draw_cursor(pos_x, pos_y);
                 play_sound(700);
                 sleep(100);
                 no_sound();
@@ -1506,7 +1505,7 @@ void cpu_win() {
         else {
             print_string("Error", win_x + 90, help_col + 60, 0x9000);
         }
-        print_string("OS: maxOS (v3.9)", win_x + 30, help_col + 75, 0x0000);
+        print_string("OS: maxOS Ultimate v3.9", win_x + 30, help_col + 75, 0x0000);
         pci_scan(win_x + 30, help_col + 90);
     }
 }
@@ -2183,14 +2182,14 @@ void draw_window() {
        }
     }
     if (theme == 3) {
-        print_string("maxOS SystemDisk Abrikos", win_x + 11, win_y + 6, 0x0000);
-        print_string("maxOS SystemDisk Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS Ultimate Abrikos", win_x + 11, win_y + 6, 0x0000);
+        print_string("maxOS Ultimate Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
     if (theme == 4) {
-        print_string("maxOS SystemDisk Tora", win_x + 11, win_y + 6, 0x0000);
-        print_string("maxOS SystemDisk Tora", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS Ultimate Tora", win_x + 11, win_y + 6, 0x0000);
+        print_string("maxOS Ultimate Tora", win_x + 10, win_y + 5, 0xFFFF); }
     else {
-        print_string("maxOS SystemDisk", win_x + 11, win_y + 6, 0x0000); 
-        print_string("maxOS SystemDisk", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS Ultimate", win_x + 11, win_y + 6, 0x0000); 
+        print_string("maxOS Ultimate", win_x + 10, win_y + 5, 0xFFFF); }
     clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
