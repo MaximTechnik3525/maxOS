@@ -66,6 +66,8 @@ void error(char* err);
 void ata_read_sector(unsigned int lba, unsigned short* buffer);
 void ata_write_sector(unsigned int lba, unsigned short* buffer);
 void open_file(int sector);
+unsigned char bcd_to_binary(unsigned char bcd);
+unsigned char read_rtc_register(unsigned char reg);
 unsigned short bg_col = 0x18C3;
 unsigned short text_col = 0x0000;
 unsigned int ram_mb = 0;
@@ -307,6 +309,7 @@ int help_col;
 int explorer_opened = 0;
 int sectors = 5000;
 int createdFiles = 0;
+int currentMin = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
@@ -364,6 +367,13 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     sleep(1500); draw_window(); drag = 0;
     unsigned char packet[3];
     while(1) {
+        unsigned char raw_min = read_rtc_register(0x02);
+        int m = bcd_to_binary(raw_min);
+        if (currentMin != m) {
+            currentMin = m;
+            draw_window();
+        }
+
         unsigned char status = inb(0x64);
         if (status & 0x01) {
             if (status & 0x20 && drag == 0 && w_mode == 0) {
@@ -2018,17 +2028,27 @@ void clock() {
     unsigned char raw_sec = read_rtc_register(0x00);
     unsigned char raw_min = read_rtc_register(0x02);
     unsigned char raw_hour = read_rtc_register(0x04);
-    int sec = bcd_to_binary(raw_sec), min = bcd_to_binary(raw_min), hour = bcd_to_binary(raw_hour);
-    char s[4], m[4], h[4];
+    unsigned char raw_day = read_rtc_register(0x07);
+    unsigned char raw_month = read_rtc_register(0x08);
+    int sec = bcd_to_binary(raw_sec), min = bcd_to_binary(raw_min), hour = bcd_to_binary(raw_hour), day = bcd_to_binary(raw_day), month = bcd_to_binary(raw_month);
+    char s[4], m[4], h[4], d[4], mo[4];
     int_str(sec, s);
     int_str(min, m);
     int_str(hour, h);
+    int_str(day, d);
+    int_str(month, mo);
     print_string(h, win_x + 691, win_y + 7, 0x0000);
     print_string(":", win_x + 711, win_y + 7, 0x0000);
     print_string(m, win_x + 721, win_y + 7, 0x0000);
     print_string(h, win_x + 690, win_y + 6, 0xFFFF);
     print_string(":", win_x + 710, win_y + 6, 0xFFFF);
     print_string(m, win_x + 720, win_y + 6, 0xFFFF);
+    print_string(d, win_x + 660, win_y + 7, 0x0000);
+    print_string(d, win_x + 659, win_y + 6, 0xFFFF);
+    print_string(mo, win_x + 630, win_y + 7, 0x0000);
+    print_string(mo, win_x + 629, win_y + 6, 0xFFFF);
+    print_string("/", win_x + 645, win_y + 7, 0x0000);
+    print_string("/", win_x + 644, win_y + 6, 0xFFFF);
 }
 void draw_window() {
     for (int y = 0; y < 768; y++) {
