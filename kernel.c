@@ -612,14 +612,6 @@ void pong() {
         }
         int swin_x = win_x + 20;
         int swin_y = win_y + 22;
-        int swin_w = win_w - 40;
-        gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-        gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-        gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-        int right_edges = swin_x + swin_w - 1;
-        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-        gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-        gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
         print_string("Pong score:", win_x + 28, win_y + 28, 0x0000);
         print_string("Pong score:", win_x + 27, win_y + 27, 0xFFFF);
         while (1) {
@@ -724,16 +716,6 @@ void pong() {
                             }
                         }
                     }
-                    int swin_x = win_x + 20;
-                    int swin_y = win_y + 22;
-                    int swin_w = win_w - 40;
-                    gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                    gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-                    gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-                    int right_edges = swin_x + swin_w - 1;
-                    gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                    gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-                    gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
                     print_string("Pong score:", win_x + 28, win_y + 28, 0x0000);
                     print_string("Pong score:", win_x + 27, win_y + 27, 0xFFFF);
                     print_string(str_score, win_x + 148, win_y + 28, 0x0000);
@@ -956,16 +938,6 @@ void open_file(int sector)
                             }
                         }
                     }
-                    int swin_x = win_x + 20;
-                    int swin_y = win_y + 22;
-                    int swin_w = win_w - 40;
-                    gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                    gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-                    gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-                    int right_edges = swin_x + swin_w - 1;
-                    gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                    gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-                    gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
                     print_string("Application", win_x + 28, win_y + 28, 0x0000);
                     print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
                 }
@@ -1019,16 +991,6 @@ void open_file(int sector)
                 }
             }
         }
-        int swin_x = win_x + 20;
-        int swin_y = win_y + 22;
-        int swin_w = win_w - 40;
-        gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-        gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-        gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-        int right_edges = swin_x + swin_w - 1;
-        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-        gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-        gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
         print_string("Text file", win_x + 28, win_y + 28, 0x0000);
         print_string("Text file", win_x + 27, win_y + 27, 0xFFFF);
         print_string(file_output, win_x + 30, win_y + 45, text_col);
@@ -1136,16 +1098,6 @@ void filew() {
                 }
             }
         }
-        int swin_x = win_x + 20;
-        int swin_y = win_y + 22;
-        int swin_w = win_w - 40;
-        gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-        gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-        gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-        int right_edges = swin_x + swin_w - 1;
-        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-        gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-        gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
         if (str_cmp(ftext, str)) {
             print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
             print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
@@ -1193,16 +1145,6 @@ void filew() {
                                     }
                                 }
                             }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-                            gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-                            gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
@@ -1243,16 +1185,6 @@ void filew() {
                                     }
                                 }
                             }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-                            gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-                            gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
@@ -1365,16 +1297,6 @@ void filew() {
                                     }
                                 }
                             }
-                            int swin_x = win_x + 20;
-                            int swin_y = win_y + 22;
-                            int swin_w = win_w - 40;
-                            gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-                            gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-                            gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-                            int right_edges = swin_x + swin_w - 1;
-                            gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-                            gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-                            gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
@@ -1444,16 +1366,16 @@ void help() {
                 }
             }
         }
-        int swin_x = win_x + 20;
-        int swin_y = win_y + 22;
-        int swin_w = win_w - 40;
-        gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-        gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-        gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-        int right_edges = swin_x + swin_w - 1;
-        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-        gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-        gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
+        // int swin_x = win_x + 20;
+        // int swin_y = win_y + 22;
+        // int swin_w = win_w - 40;
+        // gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
+        // gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
+        // gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
+        // int right_edges = swin_x + swin_w - 1;
+        // gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
+        // gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
+        // gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
         print_string("Help", win_x + 28, win_y + 28, 0x0000);
         print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Arrows to move window.", win_x + 30, help_col, 0x0000);
@@ -1503,21 +1425,11 @@ void cpu_win() {
                 }
             }
         }
-        int swin_x = win_x + 20;
-        int swin_y = win_y + 22;
-        int swin_w = win_w - 40;
-        gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-        gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-        gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-        int right_edges = swin_x + swin_w - 1;
-        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-        gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-        gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
         char cpu_name[49];
         get_cpu(cpu_name);
         char ram[32];
         int_str(ram_mb, ram);
-        write("ATA driver and maxFS OK!", 5011);
+        write("ATA driver and maxFS2: OK!", 5011);
         char fs_msg[30];
         read(5011, fs_msg);
         print_string("System information. Press Esc to close.", win_x + 28, win_y + 28, 0x0000);
@@ -1575,21 +1487,6 @@ void open_explorer() {
                 }
             }
         }
-
-        int swin_x = win_x + 20;
-        int swin_y = win_y + 22;
-        int swin_w = win_w - 40;
-
-        gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-        gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-        gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-
-        int right_edges = swin_x + swin_w - 1;
-
-        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-        gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-        gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
-
         print_string("Explorer: F to format, Esc to close. Press 1-0 to open the file.", win_x + 28, win_y + 28, 0x0000);
         print_string("Explorer: F to format, Esc to close. Press 1-0 to open the file.", win_x + 27, win_y + 27, 0xFFFF);
         print_string("File:", win_x + 35, win_y + 45, 0x0000);
