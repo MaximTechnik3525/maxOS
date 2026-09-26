@@ -69,7 +69,6 @@ void ata_write_sector(unsigned int lba, unsigned short* buffer);
 void open_file(int sector);
 unsigned char bcd_to_binary(unsigned char bcd);
 unsigned char read_rtc_register(unsigned char reg);
-unsigned short bg_col = 0x18C3;
 unsigned short text_col = 0x0000;
 unsigned int ram_mb = 0;
 char* bootloader = "Unknown";
@@ -363,7 +362,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     }
     print_string("maxOS is starting up...", 425, 420, 0x05E5);
     print_string("By MaximTechnik3525", 10, 10, 0x05E5);
-    play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(750); sleep(150); play_sound(50); sleep(200); no_sound();    sleep(1500); draw_window(); drag = 0;
+    play_sound(100); sleep(250); play_sound(350); sleep(150); play_sound(500); sleep(150); play_sound(600); sleep(150); play_sound(100); sleep(300); no_sound();
+    sleep(1700); draw_window(); drag = 0;
     unsigned char packet[3];
     while(1) {
         outb(0x70, 0x0A);
@@ -440,57 +440,66 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (explorer_opened == 1 && ascii_char == '1') {
                         open_file(5000);
-                        play_sound(100); sleep(100); no_sound();
+                        play_sound(400); sleep(80); no_sound();
+                        play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '2') {
                         open_file(5001);
-                        play_sound(200); sleep(100); no_sound();
+                        play_sound(400); sleep(80); no_sound();
+                        play_sound(600); sleep(120); no_sound();(200); sleep(100); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '3') {
                         open_file(5002);
-                        play_sound(300); sleep(100); no_sound();
+                        play_sound(400); sleep(80); no_sound();
+                        play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '4') {
                         open_file(5003);
-                        play_sound(400); sleep(100); no_sound();
+                        play_sound(400); sleep(80); no_sound();
+                        play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '5') {
                         open_file(5004);
-                        play_sound(500); sleep(100); no_sound();
+                        play_sound(400); sleep(80); no_sound();
+                        play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '6') {
                         open_file(5005);
-                        play_sound(600); sleep(100); no_sound();
+                        play_sound(400); sleep(80); no_sound();
+                        play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '7') {
                         open_file(5006);
-                        play_sound(700); sleep(100); no_sound();
+                        play_sound(400); sleep(80); no_sound();
+                        play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '8') {
                         open_file(5007);
-                        play_sound(800); sleep(100); no_sound();
+                        play_sound(400); sleep(80); no_sound();
+                        play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '9') {
                         open_file(5008);
-                        play_sound(900); sleep(100); no_sound();
+                        play_sound(400); sleep(80); no_sound();
+                        play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '0') {
                         open_file(5009);
-                        play_sound(1000); sleep(100); no_sound();
-                    
+                        play_sound(400); sleep(80); no_sound();
+                        play_sound(600); sleep(120); no_sound();                    
                     }
                     if (ascii_char == 'C' && drag == 0 && tail == 0) {
                         tail = 1;
-                        play_sound(900);
-                        sleep(100);
-                        no_sound();
+                        play_sound(1200); sleep(70); no_sound();
+                        sleep(70);
+                        play_sound(1200); sleep(70); no_sound();
                     }
                     if (ascii_char == 'O' && drag == 0 && tail == 1) {
                         tail = 0;
                         draw_window();
-                        play_sound(800);
-                        sleep(100);
-                        no_sound();
+                        play_sound(200); sleep(70); no_sound();
+                        sleep(70);
+                        play_sound(200); sleep(70); no_sound();
                     }
                     if (ascii_char == 'R' && win_x < 300 && drag == 0 && km_mode == 0) {
                         win_x += 20;
@@ -514,95 +523,62 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         power_opened = 0;
                         help_col = 65;
                         draw_window();
-                        play_sound(900);
-                        sleep(100);
-                        no_sound();
+                        play_sound(100); sleep(70); no_sound();
+                        play_sound(40); sleep(140); no_sound();
                     }
                     if (ascii_char == '1' && drag == 0) {
-                        bg_col = 0x18C3;
                         theme = 1;
                         draw_window();
-                        play_sound(100);
-                        sleep(100);
-                        no_sound();
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                     }
                     if (ascii_char == '2' && drag == 0) {
                         theme = 2;
-                        bg_col = 0x2000;
                         draw_window();
-                        play_sound(200);
-                        sleep(100);
-                        no_sound();
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                     }                        
                     if (ascii_char == '3' && drag == 0) {
-                        bg_col = 0x1041;
                         theme = 3;
                         draw_window();
-                        play_sound(300);
-                        sleep(100);
-                        no_sound();
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                     }
                     if (ascii_char == '4' && drag == 0) {
                         theme = 4;
-                        bg_col = 0x10A2;
                         draw_window();
-                        play_sound(400);
-                        sleep(100);
-                        no_sound();
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                     }
                     if (ascii_char == '5' && drag == 0) {
-                        bg_col = 0x01C8;
                         theme = 5;
                         draw_window();
-                        play_sound(500);
-                        sleep(100);
-                        no_sound();
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                     }
                     if (ascii_char == '6' && drag == 0) {
-                        bg_col = 0x00A1;
                         theme = 6;
                         draw_window();
-                        play_sound(600);
-                        sleep(100);
-                        no_sound();
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                     }
                     if (ascii_char == '7' && drag == 0) {
-                        bg_col = 0x4083;
                         theme = 7;
                         draw_window();
-                        play_sound(700);
-                        sleep(100);
-                        no_sound();
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                     }
                     if (ascii_char == '8' && drag == 0) {
-                        bg_col = 0x7BE0;
                         theme = 8;
                         draw_window();
-                        play_sound(800);
-                        sleep(100);
-                        no_sound();
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                     }
                     if (ascii_char == '9' && drag == 0) {
-                        bg_col = 0x0110;
                         theme = 9;
                         draw_window();
-                        play_sound(900);
-                        sleep(100);
-                        no_sound();
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                     }
                     if (ascii_char == '0' && drag == 0) {
-                        bg_col = 0x10A2;
                         theme = 10;
                         draw_window();
-                        play_sound(1000);
-                        sleep(100);
-                        no_sound();
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                     }
                     if (ascii_char == 'T' && km_mode == 0 && drag == 0) {
                         km_mode = 1;
-                        play_sound(200);
-                        sleep(100);
-                        no_sound();
+                        play_sound(100); sleep(60); play_sound(250); sleep(120); no_sound();
                     }
                     if (ascii_char == 'U' && km_mode == 1 && pos_y > 15 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
@@ -626,9 +602,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (ascii_char == 'G' && km_mode == 1 && drag == 0) {
                         km_mode = 0;
-                        play_sound(1000);
-                        sleep(100);
-                        no_sound();
+                        play_sound(50); sleep(60); play_sound(200); sleep(120); no_sound();
                         draw_window();
                     }
                     if (ascii_char == 'e' && km_mode == 1 && drag == 0) {
@@ -645,9 +619,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             write("", i);
                         }
                         sectors = 5000;
-                        play_sound(1000);
-                        sleep(100);
-                        no_sound();
+                        play_sound(300); sleep(50); no_sound(); 
+                        sleep(50);
+                        play_sound(300); sleep(50); no_sound(); 
+                        sleep(50);
+                        play_sound(300); sleep(50); no_sound(); 
                         open_explorer();
                     }
                 }
@@ -704,7 +680,8 @@ void pong() {
                 if (ascii_char == 'E') {
                     drag = 0;
                     draw_window();
-                    play_sound(900); sleep(100); no_sound();
+                    play_sound(100); sleep(70); no_sound();
+                    play_sound(40); sleep(140); no_sound();
                     break;
                 }
                 if (ascii_char == 'd' && pad_x <= win_x + 630) {
@@ -715,7 +692,7 @@ void pong() {
                             gfx_memory[screen_y * 1024 + screen_x] = 0xF77D;
                         }
                     }
-                    pad_x += 35;
+                    pad_x += 30;
                     for (int x = 0; x < pad_w; x++) {
                         for (int y = 0; y < pad_h; y++) {
                             int screen_x = pad_x + x;
@@ -733,7 +710,7 @@ void pong() {
                             gfx_memory[screen_y * 1024 + screen_x] = 0xF77D;
                         }
                     }
-                    pad_x -= 35;
+                    pad_x -= 30;
                     for (int x = 0; x < pad_w; x++) {
                         for (int y = 0; y < pad_h; y++) {
                             int screen_x = pad_x + x;
@@ -837,7 +814,7 @@ void pong() {
                     gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0x03FF;
                 }
             }
-            sleep(12);
+            sleep(16);
         }
     }
 }
@@ -877,61 +854,51 @@ void open_file(int sector)
                 {
                     theme = 1;
                     draw_window();
-                    bg_col = 0x18C3;
                 }
                 if (str_in(file_output, "theme2")) 
                 {
                     theme = 2;
                     draw_window();
-                    bg_col = 0x2000;
                 }
                 if (str_in(file_output, "theme3")) 
                 {
                     theme = 3;
                     draw_window();
-                    bg_col = 0x1041;
                 }
                 if (str_in(file_output, "theme4")) 
                 {
                     theme = 4;
                     draw_window();
-                    bg_col = 0x10A2;
                 }
                 if (str_in(file_output, "theme5")) 
                 {
                     theme = 5;
                     draw_window();
-                    bg_col = 0x01C8;
                 }
                 if (str_in(file_output, "theme6")) 
                 {
                     theme = 6;
                     draw_window();
-                    bg_col = 0x05E0;
                 }
                 if (str_in(file_output, "theme7")) 
                 {
                     theme = 7;
                     draw_window();
-                    bg_col = 0xFBEF;
                 }
                 if (str_in(file_output, "theme8")) 
                 {
                     theme = 8;
                     draw_window();
-                    bg_col = 0x8B04;
                 }
                 if (str_in(file_output, "theme9")) 
                 {
                     theme = 9;
                     draw_window();
-                    bg_col = 0x1000;
                 }
                 if (str_in(file_output, "theme10")) 
                 {
                     theme = 10;
                     draw_window();
-                    bg_col = 0x0841;
                 }
                 if (str_in(file_output, "redraw")) 
                 {
@@ -965,8 +932,8 @@ void open_file(int sector)
                 }
                 if (str_in(file_output, "speaker")) 
                 {
-                    play_sound(750);
-                    sleep(250);
+                    play_sound(500);
+                    sleep(300);
                     no_sound();
                 }
                 if (str_in(file_output, "scrblack")) 
@@ -1039,10 +1006,6 @@ void open_file(int sector)
                         write("", i);
                     }
                     sectors = 5000;
-                    play_sound(1000);
-                    sleep(100);
-                    no_sound();
-                    open_explorer();
                 }
             }
         }
@@ -1071,7 +1034,7 @@ void open_file(int sector)
                 }
                 else 
                 {
-                    gfx_memory[y * 1024 + x] = 0xFFFF;
+                    gfx_memory[y * 1024 + x] = 0xF77D;
                 }
             }
         }
@@ -1110,7 +1073,7 @@ else {
         }
         print_string("No file", win_x + 28, win_y + 28, 0x0000);
         print_string("No file", win_x + 27, win_y + 27, 0xFFFF);
-        print_string("File not found!", win_x + 30, win_y + 45, text_col);
+        print_string("File not found or empty!", win_x + 30, win_y + 45, text_col);
         print_string("Press Esc to close this window.", win_x + 30, win_y + 60, 0x0000);
 }
 }
@@ -1187,7 +1150,8 @@ void filew() {
             print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
         }
         print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-        print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
+        print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
+        print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000);
         print_string(ftext, win_x + 30, help_col, text_col);
         while (1) {
             unsigned char status = inb(0x64);
@@ -1228,7 +1192,8 @@ void filew() {
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
+                            print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
+                            print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
                             read((sectors - 1), str);
                             if (str_cmp(ftext, str)) {
@@ -1268,7 +1233,8 @@ void filew() {
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
+                            print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
+                            print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000); 
                             print_string(ftext, win_x + 30, help_col, text_col);
                             read((sectors - 1), str);
                             if (str_cmp(ftext, str)) {
@@ -1380,7 +1346,8 @@ void filew() {
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Press shift + F1/F2/F3/F4/F5 to change text color. Programm: !mapp!", win_x + 30, help_col + 30, 0x0000);
+                            print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
+                            print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
                             read((sectors - 1), str);
                             if (str_cmp(ftext, str)) {
@@ -1397,7 +1364,8 @@ void filew() {
                     else if (ascii_char == 'F') {
                         if (createdFiles < 10 && disk_exists == 1) {
                             write(ftext, sectors);
-                            play_sound(750); sleep(100); no_sound();
+                            play_sound(800); sleep(100); no_sound();
+                            play_sound(1200); sleep(120); no_sound();
                             w_mode = 0;
                             draw_window();
                             open_file(sectors);
@@ -1406,11 +1374,14 @@ void filew() {
                             break;
                         }
                         else {
-                            play_sound(150); sleep(100); no_sound();
+                            play_sound(100); sleep(60); no_sound();
+                            sleep(60);
+                            play_sound(100); sleep(60); no_sound();
                         }
                     }
                     else if (ascii_char == 'E') {
-                        play_sound(150); sleep(100); no_sound();
+                        play_sound(100); sleep(70); no_sound();
+                        play_sound(40); sleep(140); no_sound();
                         w_mode = 0;
                         drag = 0;
                         draw_window();
@@ -1707,11 +1678,10 @@ void shutdown() {
         }
     }
     print_string("maxOS is shutting down...", 420, 420, 0xF800);
-    play_sound(200); sleep(150); no_sound();
+    play_sound(300); sleep(250); no_sound();
+    play_sound(200); sleep(250); no_sound();
     play_sound(100); sleep(250); no_sound();
-    play_sound(200); sleep(150); no_sound();
-    play_sound(100); sleep(150); no_sound();
-    play_sound(70); sleep(300); no_sound();
+    play_sound(40); sleep(350); no_sound();
     sleep(3000);
     outw(0xB004, 0x2000);
     outw(0x604, 0x2000);
@@ -1737,11 +1707,10 @@ void reboot() {
         }
     }
     print_string("maxOS is rebooting...", 423, 420, 0xF800);
-    play_sound(200); sleep(150); no_sound();
+    play_sound(300); sleep(250); no_sound();
+    play_sound(200); sleep(250); no_sound();
     play_sound(100); sleep(250); no_sound();
-    play_sound(200); sleep(150); no_sound();
-    play_sound(100); sleep(150); no_sound();
-    play_sound(70); sleep(300); no_sound();
+    play_sound(40); sleep(350); no_sound();
     sleep(3000);
     outb(0x64, 0xFE);
     volatile unsigned long long idt_pointer = 0;
