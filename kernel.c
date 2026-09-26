@@ -672,7 +672,7 @@ void pong() {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else {
-                    gfx_memory[y * 1024 + x] = 0xEF59;
+                    gfx_memory[y * 1024 + x] = 0xF77D;
                 }
             }
         }
@@ -681,10 +681,12 @@ void pong() {
         print_string("Pong - score:", win_x + 28, win_y + 28, 0x0000);
         print_string("Pong - score:", win_x + 27, win_y + 27, 0xFFFF);
         while (1) {
-            unsigned char check_mouse = inb(0x64);
-            if (check_mouse & 0x20) {
-                inb(0x60);
-                continue;
+            unsigned char status = inb(0x64);
+            if (status & 0x01) {
+                if (status & 0x20) {
+                    inb(0x60);
+                    continue;
+                }
             }
             unsigned char scan_code = inb(0x60);
             if (scan_code < 0x80 && w_mode == 0) {
@@ -700,7 +702,7 @@ void pong() {
                         for (int y = 0; y < pad_h; y++) {
                             int screen_x = pad_x + x;
                             int screen_y = pad_y + y;
-                            gfx_memory[screen_y * 1024 + screen_x] = 0xEF59;
+                            gfx_memory[screen_y * 1024 + screen_x] = 0xF77D;
                         }
                     }
                     pad_x += 20;
@@ -708,7 +710,7 @@ void pong() {
                         for (int y = 0; y < pad_h; y++) {
                             int screen_x = pad_x + x;
                             int screen_y = pad_y + y;
-                            gfx_memory[screen_y * 1024 + screen_x] = 0xB269;
+                            gfx_memory[screen_y * 1024 + screen_x] = 0xF800;
                         }
                     }
                     sleep(20);
@@ -718,7 +720,7 @@ void pong() {
                         for (int y = 0; y < pad_h; y++) {
                             int screen_x = pad_x + x;
                             int screen_y = pad_y + y;
-                            gfx_memory[screen_y * 1024 + screen_x] = 0xEF59;
+                            gfx_memory[screen_y * 1024 + screen_x] = 0xF77D;
                         }
                     }
                     pad_x -= 20;
@@ -726,7 +728,7 @@ void pong() {
                         for (int y = 0; y < pad_h; y++) {
                             int screen_x = pad_x + x;
                             int screen_y = pad_y + y;
-                            gfx_memory[screen_y * 1024 + screen_x] = 0xB269;
+                            gfx_memory[screen_y * 1024 + screen_x] = 0xF800;
                         }
                     }
                     sleep(20);
@@ -734,7 +736,7 @@ void pong() {
             }
             for (int x = 0; x < ball_size; x++) {
                 for (int y = 0; y < ball_size; y++) {
-                    gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0xEF59;
+                    gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0xF77D;
                 }
             }
             ball_x += ball_dx;
@@ -821,7 +823,7 @@ void pong() {
             }
             for (int x = 0; x < ball_size; x++) {
                 for (int y = 0; y < ball_size; y++) {
-                    gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0x7E1F;
+                    gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0x03FF;
                 }
             }
             sleep(16);
@@ -1004,7 +1006,7 @@ void open_file(int sector)
                             }
                             else 
                             {
-                                gfx_memory[y * 1024 + x] = 0xFFFF;
+                                gfx_memory[y * 1024 + x] = 0xF77D;
                             }
                         }
                     }
@@ -1091,20 +1093,10 @@ else {
                 }
                 else 
                 {
-                    gfx_memory[y * 1024 + x] = 0xFFFF;
+                    gfx_memory[y * 1024 + x] = 0xF77D;
                 }
             }
         }
-        int swin_x = win_x + 20;
-        int swin_y = win_y + 22;
-        int swin_w = win_w - 40;
-        gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-        gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-        gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-        int right_edges = swin_x + swin_w - 1;
-        gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-        gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-        gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
         print_string("No file", win_x + 28, win_y + 28, 0x0000);
         print_string("No file", win_x + 27, win_y + 27, 0xFFFF);
         print_string("File not found!", win_x + 30, win_y + 45, text_col);
@@ -1165,7 +1157,7 @@ void filew() {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else {
-                    gfx_memory[y * 1024 + x] = 0xFFFF;
+                    gfx_memory[y * 1024 + x] = 0xF77D;
                 }
             }
         }
@@ -1212,7 +1204,7 @@ void filew() {
                                         gfx_memory[y * 1024 + x] = 0x11EB;
                                     }
                                     else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                        gfx_memory[y * 1024 + x] = 0xF77D;
                                     }
                                 }
                             }
@@ -1252,7 +1244,7 @@ void filew() {
                                         gfx_memory[y * 1024 + x] = 0x11EB;
                                     }
                                     else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                        gfx_memory[y * 1024 + x] = 0xF77D;
                                     }
                                 }
                             }
@@ -1364,7 +1356,7 @@ void filew() {
                                         gfx_memory[y * 1024 + x] = 0x11EB;
                                     }
                                     else {
-                                        gfx_memory[y * 1024 + x] = 0xFFFF;
+                                        gfx_memory[y * 1024 + x] = 0xF77D;
                                     }
                                 }
                             }
@@ -1432,7 +1424,7 @@ void help() {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else {
-                    gfx_memory[y * 1024 + x] = 0xFFFF;
+                    gfx_memory[y * 1024 + x] = 0xF77D;
                 }
             }
         }
@@ -1477,7 +1469,7 @@ void power() {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else {
-                    gfx_memory[y * 1024 + x] = 0xFFFF;
+                    gfx_memory[y * 1024 + x] = 0xF77D;
                 }
             }
         }
@@ -1522,7 +1514,7 @@ void cpu_win() {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else {
-                    gfx_memory[y * 1024 + x] = 0xFFFF;
+                    gfx_memory[y * 1024 + x] = 0xF77D;
                 }
             }
         }
@@ -1584,7 +1576,7 @@ void open_explorer() {
                     gfx_memory[y * 1024 + x] = 0xC618;
                 }
                 else {
-                    gfx_memory[y * 1024 + x] = 0xFFFF;
+                    gfx_memory[y * 1024 + x] = 0xF77D;
                 }
             }
         }
@@ -1928,8 +1920,8 @@ void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
             int screen_y = (win_y + 22) + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = pong_icon[y][x];
-                if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0xB269; }
-                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0x7E1F; }
+                if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0xF800; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0x03FF; }
                 else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0x0000; }
             }
         }
@@ -2257,7 +2249,7 @@ void draw_window() {
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x10A2; }
             }
             else {
-                gfx_memory[y * 1024 + x] = 0xF7BE;
+                gfx_memory[y * 1024 + x] = 0xF77D;
             }
        }
     }
