@@ -1734,7 +1734,7 @@ void error(char* err) {
     drag = 2;
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
-            gfx_memory[y * 1024 + x] = 0xB269;
+            gfx_memory[y * 1024 + x] = 0x9800;
         }
     }
     print_string("maxOS error!", 471, 11, 0x0000);
