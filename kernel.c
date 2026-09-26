@@ -1522,7 +1522,7 @@ void cpu_win() {
         get_cpu(cpu_name);
         char ram[32];
         int_str(ram_mb, ram);
-        write("ATA driver and maxFS2: OK!", 5011);
+        write("ATA driver and maxFS2 OK!", 5011);
         char fs_msg[30];
         read(5011, fs_msg);
         print_string("System information. Press Esc to close.", win_x + 28, win_y + 28, 0x0000);
