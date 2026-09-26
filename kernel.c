@@ -179,6 +179,46 @@ unsigned char off_icon[12][12] = {
     {0,0,2,3,3,3,3,3,3,2,0,0},
     {0,0,0,2,2,2,2,2,2,0,0,0},
 };
+unsigned char sad_smile_icon[24][24] = {
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,2,2,2,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0},
+    {0,0,0,0,2,1,1,1,2,0,0,0,0,2,1,1,1,2,0,0,0,0,0,0},
+    {0,0,0,0,2,1,1,1,2,0,0,0,0,2,1,1,1,2,0,0,0,0,0,0},
+    {0,0,0,0,2,3,3,3,2,0,0,0,0,2,3,3,3,2,0,0,0,0,0,0},
+    {0,0,0,0,0,2,2,2,0,0,0,0,0,0,2,2,2,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,2,2,2,2,2,2,2,2,2,2,2,2,0,0,0,0,0,0,0},
+    {0,0,0,0,2,1,1,1,1,1,1,1,1,1,1,1,1,2,0,0,0,0,0,0},
+    {0,0,0,2,1,3,1,3,1,3,1,3,1,3,1,3,1,3,2,0,0,0,0,0},
+    {0,0,2,3,3,3,2,2,2,2,2,2,2,2,2,2,3,3,3,2,0,0,0,0},
+    {0,0,2,3,3,2,0,0,0,0,0,0,0,0,0,0,2,3,3,2,0,0,0,0},
+    {0,0,2,3,3,2,0,0,0,0,0,0,0,0,0,0,2,3,3,2,0,0,0,0},
+    {0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,2,2,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}
+};
+//unsigned char empty_list[12][12] = {
+//     {0,0,0,0,0,0,0,0,0,0,0,0},
+//     {0,0,0,0,0,0,0,0,0,0,0,0},
+//     {0,0,0,0,0,0,0,0,0,0,0,0},
+//     {0,0,0,0,0,0,0,0,0,0,0,0},
+//     {0,0,0,0,0,0,0,0,0,0,0,0},
+//     {0,0,0,0,0,0,0,0,0,0,0,0},
+//     {0,0,0,0,0,0,0,0,0,0,0,0},
+//     {0,0,0,0,0,0,0,0,0,0,0,0},
+//     {0,0,0,0,0,0,0,0,0,0,0,0},
+//     {0,0,0,0,0,0,0,0,0,0,0,0},
+//     {0,0,0,0,0,0,0,0,0,0,0,0},
+//     {0,0,0,0,0,0,0,0,0,0,0,0},
+// };
 const unsigned char max_font[] = {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 32 (пробел)
     0x18,0x18,0x18,0x18,0x18,0x00,0x18,0x00, // 33 !
@@ -906,34 +946,58 @@ void open_file(int sector)
                     help_col = 65;
                     draw_window();
                 }
-                if (str_in(file_output, "winr")) 
+                if (str_in(file_output, "wright")) 
                 {
                     drag = 0;
                     win_x += 50;
                     draw_window();
                 }
-                if (str_in(file_output, "winl")) 
+                if (str_in(file_output, "wleft")) 
                 {
                     drag = 0;
                     win_x -= 50;
                     draw_window();
                 }
-                if (str_in(file_output, "winu")) 
+                if (str_in(file_output, "wup")) 
                 {
                     drag = 0;
                     win_y -= 50;
                     draw_window();
                 }
-                if (str_in(file_output, "wind")) 
+                if (str_in(file_output, "wdown")) 
                 {
                     drag = 0;
                     win_y += 50;
                     draw_window();
                 }
-                if (str_in(file_output, "speaker")) 
+                if (str_in(file_output, "spk100")) 
+                {
+                    play_sound(100);
+                    sleep(350);
+                    no_sound();
+                }
+                if (str_in(file_output, "spk250")) 
+                {
+                    play_sound(250);
+                    sleep(350);
+                    no_sound();
+                }
+                if (str_in(file_output, "spk500")) 
                 {
                     play_sound(500);
-                    sleep(300);
+                    sleep(350);
+                    no_sound();
+                }
+                if (str_in(file_output, "spk750")) 
+                {
+                    play_sound(750);
+                    sleep(350);
+                    no_sound();
+                }
+                if (str_in(file_output, "spk1000")) 
+                {
+                    play_sound(1000);
+                    sleep(350);
                     no_sound();
                 }
                 if (str_in(file_output, "scrblack")) 
@@ -1725,18 +1789,30 @@ void error(char* err) {
             gfx_memory[y * 1024 + x] = 0x9800;
         }
     }
-    print_string("maxOS error!", 471, 11, 0x0000);
-    print_string("maxOS error!", 470, 10, 0xFFFF);
+    print_string("maxOS critical error!", 456, 11, 0x0000);
+    print_string("maxOS critical error!", 455, 10, 0xFFFF);
     print_string(err, 11, 31, 0x0000);
     print_string(err, 10, 30, 0xFFFF);
-    print_string("Restart or off your PC :(", 11, 51, 0x0000);
-    print_string("Restart or off your PC :(", 10, 50, 0xFFFF);
+    print_string("Your PC will be restarted in a few seconds...", 11, 51, 0x0000);
+    print_string("Your PC will be restarted in a few seconds...", 10, 50, 0xFFFF);
     print_string("If this keep happening, try to fix the issues or avoid repeating this actions.", 11, 71, 0x0000);
     print_string("If this keep happening, try to fix the issues or avoid repeating this actions.", 10, 70, 0xFFFF);
     print_string("You can check error description and code, to get more information.", 11, 91, 0x0000);
     print_string("You can check error description and code, to get more information.", 10, 90, 0xFFFF);
-    play_sound(100); sleep(250); play_sound(75); sleep(250); play_sound(50); sleep(250); no_sound();
-    sleep(3000); reboot();
+    for (int y = 0; y < 24; y++) {
+        for (int x = 0; x < 24; x++) {
+            int screen_x = 800 + x;
+            int screen_y = 70 + y;
+            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = sad_smile_icon[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0xF800; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0x10A2; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0x5000; }
+            }
+        }
+    }
+    play_sound(100); sleep(350); no_sound(); sleep(100); play_sound(150); sleep(350); no_sound(100); play_sound(100); sleep(250); no_sound();
+    sleep(5000); reboot();
 }
 int str_in(char* main_string, char* substring) {
     int i = 0;
