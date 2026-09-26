@@ -10,15 +10,12 @@ gcc -m32 -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 # Компилируем драйвер жесткого диска ATA
 gcc -m32 -c ata.c -o ata.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-# Компилируем звуковой драйвер
-gcc -m32 -c sb16.c -o sb16.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-
 # === ИСПРАВЛЕНО 1: Добавили компиляцию нашего нового PCI-драйвера! ===
 gcc -m32 -c pci.c -o pci.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
 echo "=== [2/3] Линковка бинарного файла ядра ==="
 # === ИСПРАВЛЕНО 2: Добавили pci.o в цепочку линковщика ld ===
-ld -m elf_i386 --no-warn-rwx-segments -T linker.ld entry.o kernel.o ata.o sb16.o pci.o -o mykernel.bin
+ld -m elf_i386 --no-warn-rwx-segments -T linker.ld entry.o kernel.o ata.o pci.o -o mykernel.bin
 
 echo "=== [3/3] Создание структуры и генерация загрузочного диска ==="
 mkdir -p iso/boot/grub

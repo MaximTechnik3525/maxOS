@@ -78,12 +78,7 @@ void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
 void write(char* msg, int sector);
 void read(int sector, char* output);
-void power();
-__attribute__((aligned(4096))) unsigned char audio_buffer[16384];
-int init_sb16();
-void play(unsigned int sample, unsigned int length);
-void sb16_write(unsigned char reg);
-unsigned int inl(unsigned short port);
+void power();unsigned int inl(unsigned short port);
 void outl(unsigned short port, unsigned int data);
 void pci_scan(int txt_x, int txt_y);
 unsigned short cursor_back[12][12] = {0};
@@ -356,17 +351,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     }
     print_string("maxOS is starting up...", 425, 420, 0x05E5);
     print_string("By MaximTechnik3525", 10, 10, 0x05E5);
-    sleep(100);
-    if (init_sb16() == 1) {
-        int period = 16;
-        for (int i = 0; i < 16384; i++){
-            if ((i % 2048 == 0)) {
-                period += 4;
-            }
-            audio_buffer[i] = (unsigned char)((i % period) * (255 / period));
-        }
-        play(11025, 16384);
-    }
     sleep(1500); draw_window(); drag = 0;
     unsigned char packet[3];
     while(1) {
