@@ -308,6 +308,7 @@ int sectors = 5000;
 int createdFiles = 0;
 int currentMin = 0;
 int power_opened = 0;
+int disk_exists = 1;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
@@ -332,6 +333,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         }
     }
     else {
+        disk_exists = 0;
         sectors = 5000;
     }
     draw_window();
@@ -825,7 +827,7 @@ void open_file(int sector)
     drag = 1;
     explorer_opened = 0;
     char file_output[77];
-    read(sector, file_output);
+    if (disk_exists == 1) { read(sector, file_output); }
     if (file_output[0] != '\0') {
     if (str_in(file_output, "!mapp!")) 
     {
@@ -1128,8 +1130,10 @@ void read(int sector, char* output) {
 }
 void filew() {
     if (1 != 0) {
-        char str[77];
-        read((sectors - 1), str);
+        char str[77] = {0};
+        if (disk_exists == 1) {
+            read((sectors - 1), str);
+        }
         int help_col = win_y + 45;
         w_mode = 1;
         for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
@@ -1368,7 +1372,7 @@ void filew() {
                         }
                     }
                     else if (ascii_char == 'F') {
-                        if (createdFiles < 10) {
+                        if (createdFiles < 10 && disk_exists == 1) {
                             write(ftext, sectors);
                             play_sound(750); sleep(100); no_sound();
                             w_mode = 0;
@@ -1512,9 +1516,11 @@ void cpu_win() {
         get_cpu(cpu_name);
         char ram[32];
         int_str(ram_mb, ram);
-        write("ATA driver and maxFS2 OK!", 5011);
         char fs_msg[30];
-        read(5011, fs_msg);
+        if (disk_exists == 1) {
+            write("ATA driver and maxFS2 OK!", 5011);
+            read(5011, fs_msg);
+        }
         print_string("System information. Press Esc to close.", win_x + 28, win_y + 28, 0x0000);
         print_string("System information. Press Esc to close.", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Your CPU:", win_x + 30, help_col, 0x0000);
@@ -1531,11 +1537,11 @@ void cpu_win() {
             print_string("No", win_x + 145, help_col + 45, 0x9000);
         }
         print_string("Disk:", win_x + 30, help_col + 60, 0x0000);
-        if (fs_msg[0] != '\0') {
+        if (fs_msg[0] != '\0' && disk_exists == 1) {
             print_string(fs_msg, win_x + 86, help_col + 60, 0x0320);
         }
         else {
-            print_string("Error", win_x + 90, help_col + 60, 0x9000);
+            print_string("Disk for read and write not found!", win_x + 86, help_col + 60, 0x9000);
         }
         print_string("OS: maxOS v3.9 official build", win_x + 30, help_col + 75, 0x0000);
         pci_scan(win_x + 30, help_col + 90);

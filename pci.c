@@ -2,7 +2,7 @@ unsigned int inl(unsigned short port);
 void outl(unsigned short port, unsigned int data);
 void print_string(char* str, int x, int y, unsigned short color);
 void int_str(int num, char* str);
-extern win_y;
+extern int win_y;
 unsigned int pci_read_config(unsigned char bus, unsigned char slot, unsigned char func, unsigned char offset) {
     unsigned int address;
     unsigned int lbus = (unsigned int)bus;
