@@ -358,7 +358,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     }
     print_string("maxOS is starting up...", 425, 420, 0x05E5);
     print_string("By MaximTechnik3525", 10, 10, 0x05E5);
-    sleep(1500); draw_window(); drag = 0;
+    play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(750); sleep(150); play_sound(50); sleep(200); no_sound();    sleep(1500); draw_window(); drag = 0;
     unsigned char packet[3];
     while(1) {
         unsigned char raw_min = read_rtc_register(0x02);
@@ -503,7 +503,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         bg_col = 0x18C3;
                         theme = 1;
                         draw_window();
-                        play_sound(700);
+                        play_sound(100);
                         sleep(100);
                         no_sound();
                     }
@@ -511,7 +511,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         theme = 2;
                         bg_col = 0x2000;
                         draw_window();
-                        play_sound(700);
+                        play_sound(200);
                         sleep(100);
                         no_sound();
                     }                        
@@ -519,7 +519,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         bg_col = 0x1041;
                         theme = 3;
                         draw_window();
-                        play_sound(700);
+                        play_sound(300);
                         sleep(100);
                         no_sound();
                     }
@@ -527,7 +527,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         theme = 4;
                         bg_col = 0x10A2;
                         draw_window();
-                        play_sound(700);
+                        play_sound(400);
                         sleep(100);
                         no_sound();
                     }
@@ -535,7 +535,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         bg_col = 0x01C8;
                         theme = 5;
                         draw_window();
-                        play_sound(700);
+                        play_sound(500);
                         sleep(100);
                         no_sound();
                     }
@@ -543,7 +543,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         bg_col = 0x00A1;
                         theme = 6;
                         draw_window();
-                        play_sound(700);
+                        play_sound(600);
                         sleep(100);
                         no_sound();
                     }
@@ -559,7 +559,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         bg_col = 0x7BE0;
                         theme = 8;
                         draw_window();
-                        play_sound(700);
+                        play_sound(800);
                         sleep(100);
                         no_sound();
                     }
@@ -567,7 +567,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         bg_col = 0x0110;
                         theme = 9;
                         draw_window();
-                        play_sound(700);
+                        play_sound(900);
                         sleep(100);
                         no_sound();
                     }
@@ -575,7 +575,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         bg_col = 0x10A2;
                         theme = 10;
                         draw_window();
-                        play_sound(700);
+                        play_sound(1000);
                         sleep(100);
                         no_sound();
                     }
@@ -1108,25 +1108,29 @@ int str_cmp(char* str1, char* str2) {
 }
 int shift_p = 0;
 void write(char* msg, int sector) {
-    unsigned short write_buffer[256] = {0};
-    char* msg_ptr = (char*)write_buffer;
-    int msg_id = 0;
-    while (msg[msg_id] != '\0' && msg_id < 510) {
-        msg_ptr[msg_id] = msg[msg_id];
-        msg_id++;
+    if (disk_exists == 1) {
+        unsigned short write_buffer[256] = {0};
+        char* msg_ptr = (char*)write_buffer;
+        int msg_id = 0;
+        while (msg[msg_id] != '\0' && msg_id < 510) {
+            msg_ptr[msg_id] = msg[msg_id];
+            msg_id++;
+        }
+        ata_write_sector(sector, write_buffer);
     }
-    ata_write_sector(sector, write_buffer);
 }
 void read(int sector, char* output) {
-    unsigned short read_buffer[256] = {0};
-    ata_read_sector(sector, read_buffer);
-    char* disk_ptr = (char*)read_buffer;
-    int i = 0;
-    while (disk_ptr[i] != '\0' && i < 76) {
-        output[i] = disk_ptr[i];
-        i++;
+    if (disk_exists == 1) {
+        unsigned short read_buffer[256] = {0};
+        ata_read_sector(sector, read_buffer);
+        char* disk_ptr = (char*)read_buffer;
+        int i = 0;
+        while (disk_ptr[i] != '\0' && i < 76) {
+            output[i] = disk_ptr[i];
+            i++;
+        }
+        output[i] = '\0';
     }
-    output[i] = '\0';
 }
 void filew() {
     if (1 != 0) {
