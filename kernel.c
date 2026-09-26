@@ -687,7 +687,7 @@ void pong() {
                     inb(0x60);
                     continue;
                 }
-            }
+            
             unsigned char scan_code = inb(0x60);
             if (scan_code < 0x80 && w_mode == 0) {
                 char ascii_char = scan_code_to_ascii(scan_code);
@@ -705,7 +705,7 @@ void pong() {
                             gfx_memory[screen_y * 1024 + screen_x] = 0xF77D;
                         }
                     }
-                    pad_x += 20;
+                    pad_x += 35;
                     for (int x = 0; x < pad_w; x++) {
                         for (int y = 0; y < pad_h; y++) {
                             int screen_x = pad_x + x;
@@ -713,7 +713,7 @@ void pong() {
                             gfx_memory[screen_y * 1024 + screen_x] = 0xF800;
                         }
                     }
-                    sleep(20);
+                    sleep(12);
                 }
                 if (ascii_char == 'a' && pad_x >= win_x + 50) {
                     for (int x = 0; x < pad_w; x++) {
@@ -723,7 +723,7 @@ void pong() {
                             gfx_memory[screen_y * 1024 + screen_x] = 0xF77D;
                         }
                     }
-                    pad_x -= 20;
+                    pad_x -= 35;
                     for (int x = 0; x < pad_w; x++) {
                         for (int y = 0; y < pad_h; y++) {
                             int screen_x = pad_x + x;
@@ -731,8 +731,9 @@ void pong() {
                             gfx_memory[screen_y * 1024 + screen_x] = 0xF800;
                         }
                     }
-                    sleep(20);
+                    sleep(12);
                 }
+            }
             }
             for (int x = 0; x < ball_size; x++) {
                 for (int y = 0; y < ball_size; y++) {
@@ -826,7 +827,7 @@ void pong() {
                     gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0x03FF;
                 }
             }
-            sleep(16);
+            sleep(12);
         }
     }
 }
