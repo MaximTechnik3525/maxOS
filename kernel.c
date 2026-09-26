@@ -306,10 +306,15 @@ int help_col;
 int explorer_opened = 0;
 int sectors = 5000;
 int createdFiles = 0;
+unsigned char raw_min2;
+int ready_min = 0;
 int currentMin = 0;
 int power_opened = 0;
 int disk_exists = 1;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
+    raw_min2 = read_rtc_register(0x02);
+    ready_min = bcd_to_binary(raw_min2);
+    currentMin = ready_min;
     struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
     if (mbi->framebuffer_pitch > 0) { REAL_PITCH = mbi->framebuffer_pitch / 2; }
@@ -361,11 +366,14 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     play_sound(100); sleep(150); play_sound(200); sleep(150); play_sound(400); sleep(150); play_sound(600); sleep(150); play_sound(750); sleep(150); play_sound(50); sleep(200); no_sound();    sleep(1500); draw_window(); drag = 0;
     unsigned char packet[3];
     while(1) {
+        outb(0x70, 0x0A);
+        if ((inb(0x71) & 0x80) == 0) {
         unsigned char raw_min = read_rtc_register(0x02);
         int m = bcd_to_binary(raw_min);
         if (currentMin != m && drag == 0) {
             currentMin = m;
             draw_window();
+        }
         }
 
         unsigned char status = inb(0x64);
@@ -2096,6 +2104,8 @@ unsigned char read_rtc_register(unsigned char reg) {
     return inb(0x71);
 }
 void clock() {
+    outb(0x70, 0x0A);
+    while (inb(0x71) & 0x80);
     unsigned char raw_sec = read_rtc_register(0x00);
     unsigned char raw_min = read_rtc_register(0x02);
     unsigned char raw_hour = read_rtc_register(0x04);
@@ -2103,6 +2113,7 @@ void clock() {
     unsigned char raw_month = read_rtc_register(0x08);
     int sec = bcd_to_binary(raw_sec), min = bcd_to_binary(raw_min), hour = bcd_to_binary(raw_hour), day = bcd_to_binary(raw_day), month = bcd_to_binary(raw_month);
     char s[4], m[4], h[4], d[4], mo[4];
+    currentMin = min;
     int_str(sec, s);
     int_str(min, m);
     int_str(hour, h);
