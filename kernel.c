@@ -440,33 +440,44 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (explorer_opened == 1 && ascii_char == '1') {
                         open_file(5000);
+                        play_sound(100); sleep(100); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '2') {
                         open_file(5001);
+                        play_sound(200); sleep(100); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '3') {
                         open_file(5002);
+                        play_sound(300); sleep(100); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '4') {
                         open_file(5003);
+                        play_sound(400); sleep(100); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '5') {
                         open_file(5004);
+                        play_sound(500); sleep(100); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '6') {
                         open_file(5005);
+                        play_sound(600); sleep(100); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '7') {
                         open_file(5006);
+                        play_sound(700); sleep(100); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '8') {
                         open_file(5007);
+                        play_sound(800); sleep(100); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '9') {
                         open_file(5008);
+                        play_sound(900); sleep(100); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '0') {
                         open_file(5009);
+                        play_sound(1000); sleep(100); no_sound();
+                    
                     }
                     if (ascii_char == 'C' && drag == 0 && tail == 0) {
                         tail = 1;
