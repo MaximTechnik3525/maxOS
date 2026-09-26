@@ -585,22 +585,22 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (ascii_char == 'U' && km_mode == 1 && pos_y > 15 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_y -= 15;
+                        pos_y -= 10;
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'D' && km_mode == 1 && pos_y < 741 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_y += 15;
+                        pos_y += 10;
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'R' && km_mode == 1 && pos_x < 997 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_x += 15;
+                        pos_x += 10;
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'L' && km_mode == 1 && pos_x > 15 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_x -= 15;
+                        pos_x -= 10;
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'G' && km_mode == 1 && drag == 0) {
@@ -612,7 +612,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (ascii_char == 'e' && km_mode == 1 && drag == 0) {
                         if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { pong(); }
-                        if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { shutdown(); }
+                        if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { power(); }
                         if (pos_x <= win_x + 50 && pos_y <= win_y + 30  && drag == 0 && pos_x >= win_x + 10 && pos_y >= win_y + 20) { help(); }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0 && pos_y >= win_y + 20) { cpu_win(); }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0 && pos_y >= win_y + 20) { filew(); }
