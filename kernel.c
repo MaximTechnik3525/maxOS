@@ -373,6 +373,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             read(checkSector, fileText);
             if (fileText[0] != '\0') {
                 sectors++;
+                createdFiles++;
             }
         }
     }
