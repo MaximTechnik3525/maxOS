@@ -321,13 +321,18 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     if (mbi->flags & (1 << 10)) {
         apm_supp = 1;
     }
-    for (int i = 0; i < 11; i++) {
-        int checkSector = 4999 + i;
-        char fileText[77];
-        read(checkSector, fileText);
-        if (fileText[0] != '\0') {
-            sectors++;
+    if ((inb(0x1F7)) != 0xFF) {
+        for (int i = 0; i < 11; i++) {
+            int checkSector = 4999 + i;
+            char fileText[77];
+            read(checkSector, fileText);
+            if (fileText[0] != '\0') {
+                sectors++;
+            }
         }
+    }
+    else {
+        sectors = 5000;
     }
     draw_window();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
