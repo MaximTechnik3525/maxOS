@@ -60,6 +60,7 @@ void no_sound();
 void pong();
 void help();
 void cpu_win();
+void reboot();
 void filew();
 void open_explorer();
 void error(char* err);
@@ -77,6 +78,7 @@ void sleep(unsigned int ms);
 int str_in(char* main_string, char* substring);
 void write(char* msg, int sector);
 void read(int sector, char* output);
+void power();
 __attribute__((aligned(4096))) unsigned char audio_buffer[16384];
 int init_sb16();
 void play(unsigned int sample, unsigned int length);
@@ -310,6 +312,7 @@ int explorer_opened = 0;
 int sectors = 5000;
 int createdFiles = 0;
 int currentMin = 0;
+int power_opened = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
     _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
@@ -351,7 +354,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             else { gfx_memory[y * 1024 + x] = 0x0040; }
         }
     }
-    print_string("maxOS Ultimate", 460, 420, 0x05E5);
+    print_string("maxOS is starting up...", 425, 420, 0x05E5);
     print_string("By MaximTechnik3525", 10, 10, 0x05E5);
     sleep(100);
     if (init_sb16() == 1) {
@@ -411,7 +414,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (click == 1) { // MOUSE CLICKS
                         if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { pong(); }
-                        if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { shutdown(); }
+                        if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { power(); }
                         if (pos_x <= win_x + 50 && pos_y <= win_y + 30 && pos_y >= win_y + 20 && pos_x >= win_x + 10) { help(); }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && pos_y >= win_y + 10) { cpu_win(); }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && pos_y >= win_y + 20) { filew(); }
@@ -428,6 +431,14 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 unsigned char scan_code = inb(0x60);
                 if (scan_code < 0x80 && w_mode == 0 && drag != 2) { // KEYBOARD CLICKS
                     char ascii_char = scan_code_to_ascii(scan_code);
+                    if (ascii_char == '1' && power_opened == 1) {
+                        shutdown();
+                        power_opened = 0;
+                    }
+                    if (ascii_char == '2' && power_opened == 1) {
+                        reboot();
+                        power_opened = 0;
+                    }
                     if (explorer_opened == 1 && ascii_char == '1') {
                         open_file(5000);
                     }
@@ -490,6 +501,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (ascii_char == 'E') {
                         drag = 0;
                         explorer_opened = 0;
+                        power_opened = 0;
                         help_col = 65;
                         draw_window();
                         play_sound(900);
@@ -669,6 +681,11 @@ void pong() {
         print_string("Pong - score:", win_x + 28, win_y + 28, 0x0000);
         print_string("Pong - score:", win_x + 27, win_y + 27, 0xFFFF);
         while (1) {
+            unsigned char check_mouse = inb(0x64);
+            if (check_mouse & 0x20) {
+                inb(0x60);
+                continue;
+            }
             unsigned char scan_code = inb(0x60);
             if (scan_code < 0x80 && w_mode == 0) {
                 char ascii_char = scan_code_to_ascii(scan_code);
@@ -996,8 +1013,9 @@ void open_file(int sector)
                 }
                 if (str_in(file_output, "printstring")) { print_string(file_output, 300, 359, 0x0000); }
                 if (str_in(file_output, "sleep")) { sleep(2000); }
-                if (str_in(file_output, "errscr")) { error("Caused by user programm. Code: 0x00"); }
+                if (str_in(file_output, "errscr")) { error("Caused by user programm. Code: 0x03"); }
                 if (str_in(file_output, "shutdown")) { shutdown(); }
+                if (str_in(file_output, "reboot")) { reboot(); }
                 if (str_in(file_output, "trailon")) { tail = 1; }
                 if (str_in(file_output, "trailoff")) { tail = 0; }
                 
@@ -1439,6 +1457,38 @@ void help() {
         print_string("F5/F6 to enable and disable mouse trail.", win_x + 30, help_col + 90, 0x0000);
     }
 }
+
+void power() {
+        int help_col = win_y + 45;
+        drag = 1;
+        power_opened = 1;
+        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+                    gfx_memory[y * 1024 + x] = 0x0320;
+                }
+                else if (y < win_y + 25) {
+                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                }
+                else if (y < win_y + 31) {
+                    gfx_memory[y * 1024 + x] = 0x24EE;
+                }
+                else if (y < win_y + 37) {
+                    gfx_memory[y * 1024 + x] = 0x11EB;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xFFFF;
+                }
+            }
+        }
+        print_string("Power control", win_x + 28, win_y + 28, 0x0000);
+        print_string("Power control", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("Press 1 to off pc.", win_x + 30, help_col, 0x0000);
+        print_string("Press 2 to reboot pc.", win_x + 30, help_col + 15, 0x0000);
+        print_string("This will delete all unsaved data!", win_x + 30, help_col + 40, 0x9000);
+        print_string("Press Esc to close this window.", win_x + 30, help_col + 55, 0x0000);
+    }
+
 void progressbar(char* file_des, int xend) {
         for (int y = win_y + 410; y < win_y + 425; y++) {
             for (int x = win_x + 300; x < win_x + 450; x++) {
@@ -1505,7 +1555,7 @@ void cpu_win() {
         else {
             print_string("Error", win_x + 90, help_col + 60, 0x9000);
         }
-        print_string("OS: maxOS Ultimate v3.9", win_x + 30, help_col + 75, 0x0000);
+        print_string("OS: maxOS v3.9 official build", win_x + 30, help_col + 75, 0x0000);
         pci_scan(win_x + 30, help_col + 90);
     }
 }
@@ -1657,7 +1707,36 @@ void shutdown() {
     outw(0x4004, 0x3400);
     outw(0x0B004, 0x2000);
     error("Cannot use power off ports! Code: 0x01");
-    asm volatile("cli; hlt");
+}
+void reboot() {
+    drag = 2;
+    for (int y = 0; y < 768; y++) {
+        for (int x = 0; x < 1024; x++) {
+            if (y <= 390 && y >= 388) {
+                gfx_memory[y * 1024 + x] = 0xFBEF;
+            }
+            else if (y <= 396 && y >= 391) {
+                gfx_memory[y * 1024 + x] = 0xF800;
+            }
+            else if (y <= 402 && y >= 397) {
+                gfx_memory[y * 1024 + x] = 0x5000;
+            }
+            else { gfx_memory[y * 1024 + x] = 0x1000; }
+
+        }
+    }
+    print_string("maxOS is rebooting...", 423, 420, 0xF800);
+    play_sound(200); sleep(150); no_sound();
+    play_sound(100); sleep(250); no_sound();
+    play_sound(200); sleep(150); no_sound();
+    play_sound(100); sleep(150); no_sound();
+    play_sound(70); sleep(300); no_sound();
+    sleep(3000);
+    outb(0x64, 0xFE);
+    volatile unsigned long long idt_pointer = 0;
+    __asm__ __volatile__("lidt %0" : : "m" (idt_pointer));
+    __asm__ __volatile__("int $0");
+    error("Cannot reboot system! Code: 0x02");
 }
 void error(char* err) {
     drag = 2;
@@ -1677,6 +1756,7 @@ void error(char* err) {
     print_string("You can check error description and code, to get more information.", 11, 91, 0x0000);
     print_string("You can check error description and code, to get more information.", 10, 90, 0xFFFF);
     play_sound(100); sleep(250); play_sound(75); sleep(250); play_sound(50); sleep(250); no_sound();
+    sleep(3000); reboot();
 }
 int str_in(char* main_string, char* substring) {
     int i = 0;
@@ -1859,7 +1939,7 @@ void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
 void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
-            int screen_x = (win_x + 318) + x;
+            int screen_x = (win_x + 326) + x;
             int screen_y = (win_y + 22) + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = off_icon[y][x];
@@ -1869,7 +1949,7 @@ void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
             }
         }
     }
-    print_string("Off", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Power", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
 }
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
@@ -2177,19 +2257,19 @@ void draw_window() {
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x10A2; }
             }
             else {
-                gfx_memory[y * 1024 + x] = 0xFFFF;
+                gfx_memory[y * 1024 + x] = 0xF7BE;
             }
        }
     }
     if (theme == 3) {
-        print_string("maxOS Ultimate Abrikos", win_x + 11, win_y + 6, 0x0000);
-        print_string("maxOS Ultimate Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS 3.9 Abrikos", win_x + 11, win_y + 6, 0x0000);
+        print_string("maxOS 3.9 Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
     if (theme == 4) {
-        print_string("maxOS Ultimate Tora", win_x + 11, win_y + 6, 0x0000);
-        print_string("maxOS Ultimate Tora", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS 3.9 Tora", win_x + 11, win_y + 6, 0x0000);
+        print_string("maxOS 3.9 Tora", win_x + 10, win_y + 5, 0xFFFF); }
     else {
-        print_string("maxOS Ultimate", win_x + 11, win_y + 6, 0x0000); 
-        print_string("maxOS Ultimate", win_x + 10, win_y + 5, 0xFFFF); }
+        print_string("maxOS 3.9", win_x + 11, win_y + 6, 0x0000); 
+        print_string("maxOS 3.9", win_x + 10, win_y + 5, 0xFFFF); }
     clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);

@@ -36,7 +36,7 @@ insmod ext2
 set gfxmode=1024x768x16
 set gfxpayload=keep
 
-menuentry "maxOS SystemDisk" {
+menuentry "maxOS 3.9" {
     search --no-floppy --set=root --file /boot/mykernel.bin
     multiboot /boot/mykernel.bin
     boot
