@@ -875,6 +875,7 @@ void open_file(int sector)
     if (file_output[0] != '\0') {
     if (str_in(file_output, "!mapp!")) 
     {
+        drag = 0;
         repeats = 1;
         if (str_in(file_output, "!mapp!"))
         {
@@ -978,6 +979,10 @@ void open_file(int sector)
                     win_y += 50;
                     draw_window();
                 }
+                if (str_in(file_output, "wcenter")) {
+                    win_x = 150; win_y = 140;
+                    draw_window();
+                }
                 if (str_in(file_output, "spk100")) 
                 {
                     play_sound(100);
@@ -1007,6 +1012,9 @@ void open_file(int sector)
                     play_sound(1000);
                     sleep(350);
                     no_sound();
+                }
+                if (str_in(file_output, "sndcoin")) {
+                    play_sound(988); sleep(80); play_sound(1318); sleep(220); no_sound();
                 }
                 if (str_in(file_output, "scrblack")) 
                 {
@@ -1070,7 +1078,6 @@ void open_file(int sector)
                 if (str_in(file_output, "reboot")) { reboot(); }
                 if (str_in(file_output, "trailon")) { tail = 1; }
                 if (str_in(file_output, "trailoff")) { tail = 0; }
-                
                 if (str_in(file_output, "format")) 
                 {
                     createdFiles = 0;
