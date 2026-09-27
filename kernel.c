@@ -80,6 +80,7 @@ void read(int sector, char* output);
 void power();unsigned int inl(unsigned short port);
 void outl(unsigned short port, unsigned int data);
 void pci_scan(int txt_x, int txt_y);
+void screensaver();
 unsigned short cursor_back[12][12] = {0};
 unsigned char mouse_arrow[12][12] = {
     {1,1,3,0,0,0,0,0,0,0,0,0},
@@ -350,6 +351,7 @@ int ready_min = 0;
 int currentMin = 0;
 int power_opened = 0;
 int disk_exists = 1;
+int timer = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
     ready_min = bcd_to_binary(raw_min2);
@@ -407,6 +409,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     sleep(1700); draw_window(); drag = 0;
     unsigned char packet[3];
     while(1) {
+        timer++;
+        if (timer >= 6000) { screensaver(); }
         outb(0x70, 0x0A);
         if ((inb(0x71) & 0x80) == 0) {
         unsigned char raw_min = read_rtc_register(0x02);
@@ -438,6 +442,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 if ((delta_x > -100 && delta_x < 100) && (delta_y > -100 && delta_y < 100)) {
                     if (delta_x != 0 || delta_y != 0) {
                         if (tail == 0) { prev_cursor(); }
+                        timer = 0;
                         pos_x += delta_x / 2;
                         pos_y -= delta_y / 2;
                         if (pos_x > 1012) {pos_x = 1012;}
@@ -470,6 +475,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 }
                 unsigned char scan_code = inb(0x60);
                 if (scan_code < 0x80 && w_mode == 0 && drag != 2) { // KEYBOARD CLICKS
+                    timer = 0;
                     char ascii_char = scan_code_to_ascii(scan_code);
                     if (ascii_char == '1' && power_opened == 1) {
                         shutdown();
@@ -670,6 +676,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 }
             }
         }
+        sleep(10);
     }
 }
 int score = 0;
@@ -2340,6 +2347,43 @@ void draw_window() {
     draw_cursor(pos_x, pos_y);
 }
 
+void screensaver() {
+    drag = 2;
+    for (int y = 0; y < 768; y++) {
+        for (int x = 0; x < 1024; x++) {
+            gfx_memory[y * 1024 + x] = 0x0100;
+        }
+    }
+    int txt_x = 5;
+    int txt_y = 5;
+    int was_x = 0;
+    int was_y = 0;
+    while (1) {
+        if (inb(0x64) & 0x01) {
+            inb(0x60);
+            timer = 0;
+            drag = 0;
+            draw_window();
+            break;
+        }
+        print_string("maxOS", txt_x, txt_y, 0x05E5);
+        if (txt_x < 980 && was_x == 0) {
+            txt_x += 5;
+        }
+        else {
+            txt_x -= 5;
+            was_x = 1;
+        }
+        if (txt_y < 740 && was_y == 0) { txt_y += 5; }
+        else {
+            txt_y -= 5;
+            was_y = 1;
+        }
+        if (txt_y < 5) { was_y = 0; }
+        if (txt_x < 5) { was_x = 0; }
+        sleep(30);
+    }
+}
 void print_string(char* str, int x, int y, unsigned short color) {
     while (*str != 0) {
         draw_char(*str, x, y, color);
