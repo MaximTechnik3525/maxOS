@@ -548,20 +548,20 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         sleep(70);
                         play_sound(200); sleep(70); no_sound();
                     }
-                    if (ascii_char == 'R' && win_x < 300 && drag == 0 && km_mode == 0) {
-                        win_x += 20;
+                    if (ascii_char == 'R' && win_x < 270 && drag == 0 && km_mode == 0) {
+                        win_x += 30;
                         draw_window();
                     }
-                    if (ascii_char == 'L' && win_x > 0 && drag == 0 && km_mode == 0) {
-                        win_x-= 20;
+                    if (ascii_char == 'L' && win_x > 30 && drag == 0 && km_mode == 0) {
+                        win_x-= 30;
                         draw_window();
                     }
-                    if (ascii_char == 'D' && win_y < 250 && drag == 0 && km_mode == 0) {
-                        win_y += 20;
+                    if (ascii_char == 'D' && win_y < 200 && drag == 0 && km_mode == 0) {
+                        win_y += 30;
                         draw_window();
                     }
-                    if (ascii_char == 'U' && win_y > 0 && drag == 0 && km_mode == 0) {
-                        win_y -= 20;
+                    if (ascii_char == 'U' && win_y > 30 && drag == 0 && km_mode == 0) {
+                        win_y -= 30;
                         draw_window();
                     }
                     if (ascii_char == 'E') {
@@ -1551,12 +1551,16 @@ void power() {
 void progressbar(char* file_des, int xend) {
         for (int y = win_y + 410; y < win_y + 425; y++) {
             for (int x = win_x + 300; x < win_x + 450; x++) {
-                gfx_memory[y * 1024 + x] = 0x3186;
+                gfx_memory[y * 1024 + x] = 0x0120;
             }
         }
         for (int y = win_y + 412; y < win_y + 423; y++) {
             for (int x = win_x + 302; x < xend; x++) {
-                gfx_memory[y * 1024 + x] = 0x0DE5;
+                if (y < (win_y + 416)) {
+                    gfx_memory[y * 1024 + x] = 0x0DE5;
+                }
+                else if (y < (win_y + 420)) { gfx_memory[y * 1024 + x] = 0x03EA; }
+                else { gfx_memory[y * 1024 + x] = 0x01A4; }
             }
         }
         print_string(file_des, win_x + 280, win_y + 435, 0x0000);
