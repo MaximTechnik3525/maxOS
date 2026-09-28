@@ -383,10 +383,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         disk_exists = 0;
         sectors = 5000;
     }
-    draw_window();
-    draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-    draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-    draw_cursor(pos_x, pos_y);
     help_col = win_y + 35;
     init_mouse();
     for (int y = 0; y < 768; y++) {
@@ -420,7 +416,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             draw_window();
         }
         }
-
         unsigned char status = inb(0x64);
         if (status & 0x01) {
             if (status & 0x20 && drag == 0 && w_mode == 0) {
@@ -2370,6 +2365,11 @@ void screensaver() {
     int was_x = 0;
     int was_y = 0;
     while (1) {
+        for (int y = 0; y < 768; y++) {
+            for (int x = 0; x < 1024; x++) {
+                gfx_memory[y * 1024 + x] = 0x0100;
+            }
+        }
         if (inb(0x64) & 0x01) {
             inb(0x60);
             timer = 0;
@@ -2392,7 +2392,7 @@ void screensaver() {
         }
         if (txt_y < 5) { was_y = 0; }
         if (txt_x < 5) { was_x = 0; }
-        sleep(30);
+        sleep(70);
     }
 }
 void print_string(char* str, int x, int y, unsigned short color) {
