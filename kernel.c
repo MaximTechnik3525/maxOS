@@ -1672,7 +1672,7 @@ void open_explorer() {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else if (y < win_y + 60) {
-                    gfx_memory[y * 1024 + x] = 0xC618;
+                    gfx_memory[y * 1024 + x] = 0x10A2;
                 }
                 else {
                     gfx_memory[y * 1024 + x] = 0xF77D;
@@ -1682,8 +1682,11 @@ void open_explorer() {
         print_string("Explorer: F to format, Esc to close. Press 1-0 to open the file.", win_x + 28, win_y + 28, 0x0000);
         print_string("Explorer: F to format, Esc to close. Press 1-0 to open the file.", win_x + 27, win_y + 27, 0xFFFF);
         print_string("File:", win_x + 35, win_y + 45, 0x0000);
-        print_string("ID/sector:", win_x + 300, win_y + 45, 0x0000);
+        print_string("Id & sector:", win_x + 300, win_y + 45, 0x0000);
         print_string("Size:", (win_x + win_h) - 14, win_y + 45, 0x0000);
+        print_string("File:", win_x + 34, win_y + 44, 0xFFFF);
+        print_string("Id & sector:", win_x + 299, win_y + 44, 0xFFFF);
+        print_string("Size:", (win_x + win_h) - 15, win_y + 44, 0xFFFF);
         int file_id = 1;
         for (int i = 0; i < (sectors - 5000); i++) {
             char str[77];
