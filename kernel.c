@@ -220,6 +220,20 @@ unsigned char sad_smile_icon[24][24] = {
 //     {0,0,0,0,0,0,0,0,0,0,0,0},
 //     {0,0,0,0,0,0,0,0,0,0,0,0},
 // };
+unsigned char clock12[12][12] = {
+    {0,0,0,1,1,1,1,1,1,0,0,0},
+    {0,0,1,2,2,4,4,2,2,1,0,0},
+    {0,1,2,2,2,4,4,2,2,2,1,0},
+    {1,2,2,2,2,4,4,2,2,2,2,1},
+    {1,2,2,2,2,4,4,2,2,2,2,1},
+    {1,2,2,2,2,4,4,4,4,4,4,1},
+    {1,3,3,3,3,3,3,3,3,3,3,1},
+    {1,3,3,3,3,3,3,3,3,3,3,1},
+    {0,1,3,3,3,3,3,3,3,3,1,0},
+    {0,0,1,3,3,3,3,3,3,1,0,0},
+    {0,0,0,1,1,1,1,1,1,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+};
 const unsigned char max_font[] = {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 32 (пробел)
     0x18,0x18,0x18,0x18,0x18,0x00,0x18,0x00, // 33 !
@@ -1223,7 +1237,7 @@ void filew() {
             print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
             print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
         }
-        print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+        print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
         print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
         print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000);
         print_string(ftext, win_x + 30, help_col, text_col);
@@ -1265,7 +1279,7 @@ void filew() {
                             }
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
                             print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
                             print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
@@ -1306,7 +1320,7 @@ void filew() {
                             }
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
                             print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
                             print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000); 
                             print_string(ftext, win_x + 30, help_col, text_col);
@@ -1419,7 +1433,7 @@ void filew() {
                             }
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Press F1 to save and run. Press Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
                             print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
                             print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
@@ -1443,6 +1457,23 @@ void filew() {
                             w_mode = 0;
                             draw_window();
                             open_file(sectors);
+                            sectors++;
+                            createdFiles++;
+                            break;
+                        }
+                        else {
+                            play_sound(100); sleep(60); no_sound();
+                            sleep(60);
+                            play_sound(100); sleep(60); no_sound();
+                        }
+                    }
+                    else if (ascii_char == 'S') {
+                        if (createdFiles < 10 && disk_exists == 1) {
+                            write(ftext, sectors);
+                            play_sound(800); sleep(100); no_sound();
+                            play_sound(1200); sleep(120); no_sound();
+                            w_mode = 0;
+                            draw_window();
                             sectors++;
                             createdFiles++;
                             break;
@@ -1504,11 +1535,11 @@ void help() {
         print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
         print_string("Arrows to move window.", win_x + 30, help_col, 0x0000);
         print_string("Esc to redraw desktop and close windows.", win_x + 30, help_col + 15, 0x0000);
-        print_string("1-9 to change system theme.", win_x + 30, help_col + 30, 0x0000);
-        print_string("F1 to save and run in notepad.", win_x + 30, help_col + 45, 0x0000);
+        print_string("1-0 to change system theme.", win_x + 30, help_col + 30, 0x0000);
+        print_string("F1 to save and run, F2 to save and exit in notepad.", win_x + 30, help_col + 45, 0x0000);
         print_string("F to format disk to maxFS2 in explorer.", win_x + 30, help_col + 60, 0x0000);
-        print_string("F3/F4 to enable and disable keyboard mouse mode.", win_x + 30, help_col + 75, 0x0000);
-        print_string("F5/F6 to enable and disable mouse trail.", win_x + 30, help_col + 90, 0x0000);
+        print_string("F3/F4 to enable and disable cursor control with keyboard.", win_x + 30, help_col + 75, 0x0000);
+        print_string("F5/F6 to enable and disable cursor trail.", win_x + 30, help_col + 90, 0x0000);
     }
 }
 
@@ -2333,6 +2364,19 @@ void draw_window() {
                 gfx_memory[y * 1024 + x] = 0xF77D;
             }
        }
+    }
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = (win_x + 610) + x;
+            int screen_y = (win_y + 3) + y;
+            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = clock12[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0x2100; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0xF791; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0xCE54; }
+                else if (pixel_type2 == 4) { gfx_memory[screen_y * 1024 + screen_x] = 0x3841; }
+            }
+        }
     }
     if (theme == 3) {
         print_string("maxOS 3.9 Abrikos", win_x + 11, win_y + 6, 0x0000);
