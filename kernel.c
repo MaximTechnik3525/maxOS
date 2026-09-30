@@ -1411,6 +1411,136 @@ void filew() {
                                 text_col = 0x0320;
                                 print_string(ftext, win_x + 30, help_col, text_col);
                             }
+                            if (ascii_char == 'q') {
+                                ftext[textid] = 'Q';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'w') {
+                                ftext[textid] = 'W';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'e') {
+                                ftext[textid] = 'E';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'r') {
+                                ftext[textid] = 'R';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 't') {
+                                ftext[textid] = 'T';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'y') {
+                                ftext[textid] = 'Y';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'u') {
+                                ftext[textid] = 'U';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'i') {
+                                ftext[textid] = 'I';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'o') {
+                                ftext[textid] = 'O';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'p') {
+                                ftext[textid] = 'P';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'a') {
+                                ftext[textid] = 'A';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 's') {
+                                ftext[textid] = 'S';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'd') {
+                                ftext[textid] = 'D';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'f') {
+                                ftext[textid] = 'F';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'g') {
+                                ftext[textid] = 'G';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'h') {
+                                ftext[textid] = 'H';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'j') {
+                                ftext[textid] = 'J';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'k') {
+                                ftext[textid] = 'K';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'l') {
+                                ftext[textid] = 'L';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'z') {
+                                ftext[textid] = 'Z';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'x') {
+                                ftext[textid] = 'X';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'c') {
+                                ftext[textid] = 'C';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'v') {
+                                ftext[textid] = 'V';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'b') {
+                                ftext[textid] = 'B';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'n') {
+                                ftext[textid] = 'N';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
+                            if (ascii_char == 'm') {
+                                ftext[textid] = 'M';
+                                textid++;
+                                ftext[textid] = '\0';
+                            }
                             for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
                                 for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
                                     if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
