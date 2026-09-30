@@ -222,15 +222,15 @@ unsigned char sad_smile_icon[24][24] = {
 // };
 unsigned char clock12[12][12] = {
     {0,0,0,1,1,1,1,1,1,0,0,0},
-    {0,0,1,2,2,4,4,2,2,1,0,0},
-    {0,1,2,2,2,4,4,2,2,2,1,0},
-    {1,2,2,2,2,4,4,2,2,2,2,1},
-    {1,2,2,2,2,4,4,2,2,2,2,1},
-    {1,2,2,2,2,4,4,4,4,4,4,1},
+    {0,0,1,2,2,4,2,2,2,1,0,0},
+    {0,1,4,2,2,4,2,2,2,4,1,0},
+    {1,2,2,2,2,4,2,2,2,2,2,1},
+    {1,2,2,2,2,4,2,2,2,2,2,1},
+    {1,4,2,2,2,4,4,4,4,4,4,1},
     {1,3,3,3,3,3,3,3,3,3,3,1},
     {1,3,3,3,3,3,3,3,3,3,3,1},
-    {0,1,3,3,3,3,3,3,3,3,1,0},
-    {0,0,1,3,3,3,3,3,3,1,0,0},
+    {0,1,4,3,3,3,3,3,3,4,1,0},
+    {0,0,1,3,3,4,3,3,3,1,0,0},
     {0,0,0,1,1,1,1,1,1,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0},
 };
@@ -1540,7 +1540,6 @@ void help() {
         print_string("F5/F6 to enable and disable cursor trail.", win_x + 30, help_col + 90, 0x0000);
 }
 
-
 void power() {
         int help_col = win_y + 45;
         drag = 1;
@@ -2369,8 +2368,8 @@ void draw_window() {
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = clock12[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0x2100; }
-                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0xF791; }
-                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0xCE54; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0xFFFA; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0xE60B; }
                 else if (pixel_type2 == 4) { gfx_memory[screen_y * 1024 + screen_x] = 0x3841; }
             }
         }
