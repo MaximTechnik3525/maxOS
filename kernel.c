@@ -690,7 +690,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 }
 int score = 0;
 void pong() {
-    if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30) {
         drag = 1;
         pad_x = win_x + (win_w / 2) - (pad_w / 2);
         pad_y = win_y + win_h - 40;
@@ -721,8 +720,8 @@ void pong() {
         }
         int swin_x = win_x + 20;
         int swin_y = win_y + 22;
-        print_string("Pong - score:", win_x + 28, win_y + 28, 0x0000);
-        print_string("Pong - score:", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("Pong game - score: 0", win_x + 28, win_y + 28, 0x0000);
+        print_string("Pong game - score: 0", win_x + 27, win_y + 27, 0xFFFF);
         while (1) {
             unsigned char status = inb(0x64);
             if (status & 0x01) {
@@ -834,10 +833,10 @@ void pong() {
                             }
                         }
                     }
-                    print_string("Pong - score:", win_x + 28, win_y + 28, 0x0000);
-                    print_string("Pong - score:", win_x + 27, win_y + 27, 0xFFFF);
-                    print_string(str_score, win_x + 148, win_y + 28, 0x0000);
-                    print_string(str_score, win_x + 147, win_y + 27, 0xFFFF);
+                    print_string("Pong game - score:", win_x + 28, win_y + 28, 0x0000);
+                    print_string("Pong game - score:", win_x + 27, win_y + 27, 0xFFFF);
+                    print_string(str_score, win_x + 198, win_y + 28, 0x0000);
+                    print_string(str_score, win_x + 197, win_y + 27, 0xFFFF);
                     if (collisions == 5) {
                         collisions = 0;
                         ball_dx -= 1;
@@ -873,8 +872,8 @@ void pong() {
             }
             sleep(16);
         }
-    }
 }
+
 void open_file(int sector) 
 {
     drag = 1;
@@ -1499,7 +1498,6 @@ void filew() {
 }
 
 void help() {
-    if (pos_x <= win_x + 50 && pos_y <= win_y + 30 && drag == 0) {
         int help_col = win_y + 45;
         drag = 1;
         for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
@@ -1540,8 +1538,8 @@ void help() {
         print_string("F to format disk to maxFS2 in explorer.", win_x + 30, help_col + 60, 0x0000);
         print_string("F3/F4 to enable and disable cursor control with keyboard.", win_x + 30, help_col + 75, 0x0000);
         print_string("F5/F6 to enable and disable cursor trail.", win_x + 30, help_col + 90, 0x0000);
-    }
 }
+
 
 void power() {
         int help_col = win_y + 45;
@@ -1593,7 +1591,6 @@ void progressbar(char* file_des, int xend) {
 }
 
 void cpu_win() {
-    if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0) {
         int help_col = win_y + 45;
         drag = 1;
         for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
@@ -1649,10 +1646,8 @@ void cpu_win() {
         print_string("OS: maxOS v3.9 official build", win_x + 30, help_col + 75, 0x0000);
         pci_scan(win_x + 30, help_col + 90);
     }
-}
+
 void open_explorer() {
-    explorer_opened = 1;
-    if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30) {
         int help_col = win_y + 45;
         int line = win_y + 65;
         drag = 1;
@@ -1672,7 +1667,7 @@ void open_explorer() {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else if (y < win_y + 60) {
-                    gfx_memory[y * 1024 + x] = 0x10A2;
+                    gfx_memory[y * 1024 + x] = 0x632C;
                 }
                 else {
                     gfx_memory[y * 1024 + x] = 0xF77D;
@@ -1737,7 +1732,6 @@ void open_explorer() {
         if (createdFiles == 8) { progressbar("You can save 2 files", win_x + 412); }
         if (createdFiles == 9) { progressbar("You can save 1 files", win_x + 425); }
         if (createdFiles == 10) { progressbar("You can save 0 files", win_x + 448); }
-    }
 }
 
 void int_str(int num, char* str) {
