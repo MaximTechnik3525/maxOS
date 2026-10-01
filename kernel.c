@@ -234,6 +234,20 @@ unsigned char clock12[12][12] = {
     {0,0,0,1,1,1,1,1,1,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0},
 };
+unsigned char clear_icon[12][12] = {
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,4,4,4,4,4,4,4,4,4,4,0},
+    {0,1,1,1,1,1,1,1,1,1,1,0},
+    {0,2,2,2,2,2,2,2,2,2,2,0},
+    {0,3,3,3,3,3,3,3,3,3,3,0},
+    {0,3,3,3,3,3,3,3,3,3,3,0},
+    {0,3,3,3,3,3,3,3,3,3,3,0},
+    {0,3,3,3,3,3,3,3,3,3,3,0},
+    {0,3,3,3,3,3,3,3,3,3,3,0},
+    {0,3,3,3,3,3,3,3,3,3,3,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+};
 const unsigned char max_font[] = {
     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 32 (пробел)
     0x18,0x18,0x18,0x18,0x18,0x00,0x18,0x00, // 33 !
@@ -366,6 +380,7 @@ int currentMin = 0;
 int power_opened = 0;
 int disk_exists = 1;
 int timer = 0;
+int windowOpened = 1;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
     ready_min = bcd_to_binary(raw_min2);
@@ -458,21 +473,25 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (pos_x < 0) {pos_x = 0;}
                         if (pos_y > 756) {pos_y = 756;}
                         if (pos_y < 0) {pos_y = 0;}
-                        draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-                        draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-                        draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
-                        draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
-                        draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
-                        draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (click == 1) { // MOUSE CLICKS
+                    if (click == 1 && windowOpened == 1) { // MOUSE CLICKS
+                        if (pos_x <= 20 && pos_y >= 750)  {
+                            windowOpened = 0;
+                            draw_window();
+                        }
                         if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { pong(); }
                         if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { power(); }
                         if (pos_x <= win_x + 50 && pos_y <= win_y + 30 && pos_y >= win_y + 20 && pos_x >= win_x + 10) { help(); }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && pos_y >= win_y + 10) { cpu_win(); }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && pos_y >= win_y + 20) { filew(); }
                         if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30 && pos_y >= win_y + 20) { open_explorer(); }
+                    }
+                    else if (click == 1 && windowOpened == 0) {
+                        if (pos_x <= 20 && pos_y >= 750)  {
+                            windowOpened = 1;
+                            draw_window();
+                        }
                     }
                 }   
             }
@@ -661,13 +680,23 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         play_sound(50); sleep(60); play_sound(200); sleep(120); no_sound();
                         draw_window();
                     }
-                    if (ascii_char == 'e' && km_mode == 1 && drag == 0) {
+                    if (ascii_char == 'e' && km_mode == 1 && drag == 0 && windowOpened == 1) {
+                        if (pos_x <= 20 && pos_y >= 750)  {
+                            windowOpened = 0;
+                            draw_window();
+                        }
                         if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { pong(); }
                         if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { power(); }
                         if (pos_x <= win_x + 50 && pos_y <= win_y + 30  && drag == 0 && pos_x >= win_x + 10 && pos_y >= win_y + 20) { help(); }
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0 && pos_y >= win_y + 20) { cpu_win(); }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0 && pos_y >= win_y + 20) { filew(); }
                         if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30 && pos_y >= win_y + 20) { open_explorer(); }
+                    }
+                    else if (ascii_char == 'e' && km_mode == 1 && drag == 0 && windowOpened == 0) {
+                        if (pos_x <= 20 && pos_y >= 750)  {
+                            windowOpened = 1;
+                            draw_window();
+                        }
                     }
                     if (ascii_char == 'f' && explorer_opened == 1) {
                         createdFiles = 0;
@@ -2425,6 +2454,7 @@ void draw_window() {
             }
         }
     }
+    if (windowOpened == 1) {
     for (int y = win_y; y < win_y + win_h; y++) {
         for (int x = win_x; x < win_x + win_w; x++) {
             if (y == win_y || y == win_y + win_h - 1 || x == win_x || x == win_x + win_w - 1) {
@@ -2504,6 +2534,7 @@ void draw_window() {
             }
         }
     }
+
     if (theme == 3) {
         print_string("maxOS 3.9 Abrikos", win_x + 11, win_y + 6, 0x0000);
         print_string("maxOS 3.9 Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
@@ -2520,6 +2551,20 @@ void draw_window() {
     draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
     draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
     draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
+    }
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = 5 + x;
+            int screen_y = 750 + y;
+            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = clear_icon[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0x110F; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0x2417; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0xF77D; }
+                else if (pixel_type2 == 4) { gfx_memory[screen_y * 1024 + screen_x] = 0x3D7F; }
+            }
+        }
+    }
     draw_cursor(pos_x, pos_y);
 }
 
