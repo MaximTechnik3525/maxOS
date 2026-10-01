@@ -381,6 +381,7 @@ int power_opened = 0;
 int disk_exists = 1;
 int timer = 0;
 int windowOpened = 1;
+int drawText = 1;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
     ready_min = bcd_to_binary(raw_min2);
@@ -477,6 +478,25 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (click == 1 && windowOpened == 1) { // MOUSE CLICKS
                         if (pos_x <= 20 && pos_y >= 750)  {
+                            drawText = 0;
+                            win_x -= 55;
+                            win_y += 45;
+                            win_h -= 100;
+                            win_w -= 300;
+                            draw_window();
+                            sleep(90);
+                            win_x -= 55;
+                            win_y += 45;
+                            win_h -= 100;
+                            win_w -= 300;
+                            draw_window();
+                            sleep(90);
+                            win_x -= 35;
+                            win_y += 45;
+                            win_h -= 100;
+                            win_w -= 300;
+                            draw_window();
+                            sleep(90);
                             windowOpened = 0;
                             draw_window();
                         }
@@ -490,6 +510,25 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     else if (click == 1 && windowOpened == 0) {
                         if (pos_x <= 20 && pos_y >= 750)  {
                             windowOpened = 1;
+                            win_x += 55;
+                            win_y -= 45;
+                            win_h += 100;
+                            win_w += 300;
+                            draw_window();
+                            sleep(90);
+                            win_x += 55;
+                            win_y -= 45;
+                            win_h += 100;
+                            win_w += 300;
+                            draw_window();
+                            sleep(90);
+                            win_x += 35;
+                            win_y -= 45;
+                            win_h += 100;
+                            win_w += 300;
+                            draw_window();
+                            sleep(90);
+                            drawText = 1;
                             draw_window();
                         }
                     }
@@ -657,22 +696,22 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (ascii_char == 'U' && km_mode == 1 && pos_y > 15 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_y -= 10;
+                        pos_y -= 6;
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'D' && km_mode == 1 && pos_y < 741 && drag == 0) {
+                    if (ascii_char == 'D' && km_mode == 1 && pos_y < 750 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_y += 10;
+                        pos_y += 6;
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'R' && km_mode == 1 && pos_x < 997 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_x += 10;
+                        pos_x += 6;
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'L' && km_mode == 1 && pos_x > 15 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_x -= 10;
+                        pos_x -= 6;
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'G' && km_mode == 1 && drag == 0) {
@@ -682,6 +721,25 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (ascii_char == 'e' && km_mode == 1 && drag == 0 && windowOpened == 1) {
                         if (pos_x <= 20 && pos_y >= 750)  {
+                            drawText = 0;
+                            win_x -= 55;
+                            win_y += 45;
+                            win_h -= 100;
+                            win_w -= 300;
+                            draw_window();
+                            sleep(90);
+                            win_x -= 55;
+                            win_y += 45;
+                            win_h -= 100;
+                            win_w -= 300;
+                            draw_window();
+                            sleep(90);
+                            win_x -= 35;
+                            win_y += 45;
+                            win_h -= 100;
+                            win_w -= 300;
+                            draw_window();
+                            sleep(90);
                             windowOpened = 0;
                             draw_window();
                         }
@@ -695,6 +753,25 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     else if (ascii_char == 'e' && km_mode == 1 && drag == 0 && windowOpened == 0) {
                         if (pos_x <= 20 && pos_y >= 750)  {
                             windowOpened = 1;
+                            win_x += 55;
+                            win_y -= 45;
+                            win_h += 100;
+                            win_w += 300;
+                            draw_window();
+                            sleep(90);
+                            win_x += 55;
+                            win_y -= 45;
+                            win_h += 100;
+                            win_w += 300;
+                            draw_window();
+                            sleep(90);
+                            win_x += 35;
+                            win_y -= 45;
+                            win_h += 100;
+                            win_w += 300;
+                            draw_window();
+                            sleep(90);
+                            drawText = 1;
                             draw_window();
                         }
                     }
@@ -2521,6 +2598,7 @@ void draw_window() {
             }
        }
     }
+    if (drawText == 1) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
             int screen_x = (win_x + 610) + x;
@@ -2551,6 +2629,7 @@ void draw_window() {
     draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
     draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
     draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
+    }
     }
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
