@@ -1796,7 +1796,7 @@ void open_explorer() {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else if (y < win_y + 60) {
-                    gfx_memory[y * 1024 + x] = 0x632C;
+                    gfx_memory[y * 1024 + x] = 0x7BEF;
                 }
                 else {
                     gfx_memory[y * 1024 + x] = 0xF77D;
@@ -2354,8 +2354,8 @@ void clock() {
     print_string(m, win_x + 720, win_y + 6, 0xFFFF);
     print_string(d, win_x + 660, win_y + 7, 0x0000);
     print_string(d, win_x + 659, win_y + 6, 0xFFFF);
-    print_string(mo, win_x + 630, win_y + 7, 0x0000);
-    print_string(mo, win_x + 629, win_y + 6, 0xFFFF);
+    print_string(mo, win_x + 626, win_y + 7, 0x0000);
+    print_string(mo, win_x + 625, win_y + 6, 0xFFFF);
     print_string("/", win_x + 645, win_y + 7, 0x0000);
     print_string("/", win_x + 644, win_y + 6, 0xFFFF);
 }
