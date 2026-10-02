@@ -83,6 +83,7 @@ void outl(unsigned short port, unsigned int data);
 void pci_scan(int txt_x, int txt_y);
 void screensaver();
 void update_screen();
+void pass();
 unsigned short* real_framebuffer;
 unsigned short cursor_back[12][12] = {0};
 unsigned char mouse_arrow[12][12] = {
@@ -223,6 +224,20 @@ unsigned char sad_smile_icon[24][24] = {
 //     {0,0,0,0,0,0,0,0,0,0,0,0},
 //     {0,0,0,0,0,0,0,0,0,0,0,0},
 // };
+unsigned char pass_icon[12][12] = {
+    {0,0,0,0,0,0,0,0,3,3,0,0},
+    {0,0,0,0,0,0,0,3,2,2,3,0},
+    {0,0,0,0,0,0,3,2,2,4,3,0},
+    {0,0,3,3,3,3,2,2,3,4,3,0},
+    {0,3,1,1,1,1,2,3,0,3,0,0},
+    {3,4,3,3,3,3,4,3,0,0,0,0},
+    {3,4,3,0,0,3,4,3,0,0,0,0},
+    {3,4,3,0,0,3,4,3,0,0,0,0},
+    {3,4,3,3,3,3,4,3,0,0,0,0},
+    {3,0,4,4,4,4,3,0,0,0,0,0},
+    {0,3,3,3,3,3,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+};
 unsigned char clock12[12][12] = {
     {0,0,0,1,1,1,1,1,1,0,0,0},
     {0,0,1,2,2,4,2,2,2,1,0,0},
@@ -369,6 +384,8 @@ int game = 0;
 int collisions = 0;
 int drag = 2;
 int textid = 0;
+int textid2 = 0;
+char ftext2[15] = {0};
 char ftext[100] = {0};
 int fid = 0;
 int tail = 0;
@@ -511,6 +528,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && pos_y >= win_y + 10) { cpu_win(); }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && pos_y >= win_y + 20) { filew(); }
                         if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30 && pos_y >= win_y + 20) { open_explorer(); }
+                        if (pos_x >= win_x + 370 && pos_x <= win_x + 410 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { pass(); }
                     }
                     else if (click == 1 && windowOpened == 0) {
                         if (pos_x <= 20 && pos_y >= 750)  {
@@ -754,6 +772,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0 && pos_y >= win_y + 20) { cpu_win(); }
                         if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0 && pos_y >= win_y + 20) { filew(); }
                         if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30 && pos_y >= win_y + 20) { open_explorer(); }
+                        if (pos_x >= win_x + 370 && pos_x <= win_x + 410 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { pass(); }
                     }
                     else if (ascii_char == 'e' && km_mode == 1 && drag == 0 && windowOpened == 0) {
                         if (pos_x <= 20 && pos_y >= 750)  {
@@ -2305,6 +2324,21 @@ void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
     }
     print_string("Power", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
 }
+void draw_passbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = (win_x + 384) + x;
+            int screen_y = (win_y + 22) + y;
+            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = pass_icon[y][x];
+                if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0xFFE0; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0x0000; }
+                else if (pixel_type2 == 4) { gfx_memory[screen_y * 1024 + screen_x] = 0xFD20; }
+            }
+        }
+    }
+    print_string("Pass", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+}
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
@@ -2376,6 +2410,7 @@ unsigned char inb(unsigned short port) {
 
 char scan_code_to_ascii(unsigned char scan_code) {
     switch (scan_code) {
+        case 0x1C: return '\E';
         case 0x0D: return '=';
         case 0x0C: return '-';
         case 0x4A: return '-';
@@ -2494,8 +2529,8 @@ void clock() {
         print_string(h, 490, 383, 0xFFFF);
         print_string(":", 510, 383, 0xFFFF);
         print_string(m, 520, 383, 0xFFFF);
-        print_string(d, win_x + 460, 384, 0x0000);
-        print_string(d, win_x + 459, 383, 0xFFFF);
+        print_string(d, 460, 384, 0x0000);
+        print_string(d, 459, 383, 0xFFFF);
         print_string(mo, 426, 384, 0x0000);
         print_string(mo, 425, 383, 0xFFFF);
         print_string("/", 445, 384, 0x0000);
@@ -2651,6 +2686,7 @@ void draw_window() {
     draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
     draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
     draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
+    draw_passbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
     }
     }
     for (int y = 0; y < 12; y++) {
@@ -2747,6 +2783,374 @@ unsigned int inl(unsigned short port) {
     __asm__ __volatile__("inl %1, %0" : "=a"(result) : "Nd"(port));
     return result;
 }
+
+void pass() {
+        int help_col = win_y + 45;
+        w_mode = 1;
+        drag = 1;
+        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+                    gfx_memory[y * 1024 + x] = 0x0320;
+                }
+                else if (y < win_y + 25) {
+                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                }
+                else if (y < win_y + 31) {
+                    gfx_memory[y * 1024 + x] = 0x24EE;
+                }
+                else if (y < win_y + 37) {
+                    gfx_memory[y * 1024 + x] = 0x11EB;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xF77D;
+                }
+            }
+        }
+        print_string("Password setup", win_x + 28, win_y + 28, 0x0000);
+        print_string("Password setup", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("Press Enter to set password. Press Esc to exit.", win_x + 30, help_col + 15, 0x0000);
+        print_string("Please, remember your password. You can't login without it.", win_x + 30, help_col + 30, 0x9000);
+        print_string(ftext2, win_x + 30, help_col, 0x0000);
+        update_screen();
+        while (1) {
+            update_screen();
+            unsigned char status = inb(0x64);
+            if (status & 0x01) {
+                if (status & 0x20) {
+                    inb(0x60);
+                    continue;
+                }
+                unsigned char scan_code = inb(0x60);
+                if (scan_code == 0x2A || scan_code == 0x36) { shift_p = 1; }
+                else if (scan_code == 0xAA || scan_code == 0xB6) { shift_p = 0; }
+                if (scan_code < 0x80 && w_mode == 1 && drag != 2 && scan_code != 0x2A && scan_code != 0x36 && scan_code != 0xAA && scan_code != 0xB6) {
+                    char ascii_char = scan_code_to_ascii(scan_code);
+                    if (shift_p == 0 && ascii_char != '\E' && ascii_char != 'E' && ascii_char != 'F' && ascii_char != 'B' && ascii_char != 'S' && ascii_char != 'U' && ascii_char != 'D' && ascii_char != 'L' && ascii_char != 'R' && ascii_char != 'T' && ascii_char != 'G' && ascii_char != 'C' && ascii_char != 'O' && ascii_char != 'M' && ascii_char != 'N') {
+                        if (textid2 < 10) {
+                            ftext2[textid2] = ascii_char;
+                            textid2++;
+                            ftext2[textid2] = '\0';
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 1024 + x] = 0x0320;
+                                    }
+                                    else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
+                                    }
+                                    else {
+                                        gfx_memory[y * 1024 + x] = 0xF77D;
+                                    }
+                                }
+                            }
+                            print_string("Password setup", win_x + 28, win_y + 28, 0x0000);
+                            print_string("Password setup", win_x + 27, win_y + 27, 0xFFFF);
+                            print_string("Press Enter to set password. Press Esc to exit.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Please, remember your password. You can't login without it.", win_x + 30, help_col + 30, 0x9000);
+                            print_string(ftext2, win_x + 30, help_col, text_col);
+                            update_screen();
+                        }
+                    }
+                    else if (ascii_char == 'B') {
+                        if (textid2 > 0) {
+                            textid2--;
+                            ftext2[textid2] = '\0';
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 1024 + x] = 0x0320;
+                                    }
+                                    else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
+                                    }
+                                    else {
+                                        gfx_memory[y * 1024 + x] = 0xF77D;
+                                    }
+                                }
+                            }
+                            print_string("Password setup", win_x + 28, win_y + 28, 0x0000);
+                            print_string("Password setup", win_x + 27, win_y + 27, 0xFFFF);
+                            print_string("Press Enter to set password. Press Esc to exit.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Please, remember your password. You can't login without it.", win_x + 30, help_col + 30, 0x9000);
+                            print_string(ftext2, win_x + 30, help_col, 0x0000);
+                            update_screen();
+                        }
+                    }
+                    if (shift_p == 1 && ascii_char != '00') {
+                        if (textid2 < 10) {
+                            if (ascii_char == '=') {
+                                ftext2[textid2] = '+';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '1') {
+                                ftext2[textid2] = '!';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '2') {
+                                ftext2[textid2] = '@';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '3') {
+                                ftext2[textid2] = '#';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '4') {
+                                ftext2[textid2] = '$';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '5') {
+                                ftext2[textid2] = '%';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '6') {
+                                ftext2[textid2] = '^';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '7') {
+                                ftext2[textid2] = '&';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '8') {
+                                ftext2[textid2] = '*';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '9') {
+                                ftext2[textid2] = '(';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '0') {
+                                ftext2[textid2] = ')';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'F') {
+                                text_col = 0x0000;
+                                print_string(ftext2, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'S') {
+                                text_col = 0x0112;
+                                print_string(ftext2, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'T') {
+                                text_col = 0x9000;
+                                print_string(ftext2, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'G') {
+                                text_col = 0x9400;
+                                print_string(ftext2, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'C') {
+                                text_col = 0x0320;
+                                print_string(ftext2, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'q') {
+                                ftext2[textid2] = 'Q';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'w') {
+                                ftext2[textid2] = 'W';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'e') {
+                                ftext2[textid2] = 'E';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'r') {
+                                ftext2[textid2] = 'R';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 't') {
+                                ftext2[textid2] = 'T';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'y') {
+                                ftext2[textid2] = 'Y';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'u') {
+                                ftext2[textid2] = 'U';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'i') {
+                                ftext2[textid2] = 'I';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'o') {
+                                ftext2[textid2] = 'O';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'p') {
+                                ftext2[textid2] = 'P';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'a') {
+                                ftext2[textid2] = 'A';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 's') {
+                                ftext2[textid2] = 'S';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'd') {
+                                ftext2[textid2] = 'D';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'f') {
+                                ftext2[textid2] = 'F';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'g') {
+                                ftext2[textid2] = 'G';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'h') {
+                                ftext2[textid2] = 'H';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'j') {
+                                ftext2[textid2] = 'J';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'k') {
+                                ftext2[textid2] = 'K';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'l') {
+                                ftext2[textid2] = 'L';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'z') {
+                                ftext2[textid2] = 'Z';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'x') {
+                                ftext2[textid2] = 'X';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'c') {
+                                ftext2[textid2] = 'C';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'v') {
+                                ftext2[textid2] = 'V';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'b') {
+                                ftext2[textid2] = 'B';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'n') {
+                                ftext2[textid2] = 'N';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'm') {
+                                ftext2[textid2] = 'M';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
+                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
+                                    if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+                                        gfx_memory[y * 1024 + x] = 0x0320;
+                                    }
+                                    else if (y < win_y + 25) {
+                                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                                    }
+                                    else if (y < win_y + 31) {
+                                        gfx_memory[y * 1024 + x] = 0x24EE;
+                                    }
+                                    else if (y < win_y + 37) {
+                                        gfx_memory[y * 1024 + x] = 0x11EB;
+                                    }
+                                    else {
+                                        gfx_memory[y * 1024 + x] = 0xF77D;
+                                    }
+                                }
+                            }
+                            print_string("Password setup", win_x + 28, win_y + 28, 0x0000);
+                            print_string("Password setup", win_x + 27, win_y + 27, 0xFFFF);
+                            print_string("Press Enter to set password. Press Esc to exit.", win_x + 30, help_col + 15, 0x0000);
+                            print_string("Please, remember your password. You can't login without it.", win_x + 30, help_col + 30, 0x9000);
+                            print_string(ftext2, win_x + 30, help_col, 0x0000);
+                            update_screen();
+                        }
+                    }
+                    else if (ascii_char == '\E') {
+                        if (disk_exists == 1) {
+                            write(ftext2, 5012);
+                            play_sound(800); sleep(100); no_sound();
+                            play_sound(1200); sleep(120); no_sound();
+                            w_mode = 0;
+                            drag = 0;
+                            draw_window();
+                            break;
+                        }
+                        else {
+                            play_sound(100); sleep(60); no_sound();
+                            sleep(60);
+                            play_sound(100); sleep(60); no_sound();
+                        }
+                    }
+                    else if (ascii_char == 'E') {
+                        play_sound(100); sleep(70); no_sound();
+                        play_sound(40); sleep(140); no_sound();
+                        w_mode = 0;
+                        drag = 0;
+                        draw_window();
+                        break;
+                    }
+                }
+            }
+        }
+    }
 
 void update_screen() {
     __asm__ __volatile__ (
