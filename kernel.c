@@ -2473,18 +2473,34 @@ void clock() {
     int_str(hour, h);
     int_str(day, d);
     int_str(month, mo);
-    print_string(h, win_x + 691, win_y + 7, 0x0000);
-    print_string(":", win_x + 711, win_y + 7, 0x0000);
-    print_string(m, win_x + 721, win_y + 7, 0x0000);
-    print_string(h, win_x + 690, win_y + 6, 0xFFFF);
-    print_string(":", win_x + 710, win_y + 6, 0xFFFF);
-    print_string(m, win_x + 720, win_y + 6, 0xFFFF);
-    print_string(d, win_x + 660, win_y + 7, 0x0000);
-    print_string(d, win_x + 659, win_y + 6, 0xFFFF);
-    print_string(mo, win_x + 626, win_y + 7, 0x0000);
-    print_string(mo, win_x + 625, win_y + 6, 0xFFFF);
-    print_string("/", win_x + 645, win_y + 7, 0x0000);
-    print_string("/", win_x + 644, win_y + 6, 0xFFFF);
+    if (windowOpened == 1) {
+        print_string(h, win_x + 691, win_y + 7, 0x0000);
+        print_string(":", win_x + 711, win_y + 7, 0x0000);
+        print_string(m, win_x + 721, win_y + 7, 0x0000);
+        print_string(h, win_x + 690, win_y + 6, 0xFFFF);
+        print_string(":", win_x + 710, win_y + 6, 0xFFFF);
+        print_string(m, win_x + 720, win_y + 6, 0xFFFF);
+        print_string(d, win_x + 660, win_y + 7, 0x0000);
+        print_string(d, win_x + 659, win_y + 6, 0xFFFF);
+        print_string(mo, win_x + 626, win_y + 7, 0x0000);
+        print_string(mo, win_x + 625, win_y + 6, 0xFFFF);
+        print_string("/", win_x + 645, win_y + 7, 0x0000);
+        print_string("/", win_x + 644, win_y + 6, 0xFFFF);
+    }
+    else if (windowOpened == 0) {
+        print_string(h, 491, 384, 0x0000);
+        print_string(":", 511, 384, 0x0000);
+        print_string(m, 521, 384, 0x0000);
+        print_string(h, 490, 383, 0xFFFF);
+        print_string(":", 510, 383, 0xFFFF);
+        print_string(m, 520, 383, 0xFFFF);
+        print_string(d, win_x + 460, 384, 0x0000);
+        print_string(d, win_x + 459, 383, 0xFFFF);
+        print_string(mo, 426, 384, 0x0000);
+        print_string(mo, 425, 383, 0xFFFF);
+        print_string("/", 445, 384, 0x0000);
+        print_string("/", 444, 383, 0xFFFF);
+    }
 }
 void draw_window() {
     for (int y = 0; y < 768; y++) {
@@ -2620,20 +2636,6 @@ void draw_window() {
        }
     }
     if (drawText == 1) {
-    for (int y = 0; y < 12; y++) {
-        for (int x = 0; x < 12; x++) {
-            int screen_x = (win_x + 610) + x;
-            int screen_y = (win_y + 3) + y;
-            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
-                unsigned char pixel_type2 = clock12[y][x];
-                if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0x2100; }
-                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0xFFFA; }
-                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0xE60B; }
-                else if (pixel_type2 == 4) { gfx_memory[screen_y * 1024 + screen_x] = 0x3841; }
-            }
-        }
-    }
-
     if (theme == 3) {
         print_string("maxOS 3.9 Abrikos", win_x + 11, win_y + 6, 0x0000);
         print_string("maxOS 3.9 Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
@@ -2643,7 +2645,6 @@ void draw_window() {
     else {
         print_string("maxOS 3.9", win_x + 11, win_y + 6, 0x0000); 
         print_string("maxOS 3.9", win_x + 10, win_y + 5, 0xFFFF); }
-    clock();
     draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
     draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
     draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
@@ -2652,6 +2653,27 @@ void draw_window() {
     draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
     }
     }
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = 0;
+            int screen_y = 0;
+            if (windowOpened == 1) {
+                screen_x = (win_x + 610) + x;
+                screen_y = (win_y + 3) + y;
+            }
+            else if (windowOpened == 0){
+                screen_x = 551 + x; screen_y = 381 + y;
+            } 
+            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = clock12[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0x2100; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0xFFFA; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0xE60B; }
+                else if (pixel_type2 == 4) { gfx_memory[screen_y * 1024 + screen_x] = 0x3841; }
+            }
+        }
+    }
+    clock();
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
             int screen_x = 5 + x;
@@ -2685,6 +2707,7 @@ void screensaver() {
             timer = 0;
             drag = 0;
             draw_window();
+            update_screen();
             break;
         }
         for (int py = txt_y - 20; py < txt_y + 20; py++) {
