@@ -84,6 +84,7 @@ void pci_scan(int txt_x, int txt_y);
 void screensaver();
 void update_screen();
 void pass();
+void login_screen();
 unsigned short* real_framebuffer;
 unsigned short cursor_back[12][12] = {0};
 unsigned char mouse_arrow[12][12] = {
@@ -454,7 +455,13 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     print_string("By MaximTechnik3525", 10, 10, 0x05E5);
     update_screen();
     play_sound(100); sleep(250); play_sound(350); sleep(150); play_sound(500); sleep(150); play_sound(600); sleep(150); play_sound(100); sleep(300); no_sound();
-    sleep(1700); draw_window(); drag = 0;
+    sleep(1700);
+    char rp[11];
+    read(5012, rp);
+    if (rp[0] != '\0') {
+        login_screen();
+    }
+    draw_window(); drag = 0;
     unsigned char packet[3];
     while(1) {
         timer++;
@@ -3146,6 +3153,343 @@ void pass() {
                         drag = 0;
                         draw_window();
                         break;
+                    }
+                }
+            }
+        }
+    }
+
+void login_screen() {
+        w_mode = 1;
+        drag = 3;
+        char read_pass[10];
+        read(5012, read_pass);
+        for (int y = 0; y < 768; y++) {
+            for (int x = 0; x < 1024; x++) {
+                if (y <= 390 && y >= 388) {
+                    gfx_memory[y * 1024 + x] = 0x3D7F;
+                }
+                else if (y <= 396 && y >= 391) {
+                    gfx_memory[y * 1024 + x] = 0x2417;
+                }
+                else if (y <= 402 && y >= 397) {
+                    gfx_memory[y * 1024 + x] = 0x110F;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xF77D;
+                }
+            }
+        }
+        print_string("Please, enter password to login:", 30, 376, 0x0000);
+        print_string("maxOS 3.9", 475, 755, 0x0000);
+        while (1) {
+            update_screen();
+            unsigned char status = inb(0x64);
+            if (status & 0x01) {
+                if (status & 0x20) {
+                    inb(0x60);
+                    continue;
+                }
+                unsigned char scan_code = inb(0x60);
+                if (scan_code == 0x2A || scan_code == 0x36) { shift_p = 1; }
+                else if (scan_code == 0xAA || scan_code == 0xB6) { shift_p = 0; }
+                if (scan_code < 0x80 && w_mode == 1 && drag != 2 && scan_code != 0x2A && scan_code != 0x36 && scan_code != 0xAA && scan_code != 0xB6) {
+                    char ascii_char = scan_code_to_ascii(scan_code);
+                    if (shift_p == 0 && ascii_char != '\E' && ascii_char != 'E' && ascii_char != 'F' && ascii_char != 'B' && ascii_char != 'S' && ascii_char != 'U' && ascii_char != 'D' && ascii_char != 'L' && ascii_char != 'R' && ascii_char != 'T' && ascii_char != 'G' && ascii_char != 'C' && ascii_char != 'O' && ascii_char != 'M' && ascii_char != 'N') {
+                        if (textid2 < 10) {
+                            ftext2[textid2] = ascii_char;
+                            textid2++;
+                            ftext2[textid2] = '\0';
+                                    for (int y = 0; y < 768; y++) {
+            for (int x = 0; x < 1024; x++) {
+                if (y <= 390 && y >= 388) {
+                    gfx_memory[y * 1024 + x] = 0x3D7F;
+                }
+                else if (y <= 396 && y >= 391) {
+                    gfx_memory[y * 1024 + x] = 0x2417;
+                }
+                else if (y <= 402 && y >= 397) {
+                    gfx_memory[y * 1024 + x] = 0x110F;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xF77D;
+                }
+            }
+        }
+        print_string("Please, enter password to login:", 30, 376, 0x0000);
+        print_string(ftext2, 350, 376, 0x0320);
+                print_string("maxOS 3.9", 475, 755, 0x0000);
+                        }
+                    }
+                    else if (ascii_char == 'B') {
+                        if (textid2 > 0) {
+                            textid2--;
+                            ftext2[textid2] = '\0';
+                        }
+                                                            for (int y = 0; y < 768; y++) {
+            for (int x = 0; x < 1024; x++) {
+                if (y <= 390 && y >= 388) {
+                    gfx_memory[y * 1024 + x] = 0x3D7F;
+                }
+                else if (y <= 396 && y >= 391) {
+                    gfx_memory[y * 1024 + x] = 0x2417;
+                }
+                else if (y <= 402 && y >= 397) {
+                    gfx_memory[y * 1024 + x] = 0x110F;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xF77D;
+                }
+            }
+        }
+        print_string("Please, enter password to login:", 30, 376, 0x0000);
+        print_string(ftext2, 350, 376, 0x0320);
+                print_string("maxOS 3.9", 475, 755, 0x0000);
+                    }
+                    if (shift_p == 1 && ascii_char != '00') {
+                        if (textid2 < 10) {
+                            if (ascii_char == '=') {
+                                ftext2[textid2] = '+';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '1') {
+                                ftext2[textid2] = '!';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '2') {
+                                ftext2[textid2] = '@';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '3') {
+                                ftext2[textid2] = '#';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '4') {
+                                ftext2[textid2] = '$';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '5') {
+                                ftext2[textid2] = '%';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '6') {
+                                ftext2[textid2] = '^';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '7') {
+                                ftext2[textid2] = '&';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '8') {
+                                ftext2[textid2] = '*';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '9') {
+                                ftext2[textid2] = '(';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == '0') {
+                                ftext2[textid2] = ')';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'F') {
+                                text_col = 0x0000;
+                                print_string(ftext2, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'S') {
+                                text_col = 0x0112;
+                                print_string(ftext2, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'T') {
+                                text_col = 0x9000;
+                                print_string(ftext2, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'G') {
+                                text_col = 0x9400;
+                                print_string(ftext2, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'C') {
+                                text_col = 0x0320;
+                                print_string(ftext2, win_x + 30, help_col, text_col);
+                            }
+                            if (ascii_char == 'q') {
+                                ftext2[textid2] = 'Q';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'w') {
+                                ftext2[textid2] = 'W';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'e') {
+                                ftext2[textid2] = 'E';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'r') {
+                                ftext2[textid2] = 'R';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 't') {
+                                ftext2[textid2] = 'T';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'y') {
+                                ftext2[textid2] = 'Y';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'u') {
+                                ftext2[textid2] = 'U';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'i') {
+                                ftext2[textid2] = 'I';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'o') {
+                                ftext2[textid2] = 'O';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'p') {
+                                ftext2[textid2] = 'P';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'a') {
+                                ftext2[textid2] = 'A';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 's') {
+                                ftext2[textid2] = 'S';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'd') {
+                                ftext2[textid2] = 'D';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'f') {
+                                ftext2[textid2] = 'F';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'g') {
+                                ftext2[textid2] = 'G';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'h') {
+                                ftext2[textid2] = 'H';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'j') {
+                                ftext2[textid2] = 'J';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'k') {
+                                ftext2[textid2] = 'K';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'l') {
+                                ftext2[textid2] = 'L';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'z') {
+                                ftext2[textid2] = 'Z';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'x') {
+                                ftext2[textid2] = 'X';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'c') {
+                                ftext2[textid2] = 'C';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'v') {
+                                ftext2[textid2] = 'V';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'b') {
+                                ftext2[textid2] = 'B';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'n') {
+                                ftext2[textid2] = 'N';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                            if (ascii_char == 'm') {
+                                ftext2[textid2] = 'M';
+                                textid2++;
+                                ftext2[textid2] = '\0';
+                            }
+                                                                for (int y = 0; y < 768; y++) {
+            for (int x = 0; x < 1024; x++) {
+                if (y <= 390 && y >= 388) {
+                    gfx_memory[y * 1024 + x] = 0x3D7F;
+                }
+                else if (y <= 396 && y >= 391) {
+                    gfx_memory[y * 1024 + x] = 0x2417;
+                }
+                else if (y <= 402 && y >= 397) {
+                    gfx_memory[y * 1024 + x] = 0x110F;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xF77D;
+                }
+            }
+        }
+        print_string("Please, enter password to login:", 30, 376, 0x0000);
+        print_string(ftext2, 350, 376, 0x0320);
+                print_string("maxOS 3.9", 475, 755, 0x0000);
+                        }
+                    }
+                    else if (ascii_char == '\E') {
+                        if (disk_exists == 1 && str_cmp(ftext2, read_pass)) {
+                            play_sound(600); sleep(100); no_sound();
+                            play_sound(850); sleep(100); no_sound();
+                            play_sound(1100); sleep(120); no_sound();
+                            sleep(250);
+                            w_mode = 0;
+                            drag = 0;
+                            draw_window();
+                            break;
+                        }
+                        else {
+                            play_sound(100); sleep(60); no_sound();
+                            sleep(60);
+                            play_sound(100); sleep(60); no_sound();
+                        }
                     }
                 }
             }
