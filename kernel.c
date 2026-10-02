@@ -2759,7 +2759,7 @@ void screensaver() {
             }
         }
         print_string("maxOS", txt_x, txt_y, 0x05E5);
-        if (txt_x < 980 && was_x == 0) {
+        if (txt_x < 960 && was_x == 0) {
             txt_x += 5;
         }
         else {
@@ -2772,7 +2772,7 @@ void screensaver() {
             was_y = 1;
         }
         if (txt_y < 25) { was_y = 0; }
-        if (txt_x < 5) { was_x = 0; }
+        if (txt_x < 25) { was_x = 0; }
         update_screen();
         sleep(30);
     }
