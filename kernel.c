@@ -1016,6 +1016,24 @@ void pong() {
         }
 }
 
+void text_parse(char* str) {
+    int i = 0;
+    while (str[i] != '\0') {
+        if (str[i] == 'o' && str[i+1] == 'u' && str[i+2] == 't' && str[i+3] == 't' && str[i+4] == 'e' && str[i+5] == 'x' && str[i+6] == 't' && str[i+7] == '#') {
+            char* arg_ptr = &str[i + 8];
+            int text_x = win_x + 30;
+            int text_y = win_y + 45;
+            while (*arg_ptr != ' ' && *arg_ptr != '\0' && *arg_ptr != '\n' && *arg_ptr != '\r') {
+                draw_char(*arg_ptr, text_x, text_y, 0x0000);
+                text_x += 9;
+                arg_ptr++;
+            }
+            return;
+        }
+        i++;
+    }
+}
+
 void open_file(int sector) 
 {
     drag = 1;
@@ -1221,7 +1239,8 @@ void open_file(int sector)
                     print_string("Application", win_x + 28, win_y + 28, 0x0000);
                     print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
                 }
-                if (str_in(file_output, "printstring")) { print_string(file_output, 300, 359, 0x0000); }
+                text_parse(file_output);
+                //if (str_in(file_output, "printstring")) { print_string(file_output, 300, 359, 0x0000); }
                 if (str_in(file_output, "sleep")) { sleep(2000); }
                 if (str_in(file_output, "errscr")) { error("Caused by user programm. Code: 0x03"); }
                 if (str_in(file_output, "shutdown")) { shutdown(); }
