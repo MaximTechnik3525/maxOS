@@ -3133,8 +3133,8 @@ void pass() {
                     else if (ascii_char == '\E') {
                         if (disk_exists == 1) {
                             write(ftext2, 5012);
-                            play_sound(800); sleep(100); no_sound();
-                            play_sound(1200); sleep(120); no_sound();
+                            play_sound(100); sleep(200); no_sound();
+                            play_sound(200); sleep(400); no_sound();
                             w_mode = 0;
                             drag = 0;
                             draw_window();
@@ -3221,6 +3221,7 @@ void login_screen() {
                             textid2++;
                             ftext2[textid2] = '\0';
                             login_visual();
+                            play_sound(700); sleep(100); no_sound();
                         }
                     }
                     else if (ascii_char == 'B') {
@@ -3229,6 +3230,7 @@ void login_screen() {
                             ftext2[textid2] = '\0';
                         }
                         login_visual();
+                        play_sound(700); sleep(100); no_sound();
                     }
                     if (shift_p == 1 && ascii_char != '00') {
                         if (textid2 < 10) {
@@ -3438,6 +3440,7 @@ void login_screen() {
                                 ftext2[textid2] = '\0';
                             }
                             login_visual();
+                            play_sound(700); sleep(100); no_sound();
                         }
                     }
                     else if (ascii_char == '\E') {
