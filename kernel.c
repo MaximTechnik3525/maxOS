@@ -230,7 +230,7 @@ unsigned char pass_icon[12][12] = {
     {0,0,0,0,0,0,0,3,2,2,3,0},
     {0,0,0,0,0,0,3,2,2,4,3,0},
     {0,0,3,3,3,3,2,2,3,4,3,0},
-    {0,3,1,1,1,1,2,3,0,3,0,0},
+    {0,3,2,2,2,2,2,3,0,3,0,0},
     {3,4,3,3,3,3,4,3,0,0,0,0},
     {3,4,3,0,0,3,4,3,0,0,0,0},
     {3,4,3,0,0,3,4,3,0,0,0,0},
@@ -3159,29 +3159,49 @@ void pass() {
         }
     }
 
+void login_visual() {
+            for (int y = 0; y < 768; y++) {
+            for (int x = 0; x < 1024; x++) {
+                if (y <= 390 && y >= 388) {
+                    gfx_memory[y * 1024 + x] = 0x0DE5;
+                }
+                else if (y <= 396 && y >= 391) {
+                    gfx_memory[y * 1024 + x] = 0x03EA;
+                }
+                else if (y <= 402 && y >= 397) {
+                    gfx_memory[y * 1024 + x] = 0x01A4;
+                }
+                else if (y > 402) {
+                    gfx_memory[y * 1024 + x] = 0x0080;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0x0120;
+                }
+            }
+        }
+        for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = 10 + x;
+            int screen_y = 373 + y;
+            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = pass_icon[y][x];
+                if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0xFFE0; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0x0000; }
+                else if (pixel_type2 == 4) { gfx_memory[screen_y * 1024 + screen_x] = 0xFD20; }
+            }
+        }
+        }
+        print_string("Enter password to login:", 30, 376, 0x05E5);
+        print_string("If you don't know password, you need to write new maxOS image. This will delete all your save data!", 10, 420, 0x05E5);
+        print_string(ftext2, 265, 376, 0x05E5);
+}
+
 void login_screen() {
         w_mode = 1;
         drag = 3;
         char read_pass[10];
         read(5012, read_pass);
-        for (int y = 0; y < 768; y++) {
-            for (int x = 0; x < 1024; x++) {
-                if (y <= 390 && y >= 388) {
-                    gfx_memory[y * 1024 + x] = 0x3D7F;
-                }
-                else if (y <= 396 && y >= 391) {
-                    gfx_memory[y * 1024 + x] = 0x2417;
-                }
-                else if (y <= 402 && y >= 397) {
-                    gfx_memory[y * 1024 + x] = 0x110F;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
-        print_string("Please, enter password to login:", 30, 376, 0x0000);
-        print_string("maxOS 3.9", 475, 755, 0x0000);
+    login_visual();
         while (1) {
             update_screen();
             unsigned char status = inb(0x64);
@@ -3200,25 +3220,7 @@ void login_screen() {
                             ftext2[textid2] = ascii_char;
                             textid2++;
                             ftext2[textid2] = '\0';
-                                    for (int y = 0; y < 768; y++) {
-            for (int x = 0; x < 1024; x++) {
-                if (y <= 390 && y >= 388) {
-                    gfx_memory[y * 1024 + x] = 0x3D7F;
-                }
-                else if (y <= 396 && y >= 391) {
-                    gfx_memory[y * 1024 + x] = 0x2417;
-                }
-                else if (y <= 402 && y >= 397) {
-                    gfx_memory[y * 1024 + x] = 0x110F;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
-        print_string("Please, enter password to login:", 30, 376, 0x0000);
-        print_string(ftext2, 350, 376, 0x0320);
-                print_string("maxOS 3.9", 475, 755, 0x0000);
+                            login_visual();
                         }
                     }
                     else if (ascii_char == 'B') {
@@ -3226,25 +3228,7 @@ void login_screen() {
                             textid2--;
                             ftext2[textid2] = '\0';
                         }
-                                                            for (int y = 0; y < 768; y++) {
-            for (int x = 0; x < 1024; x++) {
-                if (y <= 390 && y >= 388) {
-                    gfx_memory[y * 1024 + x] = 0x3D7F;
-                }
-                else if (y <= 396 && y >= 391) {
-                    gfx_memory[y * 1024 + x] = 0x2417;
-                }
-                else if (y <= 402 && y >= 397) {
-                    gfx_memory[y * 1024 + x] = 0x110F;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
-        print_string("Please, enter password to login:", 30, 376, 0x0000);
-        print_string(ftext2, 350, 376, 0x0320);
-                print_string("maxOS 3.9", 475, 755, 0x0000);
+                        login_visual();
                     }
                     if (shift_p == 1 && ascii_char != '00') {
                         if (textid2 < 10) {
@@ -3453,25 +3437,7 @@ void login_screen() {
                                 textid2++;
                                 ftext2[textid2] = '\0';
                             }
-                                                                for (int y = 0; y < 768; y++) {
-            for (int x = 0; x < 1024; x++) {
-                if (y <= 390 && y >= 388) {
-                    gfx_memory[y * 1024 + x] = 0x3D7F;
-                }
-                else if (y <= 396 && y >= 391) {
-                    gfx_memory[y * 1024 + x] = 0x2417;
-                }
-                else if (y <= 402 && y >= 397) {
-                    gfx_memory[y * 1024 + x] = 0x110F;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
-        print_string("Please, enter password to login:", 30, 376, 0x0000);
-        print_string(ftext2, 350, 376, 0x0320);
-                print_string("maxOS 3.9", 475, 755, 0x0000);
+                            login_visual();
                         }
                     }
                     else if (ascii_char == '\E') {

@@ -23,9 +23,21 @@ mkdir -p iso/boot/grub
 cp mykernel.bin iso/boot/
 
 cat << 'EOF' > iso/boot/grub/grub.cfg
-insmod vbe
-insmod vga
-insmod video_all
+font=video
+if loadfont /boot/grub/fonts/unicode.pf2 ; then
+    insmod vbe
+    insmod vga
+    insmod gfxterm
+    insmod video_all
+    set gfxmode=1024x768
+    local_video
+    terminal_output gfxterm
+fi
+
+set timeout=3
+set default=0
+set gfxpayload=keep
+
 insmod part_msdos
 insmod fat
 insmod ext2
