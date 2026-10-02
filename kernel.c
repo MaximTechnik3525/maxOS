@@ -43,6 +43,7 @@ unsigned short* _gfx_memory_backend;
 unsigned int REAL_PITCH = 1024;
 #define gfx_memory_safe(y, x) _gfx_memory_backend[(y) * REAL_PITCH + (x)]
 #define gfx_memory _gfx_memory_backend
+unsigned short back_buffer[786432];
 void draw_cursor(int mouse_x, int mouse_y);
 void draw_btn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_cpubtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
@@ -81,6 +82,8 @@ void power();unsigned int inl(unsigned short port);
 void outl(unsigned short port, unsigned int data);
 void pci_scan(int txt_x, int txt_y);
 void screensaver();
+void update_screen();
+unsigned short* real_framebuffer;
 unsigned short cursor_back[12][12] = {0};
 unsigned char mouse_arrow[12][12] = {
     {1,1,3,0,0,0,0,0,0,0,0,0},
@@ -387,7 +390,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     ready_min = bcd_to_binary(raw_min2);
     currentMin = ready_min;
     struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
-    _gfx_memory_backend = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
+    real_framebuffer = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
+    _gfx_memory_backend = back_buffer;
     if (mbi->framebuffer_pitch > 0) { REAL_PITCH = mbi->framebuffer_pitch / 2; }
     unsigned short width = mbi->framebuffer_width;
     unsigned short height = mbi->framebuffer_height;
@@ -431,6 +435,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     }
     print_string("maxOS is starting up...", 425, 420, 0x05E5);
     print_string("By MaximTechnik3525", 10, 10, 0x05E5);
+    update_screen();
     play_sound(100); sleep(250); play_sound(350); sleep(150); play_sound(500); sleep(150); play_sound(600); sleep(150); play_sound(100); sleep(300); no_sound();
     sleep(1700); draw_window(); drag = 0;
     unsigned char packet[3];
@@ -483,22 +488,22 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             win_y += 45;
                             win_h -= 100;
                             win_w -= 300;
-                            draw_window();
-                            sleep(90);
+                            draw_window(); update_screen();
+                            sleep(50);
                             win_x -= 55;
                             win_y += 45;
                             win_h -= 100;
                             win_w -= 300;
-                            draw_window();
-                            sleep(90);
+                            draw_window(); update_screen();
+                            sleep(50);
                             win_x -= 35;
                             win_y += 45;
                             win_h -= 100;
                             win_w -= 300;
-                            draw_window();
-                            sleep(90);
+                            draw_window(); update_screen();
+                            sleep(50);
                             windowOpened = 0;
-                            draw_window();
+                            draw_window(); update_screen();
                         }
                         if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { pong(); }
                         if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { power(); }
@@ -514,22 +519,22 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             win_y -= 45;
                             win_h += 100;
                             win_w += 300;
-                            draw_window();
-                            sleep(90);
+                            draw_window(); update_screen();
+                            sleep(50);
                             win_x += 55;
                             win_y -= 45;
                             win_h += 100;
                             win_w += 300;
-                            draw_window();
-                            sleep(90);
+                            draw_window(); update_screen();
+                            sleep(50);
                             win_x += 35;
                             win_y -= 45;
                             win_h += 100;
                             win_w += 300;
-                            draw_window();
-                            sleep(90);
+                            draw_window(); update_screen();
+                            sleep(50);
                             drawText = 1;
-                            draw_window();
+                            draw_window(); update_screen();
                         }
                     }
                 }   
@@ -726,20 +731,20 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             win_y += 45;
                             win_h -= 100;
                             win_w -= 300;
-                            draw_window();
-                            sleep(90);
+                            draw_window(); update_screen();
+                            sleep(50);
                             win_x -= 55;
                             win_y += 45;
                             win_h -= 100;
                             win_w -= 300;
-                            draw_window();
-                            sleep(90);
+                            draw_window(); update_screen();
+                            sleep(50);
                             win_x -= 35;
                             win_y += 45;
                             win_h -= 100;
                             win_w -= 300;
-                            draw_window();
-                            sleep(90);
+                            draw_window(); update_screen();
+                            sleep(50);
                             windowOpened = 0;
                             draw_window();
                         }
@@ -757,22 +762,22 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             win_y -= 45;
                             win_h += 100;
                             win_w += 300;
-                            draw_window();
-                            sleep(90);
+                            draw_window(); update_screen();
+                            sleep(50);
                             win_x += 55;
                             win_y -= 45;
                             win_h += 100;
                             win_w += 300;
-                            draw_window();
-                            sleep(90);
+                            draw_window(); update_screen();
+                            sleep(50);
                             win_x += 35;
                             win_y -= 45;
                             win_h += 100;
                             win_w += 300;
-                            draw_window();
-                            sleep(90);
+                            draw_window(); update_screen();
+                            sleep(50);
                             drawText = 1;
-                            draw_window();
+                            draw_window(); update_screen();
                         }
                     }
                     if (ascii_char == 'f' && explorer_opened == 1) {
@@ -792,6 +797,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             }
         }
         sleep(10);
+        update_screen();
     }
 }
 int score = 0;
@@ -828,6 +834,7 @@ void pong() {
         int swin_y = win_y + 22;
         print_string("Pong game - score: 0", win_x + 28, win_y + 28, 0x0000);
         print_string("Pong game - score: 0", win_x + 27, win_y + 27, 0xFFFF);
+        update_screen();
         while (1) {
             unsigned char status = inb(0x64);
             if (status & 0x01) {
@@ -863,6 +870,7 @@ void pong() {
                         }
                     }
                     sleep(12);
+                    update_screen();
                 }
                 if (ascii_char == 'a' && pad_x >= win_x + 50) {
                     for (int x = 0; x < pad_w; x++) {
@@ -881,6 +889,7 @@ void pong() {
                         }
                     }
                     sleep(12);
+                    update_screen();
                 }
             }
             }
@@ -977,6 +986,7 @@ void pong() {
                 }
             }
             sleep(16);
+            update_screen();
         }
 }
 
@@ -1345,8 +1355,10 @@ void filew() {
         print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
         print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
         print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000);
+        update_screen();
         print_string(ftext, win_x + 30, help_col, text_col);
         while (1) {
+            update_screen();
             unsigned char status = inb(0x64);
             if (status & 0x01) {
                 if (status & 0x20) {
@@ -1398,6 +1410,7 @@ void filew() {
                                 print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
                             }
                             print_string(ftext, win_x + 30, help_col, text_col);
+                            update_screen();
                         }
                     }
                     else if (ascii_char == 'B') {
@@ -1438,6 +1451,7 @@ void filew() {
                                 print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
                                 print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
                             }
+                            update_screen();
                         }
                     }
                     if (shift_p == 1 && ascii_char != '00') {
@@ -1682,6 +1696,7 @@ void filew() {
                                 print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
                             }
                             print_string(ftext, win_x + 30, help_col, text_col);
+                            update_screen();
                         }
                     }
                     else if (ascii_char == 'F') {
@@ -1955,6 +1970,7 @@ void open_explorer() {
             print_string("/", win_x + 310, line, 0x0000);
             print_string(sector_str, win_x + 320, line, 0x0000);
             line += 15;
+            file_id++;
         }
         if (createdFiles == 0) { progressbar("You can save 10 files", win_x + 305); }
         if (createdFiles == 1) { progressbar("You can save 9 files", win_x + 319); }
@@ -2019,6 +2035,7 @@ void shutdown() {
         }
     }
     print_string("maxOS is shutting down...", 420, 420, 0xF800);
+    update_screen();
     play_sound(300); sleep(250); no_sound();
     play_sound(200); sleep(250); no_sound();
     play_sound(100); sleep(250); no_sound();
@@ -2029,6 +2046,7 @@ void shutdown() {
     outw(0x4004, 0x3400);
     outw(0x0B004, 0x2000);
     error("Cannot use power off ports! Code: 0x01");
+    update_screen();
 }
 void reboot() {
     drag = 2;
@@ -2048,6 +2066,7 @@ void reboot() {
         }
     }
     print_string("maxOS is rebooting...", 423, 420, 0xF800);
+    update_screen();
     play_sound(300); sleep(250); no_sound();
     play_sound(200); sleep(250); no_sound();
     play_sound(100); sleep(250); no_sound();
@@ -2058,6 +2077,7 @@ void reboot() {
     __asm__ __volatile__("lidt %0" : : "m" (idt_pointer));
     __asm__ __volatile__("int $0");
     error("Cannot reboot system! Code: 0x02");
+    update_screen();
 }
 void error(char* err) {
     drag = 2;
@@ -2088,6 +2108,7 @@ void error(char* err) {
             }
         }
     }
+    update_screen();
     play_sound(100); sleep(350); no_sound(); sleep(100); play_sound(150); sleep(350); no_sound(100); play_sound(100); sleep(250); no_sound();
     sleep(5000); reboot();
 }
@@ -2654,22 +2675,22 @@ void screensaver() {
             gfx_memory[y * 1024 + x] = 0x0100;
         }
     }
-    int txt_x = 5;
-    int txt_y = 5;
+    int txt_x = 75;
+    int txt_y = 25;
     int was_x = 0;
     int was_y = 0;
     while (1) {
-        for (int y = 0; y < 768; y++) {
-            for (int x = 0; x < 1024; x++) {
-                gfx_memory[y * 1024 + x] = 0x0100;
-            }
-        }
         if (inb(0x64) & 0x01) {
             inb(0x60);
             timer = 0;
             drag = 0;
             draw_window();
             break;
+        }
+        for (int py = txt_y - 20; py < txt_y + 20; py++) {
+            for (int px = txt_x - 70; px < txt_x + 70; px++) {
+                gfx_memory[py * 1024 + px] = 0x0100;
+            }
         }
         print_string("maxOS", txt_x, txt_y, 0x05E5);
         if (txt_x < 980 && was_x == 0) {
@@ -2684,9 +2705,10 @@ void screensaver() {
             txt_y -= 5;
             was_y = 1;
         }
-        if (txt_y < 5) { was_y = 0; }
+        if (txt_y < 25) { was_y = 0; }
         if (txt_x < 5) { was_x = 0; }
-        sleep(70);
+        update_screen();
+        sleep(30);
     }
 }
 void print_string(char* str, int x, int y, unsigned short color) {
@@ -2701,6 +2723,20 @@ unsigned int inl(unsigned short port) {
     unsigned int result;
     __asm__ __volatile__("inl %1, %0" : "=a"(result) : "Nd"(port));
     return result;
+}
+
+void update_screen() {
+    __asm__ __volatile__ (
+        "pushl %%esi\n\t"
+        "pushl %%edi\n\t"
+        "cld\n\t"
+        "rep movsl\n\t"
+        "popl %%edi\n\t"
+        "popl %%esi"
+        :
+        : "D"(real_framebuffer), "S"(back_buffer), "c"(393216)
+        : "memory"
+    );
 }
 
 void outl(unsigned short port, unsigned int data) {
