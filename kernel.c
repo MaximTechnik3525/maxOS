@@ -1028,10 +1028,63 @@ int parse_number(char** stream) {
     return num;
 }
 
-void square_parse(char* str) {
+void execute_commands(char* str) {
     int i = 0;
     while (str[i] != '\0') {
-        if (str[i] == 'd' && str[i+1] == 'r' && str[i+2] == 'a' && str[i+3] == 'w' && str[i+4] == 's' && str[i+5] == 'q' && str[i+6] == '#') {
+        if (str[i] == 's' && str[i+1] == 'l' && str[i+2] == 'e' && str[i+3] == 'e' && str[i+4] == 'p' && str[i+5] == '#') {
+            char* arg_ptr = &str[i += 6];
+            int ms = parse_number(&arg_ptr);
+            if (ms > 0) { sleep(ms); }
+            i = (int)(arg_ptr - str);
+            continue;
+        }
+        else if (str[i] == 'r' && str[i+1] == 'e' && str[i+2] == 'd' && str[i+3] == 'r' && str[i+4] == 'a' && str[i+5] == 'w') {
+            drag = 0; help_col = 65; i += 6;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'w' && str[i+1] == 'r' && str[i+2] == 'i' && str[i+3] == 'g' && str[i+4] == 'h' && str[i+5] == 't') {
+            drag = 0; win_x += 70; i += 6;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'w' && str[i+1] == 'l' && str[i+2] == 'e' && str[i+3] == 'f' && str[i+4] == 't') {
+            drag = 0; win_x -= 70; i += 5;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'w' && str[i+1] == 'u' && str[i+2] == 'p') {
+            drag = 0; win_y -= 70; i += 3;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'w' && str[i+1] == 'd' && str[i+2] == 'o' && str[i+3] == 'w' && str[i+4] == 'n') {
+            drag = 0; win_y += 70; i += 5;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'w' && str[i+1] == 'c' && str[i+2] == 'e' && str[i+3] == 'n' && str[i+4] == 't' && str[i+5] == 'e' && str[i+6] == 'r') {
+            drag = 0; i += 7;
+            win_x = 140; win_y = 150;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'b' && str[i+1] == 'e' && str[i+2] == 'e' && str[i+3] == 'p' && str[i+4] == '#') {
+            char* arg_ptr = &str[i+5];
+            int freq = parse_number(&arg_ptr);
+            int ms = parse_number(&arg_ptr);
+            if (freq > 0 && ms > 0) {
+                play_sound(freq); sleep(ms); no_sound(); sleep(20);
+            }
+            i = (int)(arg_ptr - str);
+            continue;
+        }
+        else if (str[i] == 's' && str[i+1] == 'n' && str[i+2] == 'd' && str[i+3] == 'c' && str[i+4] == 'o' && str[i+5] == 'i' && str[i+6] == 'n') {
+            i += 7;
+            play_sound(988); sleep(80); play_sound(1318); sleep(220); no_sound();
+            continue;
+        }
+        else if (str[i] == 'd' && str[i+1] == 'r' && str[i+2] == 'a' && str[i+3] == 'w' && str[i+4] == 's' && str[i+5] == 'q' && str[i+6] == '#') {
             char* arg_ptr = &str[i+7];
             int custom_x = parse_number(&arg_ptr);
             int custom_y = parse_number(&arg_ptr);
@@ -1045,29 +1098,7 @@ void square_parse(char* str) {
             i = (int)(arg_ptr - str);
             continue;
         }
-        i++;
-    }
-}
-
-void beep_parse(char* str) {
-    int i = 0;
-    while (str[i] != '\0') {
-        if (str[i] == 'b' && str[i+1] == 'e' && str[i+2] == 'e' && str[i+3] == 'p' && str[i+4] == '#') {
-            char* arg_ptr = &str[i+5];
-            int freq = parse_number(&arg_ptr);
-            int ms = parse_number(&arg_ptr);
-            play_sound(freq); sleep(ms); no_sound();
-            i = (int)(arg_ptr - str);
-            continue;
-        }
-        i++;
-    }
-}
-
-void text_parse(char* str) {
-    int i = 0;
-    while (str[i] != '\0') {
-        if (str[i] == 'o' && str[i+1] == 'u' && str[i+2] == 't' && str[i+3] == 't' && str[i+4] == 'e' && str[i+5] == 'x' && str[i+6] == 't' && str[i+7] == '#') {
+        else if (str[i] == 'o' && str[i+1] == 'u' && str[i+2] == 't' && str[i+3] == 't' && str[i+4] == 'e' && str[i+5] == 'x' && str[i+6] == 't' && str[i+7] == '#') {
             char* arg_ptr = &str[i + 8];
             int text_x = win_x + 30;
             int text_y = win_y + 45;
@@ -1076,7 +1107,8 @@ void text_parse(char* str) {
                 text_x += 9;
                 arg_ptr++;
             }
-            return;
+            i = (int)(arg_ptr - str);
+            continue;
         }
         i++;
     }
@@ -1091,7 +1123,6 @@ void open_file(int sector)
     if (file_output[0] != '\0') {
     if (str_in(file_output, "!mapp!")) 
     {
-        drag = 0;
         repeats = 1;
         if (str_in(file_output, "!mapp!"))
         {
@@ -1103,18 +1134,39 @@ void open_file(int sector)
 
             for (int range = 0; range < repeats; range++) 
             {
-                if (str_in(file_output, "waitkey")) 
+                if (str_in(file_output, "drawwin")) 
                 {
-                    while (1) 
+                    drag = 1;
+                    for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) 
                     {
-                        unsigned char scan_code = inb(0x60);
-                        if (scan_code < 0x80) 
+                        for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) 
                         {
-                            char ascii_char = scan_code_to_ascii(scan_code);
-                            if (ascii_char != '10') { break; }
+                            if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) 
+                            {
+                                gfx_memory[y * 1024 + x] = 0x0320;
+                            }
+                            else if (y < win_y + 25) 
+                            {
+                                gfx_memory[y * 1024 + x] = 0x3DEF;
+                            }
+                            else if (y < win_y + 31) 
+                            {
+                                gfx_memory[y * 1024 + x] = 0x24EE;
+                            }
+                            else if (y < win_y + 37) 
+                            {
+                                gfx_memory[y * 1024 + x] = 0x11EB;
+                            }
+                            else 
+                            {
+                                gfx_memory[y * 1024 + x] = 0xF77D;
+                            }
                         }
                     }
+                    print_string("Application", win_x + 28, win_y + 28, 0x0000);
+                    print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
                 }
+                execute_commands(file_output);
                 if (str_in(file_output, "theme1")) 
                 {
                     theme = 1;
@@ -1165,107 +1217,9 @@ void open_file(int sector)
                     theme = 10;
                     draw_window();
                 }
-                if (str_in(file_output, "redraw")) 
-                {
-                    drag = 0;
-                    help_col = 65;
-                    draw_window();
-                }
-                if (str_in(file_output, "wright")) 
-                {
-                    drag = 0;
-                    win_x += 50;
-                    draw_window();
-                }
-                if (str_in(file_output, "wleft")) 
-                {
-                    drag = 0;
-                    win_x -= 50;
-                    draw_window();
-                }
-                if (str_in(file_output, "wup")) 
-                {
-                    drag = 0;
-                    win_y -= 50;
-                    draw_window();
-                }
-                if (str_in(file_output, "wdown")) 
-                {
-                    drag = 0;
-                    win_y += 50;
-                    draw_window();
-                }
-                if (str_in(file_output, "wcenter")) {
-                    win_x = 150; win_y = 140;
-                    draw_window();
-                }
-                if (str_in(file_output, "beep#")) {
-                    beep_parse(file_output);
-                }
-                if (str_in(file_output, "sndcoin")) {
-                    play_sound(988); sleep(80); play_sound(1318); sleep(220); no_sound();
-                }
-                if (str_in(file_output, "drawsq#")) {
-                    square_parse(file_output);
-                }
-                if (str_in(file_output, "scrblack")) 
-                {
-                    for (int y = 0; y < 768; y++) 
-                    {
-                        for (int x = 0; x < 1024; x++) 
-                        {
-                            gfx_memory[y * 1024 + x] = 0x0000;
-                        }
-                    }
-                }
-                if (str_in(file_output, "scrwhite")) 
-                {
-                    for (int y = 0; y < 768; y++) 
-                    {
-                        for (int x = 0; x < 1024; x++) 
-                        {
-                            gfx_memory[y * 1024 + x] = 0xFFFF;
-                        }
-                    }
-                }
                 if (str_in(file_output, "stbusy")) { drag = 1; }
                 if (str_in(file_output, "stfree")) { drag = 0; }
                 if (str_in(file_output, "stcrit")) { drag = 2; }
-                
-                if (str_in(file_output, "drawwin")) 
-                {
-                    for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) 
-                    {
-                        for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) 
-                        {
-                            if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) 
-                            {
-                                gfx_memory[y * 1024 + x] = 0x0320;
-                            }
-                            else if (y < win_y + 25) 
-                            {
-                                gfx_memory[y * 1024 + x] = 0x3DEF;
-                            }
-                            else if (y < win_y + 31) 
-                            {
-                                gfx_memory[y * 1024 + x] = 0x24EE;
-                            }
-                            else if (y < win_y + 37) 
-                            {
-                                gfx_memory[y * 1024 + x] = 0x11EB;
-                            }
-                            else 
-                            {
-                                gfx_memory[y * 1024 + x] = 0xF77D;
-                            }
-                        }
-                    }
-                    print_string("Application", win_x + 28, win_y + 28, 0x0000);
-                    print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
-                }
-                text_parse(file_output);
-                //if (str_in(file_output, "printstring")) { print_string(file_output, 300, 359, 0x0000); }
-                if (str_in(file_output, "sleep")) { sleep(2000); }
                 if (str_in(file_output, "errscr")) { error("Caused by user programm. Code: 0x03"); }
                 if (str_in(file_output, "shutdown")) { shutdown(); }
                 if (str_in(file_output, "reboot")) { reboot(); }
