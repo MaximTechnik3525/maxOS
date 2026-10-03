@@ -1016,6 +1016,54 @@ void pong() {
         }
 }
 
+int parse_number(char** stream) {
+    int num = 0;
+    while (**stream >= '0' && **stream <= '9') {
+        num = num * 10 + (**stream - '0');
+        (*stream)++;
+    }
+    if (**stream == '#') {
+        (*stream)++;
+    }
+    return num;
+}
+
+void square_parse(char* str) {
+    int i = 0;
+    while (str[i] != '\0') {
+        if (str[i] == 'd' && str[i+1] == 'r' && str[i+2] == 'a' && str[i+3] == 'w' && str[i+4] == 's' && str[i+5] == 'q' && str[i+6] == '#') {
+            char* arg_ptr = &str[i+7];
+            int custom_x = parse_number(&arg_ptr);
+            int custom_y = parse_number(&arg_ptr);
+            if (custom_x < 0 || custom_x > 900) custom_x = 412;
+            if (custom_y < 0 || custom_y > 600) custom_y = 284;
+            for (int y = custom_y; y < custom_y + 100; y++) {
+                for (int x = custom_x; x < custom_x + 100; x++) {
+                    gfx_memory[y * 1024 + x] = 0x0000;
+                }
+            }
+            i = (int)(arg_ptr - str);
+            continue;
+        }
+        i++;
+    }
+}
+
+void beep_parse(char* str) {
+    int i = 0;
+    while (str[i] != '\0') {
+        if (str[i] == 'b' && str[i+1] == 'e' && str[i+2] == 'e' && str[i+3] == 'p' && str[i+4] == '#') {
+            char* arg_ptr = &str[i+5];
+            int freq = parse_number(&arg_ptr);
+            int ms = parse_number(&arg_ptr);
+            play_sound(freq); sleep(ms); no_sound();
+            i = (int)(arg_ptr - str);
+            continue;
+        }
+        i++;
+    }
+}
+
 void text_parse(char* str) {
     int i = 0;
     while (str[i] != '\0') {
@@ -1151,38 +1199,14 @@ void open_file(int sector)
                     win_x = 150; win_y = 140;
                     draw_window();
                 }
-                if (str_in(file_output, "spk100")) 
-                {
-                    play_sound(100);
-                    sleep(350);
-                    no_sound();
-                }
-                if (str_in(file_output, "spk250")) 
-                {
-                    play_sound(250);
-                    sleep(350);
-                    no_sound();
-                }
-                if (str_in(file_output, "spk500")) 
-                {
-                    play_sound(500);
-                    sleep(350);
-                    no_sound();
-                }
-                if (str_in(file_output, "spk750")) 
-                {
-                    play_sound(750);
-                    sleep(350);
-                    no_sound();
-                }
-                if (str_in(file_output, "spk1000")) 
-                {
-                    play_sound(1000);
-                    sleep(350);
-                    no_sound();
+                if (str_in(file_output, "beep#")) {
+                    beep_parse(file_output);
                 }
                 if (str_in(file_output, "sndcoin")) {
                     play_sound(988); sleep(80); play_sound(1318); sleep(220); no_sound();
+                }
+                if (str_in(file_output, "drawsq#")) {
+                    square_parse(file_output);
                 }
                 if (str_in(file_output, "scrblack")) 
                 {
