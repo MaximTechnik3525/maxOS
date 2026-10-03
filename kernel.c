@@ -387,7 +387,7 @@ int drag = 2;
 int textid = 0;
 int textid2 = 0;
 char ftext2[15] = {0};
-char ftext[100] = {0};
+char ftext[1000] = {0};
 int fid = 0;
 int tail = 0;
 int repeats = 1;
@@ -1249,7 +1249,6 @@ void execute_commands(char* str) {
                     }
                     print_string("Application", win_x + 28, win_y + 28, 0x0000);
                     print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
-                    continue;
         }
         else if (str[i] == 'f' && str[i+1] == 's' && str[i+2] == 'c' && str[i+3] == 'r' && str[i+4] == '#') {
             char* arg_ptr = &str[i+5];
@@ -1265,7 +1264,12 @@ void execute_commands(char* str) {
             i = (int)(arg_ptr - str);
             continue;
         }
-        i++;
+        else if (str[i] == '\n' || str[i] == '\r') {
+            i++;
+        }
+        else {
+            i++;
+        }
     }
 }
 
@@ -1273,7 +1277,7 @@ void open_file(int sector)
 {
     drag = 1;
     explorer_opened = 0;
-    char file_output[77];
+    char file_output[1000];
     if (disk_exists == 1) { read(sector, file_output); }
     if (file_output[0] != '\0') {
     if (str_in(file_output, "!mapp!")) 
@@ -1324,7 +1328,7 @@ void open_file(int sector)
         print_string("Text file", win_x + 28, win_y + 28, 0x0000);
         print_string("Text file", win_x + 27, win_y + 27, 0xFFFF);
         print_string(file_output, win_x + 30, win_y + 45, text_col);
-        print_string("Press Esc to close this window.", win_x + 30, win_y + 60, 0x0000);
+        print_string("Press Esc to close this window.", win_x + 30, help_col + 470, 0x0000);
     }
 }
 else {
@@ -1356,8 +1360,8 @@ else {
         }
         print_string("No file", win_x + 28, win_y + 28, 0x0000);
         print_string("No file", win_x + 27, win_y + 27, 0xFFFF);
-        print_string("File not found or empty!", win_x + 30, win_y + 45, text_col);
-        print_string("Press Esc to close this window.", win_x + 30, win_y + 60, 0x0000);
+        print_string("File not found or empty!", win_x + 30, win_y + 451, text_col);
+        print_string("Press Esc to close this window.", win_x + 30, help_col + 470, 0x0000);
 }
 }
 int str_cmp(char* str1, char* str2) {
@@ -1390,13 +1394,15 @@ void read(int sector, char* output) {
         ata_read_sector(sector, read_buffer);
         char* disk_ptr = (char*)read_buffer;
         int i = 0;
-        while (disk_ptr[i] != '\0' && i < 76) {
+        while (disk_ptr[i] != '\0' && i < 1000) {
             output[i] = disk_ptr[i];
             i++;
         }
         output[i] = '\0';
     }
 }
+int enter_counter = 0;
+int symbols_counter = 0;
 void filew() {
     if (1 != 0) {
         char str[77] = {0};
@@ -1432,9 +1438,9 @@ void filew() {
             print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
             print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
         }
-        print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-        print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
-        print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000);
+        print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 440, 0x0000);
+        print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 455, 0x0000);
+        print_string("To make app write '!mapp!'.", win_x + 30, help_col + 470, 0x0000);
         update_screen();
         print_string(ftext, win_x + 30, help_col, text_col);
         while (1) {
@@ -1451,10 +1457,11 @@ void filew() {
                 if (scan_code < 0x80 && w_mode == 1 && drag != 2 && scan_code != 0x2A && scan_code != 0x36 && scan_code != 0xAA && scan_code != 0xB6) {
                     char ascii_char = scan_code_to_ascii(scan_code);
                     if (shift_p == 0 && ascii_char != 'E' && ascii_char != 'F' && ascii_char != 'B' && ascii_char != 'S' && ascii_char != 'U' && ascii_char != 'D' && ascii_char != 'L' && ascii_char != 'R' && ascii_char != 'T' && ascii_char != 'G' && ascii_char != 'C' && ascii_char != 'O' && ascii_char != 'M' && ascii_char != 'N') {
-                        if (textid < 76) {
+                        if (symbols_counter < 70 && textid < 509) {
                             ftext[textid] = ascii_char;
                             textid++;
                             ftext[textid] = '\0';
+                            symbols_counter++;
                             for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
                                 for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
                                     if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
@@ -1476,9 +1483,9 @@ void filew() {
                             }
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
-                            print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000);
+                            print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 440, 0x0000);
+                            print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 455, 0x0000);
+                            print_string("To make app write '!mapp!'.", win_x + 30, help_col + 470, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
                             read((sectors - 1), str);
                             if (str_cmp(ftext, str)) {
@@ -1496,6 +1503,20 @@ void filew() {
                     else if (ascii_char == 'B') {
                         if (textid > 0) {
                             textid--;
+                            
+                            if (ftext[textid] == '\n')
+                            {
+                                enter_counter--;
+                                int str_id = textid - 1;
+                                symbols_counter = 0;
+                                while (str_id >= 0 && ftext[str_id] != '\n') {
+                                    symbols_counter++;
+                                    str_id--;
+                                }
+                            }
+                            else {
+                                symbols_counter--;
+                            }
                             ftext[textid] = '\0';
                             for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
                                 for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
@@ -1518,9 +1539,9 @@ void filew() {
                             }
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
-                            print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000); 
+                            print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 440, 0x0000);
+                            print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 455, 0x0000);
+                            print_string("To make app write '!mapp!'.", win_x + 30, help_col + 470, 0x0000); 
                             print_string(ftext, win_x + 30, help_col, text_col);
                             read((sectors - 1), str);
                             if (str_cmp(ftext, str)) {
@@ -1535,7 +1556,8 @@ void filew() {
                         }
                     }
                     if (shift_p == 1 && ascii_char != '00') {
-                        if (textid < 76) {
+                        if (symbols_counter < 70 && textid < 509) {
+                            symbols_counter++;
                             if (ascii_char == '=') {
                                 ftext[textid] = '+';
                                 textid++;
@@ -1762,9 +1784,9 @@ void filew() {
                             }
                             print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
                             print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 30, 0x0000);
-                            print_string("To make app write '!mapp!'.", win_x + 30, help_col + 45, 0x0000);
+                            print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 440, 0x0000);
+                            print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 455, 0x0000);
+                            print_string("To make app write '!mapp!'.", win_x + 30, help_col + 470, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
                             read((sectors - 1), str);
                             if (str_cmp(ftext, str)) {
@@ -1778,6 +1800,13 @@ void filew() {
                             print_string(ftext, win_x + 30, help_col, text_col);
                             update_screen();
                         }
+                    }
+                    else if (shift_p == 0 && ascii_char == '\E' && enter_counter < 24) {
+                        ftext[textid] = '\n';
+                        textid++;
+                        ftext[textid] = '\0';
+                        enter_counter++;
+                        symbols_counter = 0;
                     }
                     else if (ascii_char == 'F') {
                         if (createdFiles < 10 && disk_exists == 1) {
@@ -2035,18 +2064,18 @@ void open_explorer() {
             char real_size_str[16];
             char ss[16];
             read(currentFile, ss);
-            for (int char_id = 0; char_id < 77; char_id++) {
+            for (int char_id = 0; char_id < 509; char_id++) {
                 if (ss[char_id] == '\0') { break; }
                 real_size++;
             }
             int_str(real_size, real_size_str);
             print_string(real_size_str, (win_x + win_h) - 8, line, 0x0000);
-            print_string("b", (win_x + win_h) + 12, line, 0x0000);
-            char file_id_str[70];
+            print_string("b", (win_x + win_h) + 21, line, 0x0000);
+            char file_id_str[509];
             char sector_str[10];
             int_str(file_id, file_id_str);
             int_str(currentFile, sector_str);
-            print_string(file_id_str, win_x + 300, line, 0x0000);
+            print_string(file_id_str, win_x + 290, line, 0x0000);
             print_string("/", win_x + 310, line, 0x0000);
             print_string(sector_str, win_x + 320, line, 0x0000);
             line += 15;
@@ -2832,7 +2861,14 @@ void screensaver() {
     }
 }
 void print_string(char* str, int x, int y, unsigned short color) {
+    int start_x = x;
     while (*str != 0) {
+        if (*str == '\n') {
+            x = start_x;
+            y += 15;
+            str++;
+            continue;
+        }
         draw_char(*str, x, y, color);
         x += 9;
         str++;
