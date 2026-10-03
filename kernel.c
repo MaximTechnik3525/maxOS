@@ -464,7 +464,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     draw_window(); drag = 0;
     unsigned char packet[3];
     while(1) {
-        timer++;
+        if (drag == 0) { timer++; }
         if (timer >= 6000) { screensaver(); }
         outb(0x70, 0x0A);
         if ((inb(0x71) & 0x80) == 0) {
@@ -1038,33 +1038,33 @@ void execute_commands(char* str) {
             i = (int)(arg_ptr - str);
             continue;
         }
-        else if (str[i] == 'r' && str[i+1] == 'e' && str[i+2] == 'd' && str[i+3] == 'r' && str[i+4] == 'a' && str[i+5] == 'w') {
-            drag = 0; help_col = 65; i += 6;
+        else if (str[i] == 'r' && str[i+1] == 'e' && str[i+2] == 'd' && str[i+3] == 'r') {
+            help_col = 65; i += 4;
             draw_window();
             continue;
         }
-        else if (str[i] == 'w' && str[i+1] == 'r' && str[i+2] == 'i' && str[i+3] == 'g' && str[i+4] == 'h' && str[i+5] == 't') {
-            drag = 0; win_x += 70; i += 6;
+        else if (str[i] == 'w' && str[i+1] == 'r' && str[i+2] == 'i' && str[i+3] == 'g') {
+            win_x += 70; i += 4;
             draw_window();
             continue;
         }
-        else if (str[i] == 'w' && str[i+1] == 'l' && str[i+2] == 'e' && str[i+3] == 'f' && str[i+4] == 't') {
-            drag = 0; win_x -= 70; i += 5;
+        else if (str[i] == 'w' && str[i+1] == 'l' && str[i+2] == 'e' && str[i+3] == 'f') {
+            win_x -= 70; i += 4;
             draw_window();
             continue;
         }
         else if (str[i] == 'w' && str[i+1] == 'u' && str[i+2] == 'p') {
-            drag = 0; win_y -= 70; i += 3;
+            win_y -= 70; i += 3;
             draw_window();
             continue;
         }
-        else if (str[i] == 'w' && str[i+1] == 'd' && str[i+2] == 'o' && str[i+3] == 'w' && str[i+4] == 'n') {
-            drag = 0; win_y += 70; i += 5;
+        else if (str[i] == 'w' && str[i+1] == 'd' && str[i+2] == 'o' && str[i+3] == 'w') {
+            win_y += 70; i += 4;
             draw_window();
             continue;
         }
-        else if (str[i] == 'w' && str[i+1] == 'c' && str[i+2] == 'e' && str[i+3] == 'n' && str[i+4] == 't' && str[i+5] == 'e' && str[i+6] == 'r') {
-            drag = 0; i += 7;
+        else if (str[i] == 'w' && str[i+1] == 'c' && str[i+2] == 'e' && str[i+3] == 'n') {
+            i += 4;
             win_x = 140; win_y = 150;
             draw_window();
             continue;
@@ -1079,13 +1079,13 @@ void execute_commands(char* str) {
             i = (int)(arg_ptr - str);
             continue;
         }
-        else if (str[i] == 's' && str[i+1] == 'n' && str[i+2] == 'd' && str[i+3] == 'c' && str[i+4] == 'o' && str[i+5] == 'i' && str[i+6] == 'n') {
-            i += 7;
+        else if (str[i] == 's' && str[i+1] == 'c' && str[i+2] == 'o' && str[i+3] == 'i' && str[i+4] == 'n') {
+            i += 5;
             play_sound(988); sleep(80); play_sound(1318); sleep(220); no_sound();
             continue;
         }
-        else if (str[i] == 'd' && str[i+1] == 'r' && str[i+2] == 'a' && str[i+3] == 'w' && str[i+4] == 's' && str[i+5] == 'q' && str[i+6] == '#') {
-            char* arg_ptr = &str[i+7];
+        else if (str[i] == 'd' && str[i+1] == 'r' && str[i+2] == 's' && str[i+3] == 'q' && str[i+4] == '#') {
+            char* arg_ptr = &str[i+5];
             int custom_x = parse_number(&arg_ptr);
             int custom_y = parse_number(&arg_ptr);
             if (custom_x < 0 || custom_x > 900) custom_x = 412;
@@ -1098,8 +1098,8 @@ void execute_commands(char* str) {
             i = (int)(arg_ptr - str);
             continue;
         }
-        else if (str[i] == 'o' && str[i+1] == 'u' && str[i+2] == 't' && str[i+3] == 't' && str[i+4] == 'e' && str[i+5] == 'x' && str[i+6] == 't' && str[i+7] == '#') {
-            char* arg_ptr = &str[i + 8];
+        else if (str[i] == 'o' && str[i+1] == 'u' && str[i+2] == 't' && str[i+3] == 't' && str[i+4] == '#') {
+            char* arg_ptr = &str[i + 5];
             int text_x = win_x + 30;
             int text_y = win_y + 45;
             while (*arg_ptr != ' ' && *arg_ptr != '\0' && *arg_ptr != '\n' && *arg_ptr != '\r') {
@@ -1110,33 +1110,117 @@ void execute_commands(char* str) {
             i = (int)(arg_ptr - str);
             continue;
         }
-        i++;
-    }
-}
-
-void open_file(int sector) 
-{
-    drag = 1;
-    explorer_opened = 0;
-    char file_output[77];
-    if (disk_exists == 1) { read(sector, file_output); }
-    if (file_output[0] != '\0') {
-    if (str_in(file_output, "!mapp!")) 
-    {
-        repeats = 1;
-        if (str_in(file_output, "!mapp!"))
-        {
-            if (str_in(file_output, "repeat0"))   { repeats = 0; }
-            if (str_in(file_output, "repeat5"))   { repeats = 5; }
-            if (str_in(file_output, "repeat10"))  { repeats = 10; }
-            if (str_in(file_output, "repeat50"))  { repeats = 50; }
-            if (str_in(file_output, "repeat100")) { repeats = 100; }
-
-            for (int range = 0; range < repeats; range++) 
-            {
-                if (str_in(file_output, "drawwin")) 
-                {
-                    drag = 1;
+        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '1') {
+            i += 3;
+            theme = 1;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '2') {
+            i += 3;
+            theme = 2;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '3') {
+            i += 3;
+            theme = 3;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '4') {
+            i += 3;
+            theme = 4;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '5') {
+            i += 3;
+            theme = 5;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '6') {
+            i += 3;
+            theme = 6;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '7') {
+            i += 3;
+            theme = 7;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '8') {
+            i += 3;
+            theme = 8;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '9') {
+            i += 3;
+            theme = 9;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '1' && str[i+3] == '0') {
+            i += 4;
+            theme = 10;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 's' && str[i+1] == 't' && str[i+2] == 'b') {
+            i += 3;
+            drag = 1;
+            continue;
+        }
+        else if (str[i] == 's' && str[i+1] == 't' && str[i+2] == 'f') {
+            i += 3;
+            drag = 0;
+            continue;
+        }
+        else if (str[i] == 's' && str[i+1] == 't' && str[i+2] == 'c') {
+            i += 3;
+            drag = 2;
+            continue;
+        }
+        else if (str[i] == 'e' && str[i+1] == 'r' && str[i+2] == 'r') {
+            i += 3;
+            error("Caused by user programm. Code: 0x03");
+            continue;
+        }
+        else if (str[i] == 's' && str[i+1] == 'h' && str[i+2] == 'n') {
+            i += 3;
+            shutdown();
+            continue;
+        }
+        else if (str[i] == 'r' && str[i+1] == 'b' && str[i+2] == 't') {
+            i += 3;
+            reboot();
+            continue;
+        }
+        else if (str[i] == 't' && str[i+1] == 'o' && str[i+2] == 'n') {
+            i += 3;
+            tail = 1;
+            continue;
+        }
+        else if (str[i] == 't' && str[i+1] == 'o' && str[i+2] == 'f') {
+            i += 3;
+            tail = 0;
+            continue;
+        }
+        else if (str[i] == 'f' && str[i+1] == 'm' && str[i+2] == 'a' && str[i+3] == 't') {
+            i += 4;
+            createdFiles = 0;
+            for (int i = 5000; i < 5011; i++) {
+                write("", i);
+            }
+            sectors = 5000;
+            continue;
+        }
+        else if (str[i] == 'w' && str[i+1] == 'i' && str[i+2] == 'n') {
+            i += 3;
                     for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) 
                     {
                         for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) 
@@ -1165,74 +1249,47 @@ void open_file(int sector)
                     }
                     print_string("Application", win_x + 28, win_y + 28, 0x0000);
                     print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
-                }
-                execute_commands(file_output);
-                if (str_in(file_output, "theme1")) 
-                {
-                    theme = 1;
-                    draw_window();
-                }
-                if (str_in(file_output, "theme2")) 
-                {
-                    theme = 2;
-                    draw_window();
-                }
-                if (str_in(file_output, "theme3")) 
-                {
-                    theme = 3;
-                    draw_window();
-                }
-                if (str_in(file_output, "theme4")) 
-                {
-                    theme = 4;
-                    draw_window();
-                }
-                if (str_in(file_output, "theme5")) 
-                {
-                    theme = 5;
-                    draw_window();
-                }
-                if (str_in(file_output, "theme6")) 
-                {
-                    theme = 6;
-                    draw_window();
-                }
-                if (str_in(file_output, "theme7")) 
-                {
-                    theme = 7;
-                    draw_window();
-                }
-                if (str_in(file_output, "theme8")) 
-                {
-                    theme = 8;
-                    draw_window();
-                }
-                if (str_in(file_output, "theme9")) 
-                {
-                    theme = 9;
-                    draw_window();
-                }
-                if (str_in(file_output, "theme10")) 
-                {
-                    theme = 10;
-                    draw_window();
-                }
-                if (str_in(file_output, "stbusy")) { drag = 1; }
-                if (str_in(file_output, "stfree")) { drag = 0; }
-                if (str_in(file_output, "stcrit")) { drag = 2; }
-                if (str_in(file_output, "errscr")) { error("Caused by user programm. Code: 0x03"); }
-                if (str_in(file_output, "shutdown")) { shutdown(); }
-                if (str_in(file_output, "reboot")) { reboot(); }
-                if (str_in(file_output, "trailon")) { tail = 1; }
-                if (str_in(file_output, "trailoff")) { tail = 0; }
-                if (str_in(file_output, "format")) 
-                {
-                    createdFiles = 0;
-                    for (int i = 5000; i < 5011; i++) {
-                        write("", i);
+                    continue;
+        }
+        else if (str[i] == 'f' && str[i+1] == 's' && str[i+2] == 'c' && str[i+3] == 'r' && str[i+4] == '#') {
+            char* arg_ptr = &str[i+5];
+            int x_w = parse_number(&arg_ptr);
+            int y_w = parse_number(&arg_ptr);
+            if (x_w > 0 && y_w > 0) {
+                for (int y = 0; y < y_w; y++) {
+                    for (int x = 0; x < x_w; x++) {
+                        gfx_memory[y * 1024 + x] = 0xF77D;
                     }
-                    sectors = 5000;
                 }
+            }
+            i = (int)(arg_ptr - str);
+            continue;
+        }
+        i++;
+    }
+}
+
+void open_file(int sector) 
+{
+    drag = 1;
+    explorer_opened = 0;
+    char file_output[77];
+    if (disk_exists == 1) { read(sector, file_output); }
+    if (file_output[0] != '\0') {
+    if (str_in(file_output, "!mapp!")) 
+    {
+        repeats = 1;
+        if (str_in(file_output, "!mapp!"))
+        {
+            if (str_in(file_output, "repeat0"))   { repeats = 0; }
+            if (str_in(file_output, "repeat5"))   { repeats = 5; }
+            if (str_in(file_output, "repeat10"))  { repeats = 10; }
+            if (str_in(file_output, "repeat50"))  { repeats = 50; }
+            if (str_in(file_output, "repeat100")) { repeats = 100; }
+
+            for (int range = 0; range < repeats; range++) 
+            {
+                execute_commands(file_output);
             }
         }
     }
@@ -2756,20 +2813,20 @@ void screensaver() {
             }
         }
         print_string("maxOS", txt_x, txt_y, 0x05E5);
-        if (txt_x < 960 && was_x == 0) {
+        if (txt_x < 965 && was_x == 0) {
             txt_x += 5;
         }
         else {
             txt_x -= 5;
             was_x = 1;
         }
-        if (txt_y < 740 && was_y == 0) { txt_y += 5; }
+        if (txt_y < 735 && was_y == 0) { txt_y += 5; }
         else {
             txt_y -= 5;
             was_y = 1;
         }
-        if (txt_y < 25) { was_y = 0; }
-        if (txt_x < 25) { was_x = 0; }
+        if (txt_y < 30) { was_y = 0; }
+        if (txt_x < 30) { was_x = 0; }
         update_screen();
         sleep(30);
     }
