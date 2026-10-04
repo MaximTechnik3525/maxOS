@@ -1056,7 +1056,7 @@ void execute_commands(char* str) {
         else if (str[i] == '+' && str[i+1] == 'x' && str[i+2] == '#') {
             char* arg_ptr = &str[i+3];
             int get_x = parse_number(&arg_ptr);
-            if (get_x >= 0 && user_x < 1024) {
+            if (get_x >= 0 && (user_x + get_x) < 1024) {
                 user_x += get_x;
             }
             i = (int)(arg_ptr - str);
@@ -1065,7 +1065,7 @@ void execute_commands(char* str) {
         else if (str[i] == '-' && str[i+1] == 'x' && str[i+2] == '#') {
             char* arg_ptr = &str[i+3];
             int get_x = parse_number(&arg_ptr);
-            if (user_x >= 0) {
+            if (user_x >= 0 && (user_x - get_x) >= 0) {
                 user_x -= get_x;
             }
             i = (int)(arg_ptr - str);
@@ -1074,7 +1074,7 @@ void execute_commands(char* str) {
         else if (str[i] == '-' && str[i+1] == 'y' && str[i+2] == '#') {
             char* arg_ptr = &str[i+3];
             int get_y = parse_number(&arg_ptr);
-            if (user_y >= 0) {
+            if (user_y >= 0 && (user_y - get_y) >= 0) {
                 user_y -= get_y;
             }
             i = (int)(arg_ptr - str);
@@ -1083,7 +1083,7 @@ void execute_commands(char* str) {
         else if (str[i] == '+' && str[i+1] == 'y' && str[i+2] == '#') {
             char* arg_ptr = &str[i+2];
             int get_y = parse_number(&arg_ptr);
-            if (get_y >= 0 && user_y < 728) {
+            if (get_y >= 0 && (user_y + get_y) < 768) {
                 user_y += get_y;
             }
             i = (int)(arg_ptr - str);
@@ -1092,7 +1092,7 @@ void execute_commands(char* str) {
         else if (str[i] == 's' && str[i+1] == 'e' && str[i+2] == 't' && str[i+3] == 'y' && str[i+4] == '#') {
             char* arg_ptr = &str[i+5];
             int get_y = parse_number(&arg_ptr);
-            if (get_y >= 0 && user_y < 728) {
+            if (get_y >= 0 && get_y < 728) {
                 user_y = get_y;
             }
             i = (int)(arg_ptr - str);
