@@ -5,7 +5,7 @@ echo "=== [1/3] Компиляция исходного кода maxOS ==="
 nasm -f elf32 entry.asm -o entry.o
 
 # Компилируем главное ядро
-gcc -m32 -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+gcc -m32 -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -Wall -Wextra
 
 # Компилируем драйвер жесткого диска ATA
 gcc -m32 -c ata.c -o ata.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra

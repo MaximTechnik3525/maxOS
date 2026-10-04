@@ -1027,11 +1027,77 @@ int parse_number(char** stream) {
     }
     return num;
 }
-
+int user_x = 0;
+int user_y = 0;
 void execute_commands(char* str) {
+    user_x = 0; user_y = 0;
     int i = 0;
+    int loops = 1;
+    if (str_in(str, "for#0"))   { loops = 0; }
+    if (str_in(str, "for#5"))   { loops = 5; }
+    if (str_in(str, "for#25"))  { loops = 25; }
+    if (str_in(str, "for#50"))  { loops = 50; }
+    if (str_in(str, "for#75"))  { loops = 75; }
+    if (str_in(str, "for#100")) { loops = 100; }
+    if (str_in(str, "for#150")) { loops = 150; }
+    for (int loop = 0; loop < loops; loop++) {
+        i = 0;
     while (str[i] != '\0') {
-        if (str[i] == 's' && str[i+1] == 'l' && str[i+2] == 'e' && str[i+3] == 'e' && str[i+4] == 'p' && str[i+5] == '#') {
+        if (str[i] == 's' && str[i+1] == 'e' && str[i+2] == 't' && str[i+3] == 'x' && str[i+4] == '#') {
+            char* arg_ptr = &str[i+5];
+            int get_x = parse_number(&arg_ptr);
+            if (get_x >= 0 && get_x < 960) {
+                user_x = get_x;
+            }
+            i = (int)(arg_ptr - str);
+            continue;
+        }
+        else if (str[i] == '+' && str[i+1] == 'x' && str[i+2] == '#') {
+            char* arg_ptr = &str[i+3];
+            int get_x = parse_number(&arg_ptr);
+            if (get_x >= 0 && user_x < 960) {
+                user_x += get_x;
+            }
+            i = (int)(arg_ptr - str);
+            continue;
+        }
+        else if (str[i] == '-' && str[i+1] == 'x' && str[i+2] == '#') {
+            char* arg_ptr = &str[i+3];
+            int get_x = parse_number(&arg_ptr);
+            if (user_x >= 0) {
+                user_x -= get_x;
+            }
+            i = (int)(arg_ptr - str);
+            continue;
+        }
+        else if (str[i] == '-' && str[i+1] == 'y' && str[i+2] == '#') {
+            char* arg_ptr = &str[i+3];
+            int get_y = parse_number(&arg_ptr);
+            if (user_y >= 0) {
+                user_y -= get_y;
+            }
+            i = (int)(arg_ptr - str);
+            continue;
+        }
+        else if (str[i] == '+' && str[i+1] == 'y' && str[i+2] == '#') {
+            char* arg_ptr = &str[i+2];
+            int get_y = parse_number(&arg_ptr);
+            if (get_y >= 0 && user_y < 728) {
+                user_y += get_y;
+            }
+            i = (int)(arg_ptr - str);
+            continue;
+        }
+        else if (str[i] == 's' && str[i+1] == 'e' && str[i+2] == 't' && str[i+3] == 'y' && str[i+4] == '#') {
+            char* arg_ptr = &str[i+5];
+            int get_y = parse_number(&arg_ptr);
+            if (get_y >= 0 && user_y < 728) {
+                user_y = get_y;
+            }
+            i = (int)(arg_ptr - str);
+            continue;
+        }
+        else if (str[i] == 's' && str[i+1] == 'l' && str[i+2] == 'e' && str[i+3] == 'e' && str[i+4] == 'p' && str[i+5] == '#') {
             char* arg_ptr = &str[i += 6];
             int ms = parse_number(&arg_ptr);
             if (ms > 0) { sleep(ms); }
@@ -1090,12 +1156,23 @@ void execute_commands(char* str) {
             int custom_y = parse_number(&arg_ptr);
             if (custom_x < 0 || custom_x > 900) custom_x = 412;
             if (custom_y < 0 || custom_y > 600) custom_y = 284;
-            for (int y = custom_y; y < custom_y + 100; y++) {
-                for (int x = custom_x; x < custom_x + 100; x++) {
+            for (int y = custom_y; y < custom_y + 40; y++) {
+                for (int x = custom_x; x < custom_x + 40; x++) {
                     gfx_memory[y * 1024 + x] = 0x0000;
                 }
             }
             i = (int)(arg_ptr - str);
+            continue;
+        }
+        else if (str[i] == 's' && str[i+1] == 'q' && str[i+2] == '#' && str[i+3] == 'x' && str[i+4] == '#' && str[i+5] == 'y') {
+            i += 6;
+            for (int y = 0; y < 40; y++) {
+                for (int x = 0; x < 40; x++) {
+                    int screen_x = user_x + x;
+                    int screen_y = user_y + y;
+                    gfx_memory[screen_y * 1024 + screen_x] = 0x0000;
+                }
+            }
             continue;
         }
         else if (str[i] == 'o' && str[i+1] == 'u' && str[i+2] == 't' && str[i+3] == 't' && str[i+4] == '#') {
@@ -1272,6 +1349,7 @@ void execute_commands(char* str) {
         }
     }
 }
+}
 
 void open_file(int sector) 
 {
@@ -1282,20 +1360,7 @@ void open_file(int sector)
     if (file_output[0] != '\0') {
     if (str_in(file_output, "!mapp!")) 
     {
-        repeats = 1;
-        if (str_in(file_output, "!mapp!"))
-        {
-            if (str_in(file_output, "repeat0"))   { repeats = 0; }
-            if (str_in(file_output, "repeat5"))   { repeats = 5; }
-            if (str_in(file_output, "repeat10"))  { repeats = 10; }
-            if (str_in(file_output, "repeat50"))  { repeats = 50; }
-            if (str_in(file_output, "repeat100")) { repeats = 100; }
-
-            for (int range = 0; range < repeats; range++) 
-            {
-                execute_commands(file_output);
-            }
-        }
+        execute_commands(file_output);
     }
     else
     {
