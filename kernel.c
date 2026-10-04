@@ -1360,7 +1360,7 @@ void open_file(int sector)
     char file_output[1000];
     if (disk_exists == 1) { read(sector, file_output); }
     if (file_output[0] != '\0') {
-    if (str_in(file_output, "!mapp!")) 
+    if (str_in(file_output, "#app#")) 
     {
         execute_commands(file_output);
     }
@@ -1498,17 +1498,29 @@ void filew() {
                 }
             }
         }
-        if (str_cmp(ftext, str)) {
-            print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
-            print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
-        }
-        else {
-            print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
-            print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
-        }
+                            if (str_cmp(ftext, str)) {
+                                if (str_in(ftext, "#app#")) {
+                                    print_string("Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
+                                }
+                                else {
+                                    print_string("Notepad: text file", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
+                                }
+                            }
+                            else {
+                                if (str_in(ftext, "#app#")) {
+                                    print_string("*Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("*Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
+                                }
+                                else {
+                                    print_string("*Notepad: text file", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("*Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
+                                }
+                            }
         print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 440, 0x0000);
         print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 455, 0x0000);
-        print_string("To make app write '!mapp!'.", win_x + 30, help_col + 470, 0x0000);
+        print_string("To make app write '#app#'.", win_x + 30, help_col + 470, 0x0000);
         update_screen();
         print_string(ftext, win_x + 30, help_col, text_col);
         while (1) {
@@ -1549,20 +1561,30 @@ void filew() {
                                     }
                                 }
                             }
-                            print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
-                            print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 440, 0x0000);
                             print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 455, 0x0000);
-                            print_string("To make app write '!mapp!'.", win_x + 30, help_col + 470, 0x0000);
+                            print_string("To make app write '#app#'.", win_x + 30, help_col + 470, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
                             read((sectors - 1), str);
                             if (str_cmp(ftext, str)) {
-                                print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
-                                print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
+                                if (str_in(ftext, "#app#")) {
+                                    print_string("Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
+                                }
+                                else {
+                                    print_string("Notepad: text file", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
+                                }
                             }
                             else {
-                                print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
-                                print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
+                                if (str_in(ftext, "#app#")) {
+                                    print_string("*Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("*Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
+                                }
+                                else {
+                                    print_string("*Notepad: text file", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("*Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
+                                }
                             }
                             print_string(ftext, win_x + 30, help_col, text_col);
                             update_screen();
@@ -1605,20 +1627,30 @@ void filew() {
                                     }
                                 }
                             }
-                            print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
-                            print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 440, 0x0000);
                             print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 455, 0x0000);
-                            print_string("To make app write '!mapp!'.", win_x + 30, help_col + 470, 0x0000); 
+                            print_string("To make app write '#app#'.", win_x + 30, help_col + 470, 0x0000); 
                             print_string(ftext, win_x + 30, help_col, text_col);
                             read((sectors - 1), str);
                             if (str_cmp(ftext, str)) {
-                                print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
-                                print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
+                                if (str_in(ftext, "#app#")) {
+                                    print_string("Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
+                                }
+                                else {
+                                    print_string("Notepad: text file", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
+                                }
                             }
                             else {
-                                print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
-                                print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
+                                if (str_in(ftext, "#app#")) {
+                                    print_string("*Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("*Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
+                                }
+                                else {
+                                    print_string("*Notepad: text file", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("*Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
+                                }
                             }
                             update_screen();
                         }
@@ -1850,20 +1882,30 @@ void filew() {
                                     }
                                 }
                             }
-                            print_string("Notepad", win_x + 28, win_y + 28, 0x0000);
-                            print_string("Notepad", win_x + 27, win_y + 27, 0xFFFF);
                             print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 440, 0x0000);
                             print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 455, 0x0000);
-                            print_string("To make app write '!mapp!'.", win_x + 30, help_col + 470, 0x0000);
+                            print_string("To make app write '#app#'.", win_x + 30, help_col + 470, 0x0000);
                             print_string(ftext, win_x + 30, help_col, text_col);
                             read((sectors - 1), str);
                             if (str_cmp(ftext, str)) {
-                                print_string("Notepad: saved", win_x + 28, win_y + 28, 0x0000);
-                                print_string("Notepad: saved", win_x + 27, win_y + 27, 0xFFFF);
+                                if (str_in(ftext, "#app#")) {
+                                    print_string("Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
+                                }
+                                else {
+                                    print_string("Notepad: text file", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
+                                }
                             }
                             else {
-                                print_string("Notepad: unsaved", win_x + 28, win_y + 28, 0x0000);
-                                print_string("Notepad: unsaved", win_x + 27, win_y + 27, 0xFFFF);
+                                if (str_in(ftext, "#app#")) {
+                                    print_string("*Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("*Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
+                                }
+                                else {
+                                    print_string("*Notepad: text file", win_x + 28, win_y + 28, 0x0000);
+                                    print_string("*Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
+                                }
                             }
                             print_string(ftext, win_x + 30, help_col, text_col);
                             update_screen();
