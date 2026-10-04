@@ -1029,8 +1029,9 @@ int parse_number(char** stream) {
 }
 int user_x = 0;
 int user_y = 0;
+int was_screen = 0;
 void execute_commands(char* str) {
-    user_x = 0; user_y = 0;
+    user_x = 0; user_y = 0; was_screen = 0;
     int i = 0;
     int loops = 1;
     if (str_in(str, "for#0"))   { loops = 0; }
@@ -1046,7 +1047,7 @@ void execute_commands(char* str) {
         if (str[i] == 's' && str[i+1] == 'e' && str[i+2] == 't' && str[i+3] == 'x' && str[i+4] == '#') {
             char* arg_ptr = &str[i+5];
             int get_x = parse_number(&arg_ptr);
-            if (get_x >= 0 && get_x < 960) {
+            if (get_x >= 0 && get_x < 1024) {
                 user_x = get_x;
             }
             i = (int)(arg_ptr - str);
@@ -1055,7 +1056,7 @@ void execute_commands(char* str) {
         else if (str[i] == '+' && str[i+1] == 'x' && str[i+2] == '#') {
             char* arg_ptr = &str[i+3];
             int get_x = parse_number(&arg_ptr);
-            if (get_x >= 0 && user_x < 960) {
+            if (get_x >= 0 && user_x < 1024) {
                 user_x += get_x;
             }
             i = (int)(arg_ptr - str);
@@ -1154,8 +1155,8 @@ void execute_commands(char* str) {
             char* arg_ptr = &str[i+5];
             int custom_x = parse_number(&arg_ptr);
             int custom_y = parse_number(&arg_ptr);
-            if (custom_x < 0 || custom_x > 900) custom_x = 412;
-            if (custom_y < 0 || custom_y > 600) custom_y = 284;
+            if (custom_x < 0 || custom_x > 960) custom_x = 0;
+            if (custom_y < 0 || custom_y > 728) custom_y = 0;
             for (int y = custom_y; y < custom_y + 40; y++) {
                 for (int x = custom_x; x < custom_x + 40; x++) {
                     gfx_memory[y * 1024 + x] = 0x0000;
@@ -1173,7 +1174,6 @@ void execute_commands(char* str) {
                     gfx_memory[screen_y * 1024 + screen_x] = 0x0000;
                 }
             }
-            continue;
         }
         else if (str[i] == 'o' && str[i+1] == 'u' && str[i+2] == 't' && str[i+3] == 't' && str[i+4] == '#') {
             char* arg_ptr = &str[i + 5];
@@ -1331,12 +1331,14 @@ void execute_commands(char* str) {
             char* arg_ptr = &str[i+5];
             int x_w = parse_number(&arg_ptr);
             int y_w = parse_number(&arg_ptr);
+            if (loop == 0) {
             if (x_w > 0 && y_w > 0) {
                 for (int y = 0; y < y_w; y++) {
                     for (int x = 0; x < x_w; x++) {
                         gfx_memory[y * 1024 + x] = 0xF77D;
                     }
                 }
+            }
             }
             i = (int)(arg_ptr - str);
             continue;
@@ -1393,7 +1395,7 @@ void open_file(int sector)
         print_string("Text file", win_x + 28, win_y + 28, 0x0000);
         print_string("Text file", win_x + 27, win_y + 27, 0xFFFF);
         print_string(file_output, win_x + 30, win_y + 45, text_col);
-        print_string("Press Esc to close this window.", win_x + 30, help_col + 470, 0x0000);
+        print_string("Press Esc to close this window.", win_x + 30, win_y + 510, 0x0000);
     }
 }
 else {
@@ -1425,8 +1427,8 @@ else {
         }
         print_string("No file", win_x + 28, win_y + 28, 0x0000);
         print_string("No file", win_x + 27, win_y + 27, 0xFFFF);
-        print_string("File not found or empty!", win_x + 30, win_y + 451, text_col);
-        print_string("Press Esc to close this window.", win_x + 30, help_col + 470, 0x0000);
+        print_string("File not found or empty!", win_x + 30, win_y + 45, text_col);
+        print_string("Press Esc to close this window.", win_x + 30, win_y + 510, 0x0000);
 }
 }
 int str_cmp(char* str1, char* str2) {
@@ -1450,6 +1452,7 @@ void write(char* msg, int sector) {
             msg_ptr[msg_id] = msg[msg_id];
             msg_id++;
         }
+        msg_ptr[msg_id] = '\0';
         ata_write_sector(sector, write_buffer);
     }
 }
@@ -1459,7 +1462,7 @@ void read(int sector, char* output) {
         ata_read_sector(sector, read_buffer);
         char* disk_ptr = (char*)read_buffer;
         int i = 0;
-        while (disk_ptr[i] != '\0' && i < 1000) {
+        while (disk_ptr[i] != '\0' && i < 511) {
             output[i] = disk_ptr[i];
             i++;
         }
@@ -1470,7 +1473,7 @@ int enter_counter = 0;
 int symbols_counter = 0;
 void filew() {
     if (1 != 0) {
-        char str[77] = {0};
+        char str[512] = {0};
         if (disk_exists == 1) {
             read((sectors - 1), str);
         }
@@ -2112,24 +2115,24 @@ void open_explorer() {
             int currentFile = 5000 + i;
             read(currentFile, str);
             if (str[0] != '\0') {
-                char fileName[11];
-                for (int i = 0; i < 10; i++) {
+                char fileName[21];
+                for (int i = 0; i < 20; i++) {
                     fileName[i] = '\0';
                 }
-                for (int char_id = 0; char_id < 10; char_id++) {
+                for (int char_id = 0; char_id < 20; char_id++) {
                     if (str[char_id] == '\0') {
                         break;
                     }
                     fileName[char_id] = str[char_id];
-                    fileName[10] = '\0';
+                    fileName[20] = '\0';
                 }
                 print_string(fileName, win_x + 30, line, 0x0000);
             }
             int real_size = 0;
             char real_size_str[16];
-            char ss[16];
+            char ss[512] = {0};
             read(currentFile, ss);
-            for (int char_id = 0; char_id < 509; char_id++) {
+            for (int char_id = 0; char_id < 511; char_id++) {
                 if (ss[char_id] == '\0') { break; }
                 real_size++;
             }
