@@ -1151,22 +1151,26 @@ void execute_commands(char* str) {
             play_sound(988); sleep(80); play_sound(1318); sleep(220); no_sound();
             continue;
         }
-        else if (str[i] == 'd' && str[i+1] == 'r' && str[i+2] == 's' && str[i+3] == 'q' && str[i+4] == '#') {
-            char* arg_ptr = &str[i+5];
+        else if (str[i] == 's' && str[i+1] == 'q' && str[i+2] == '#') {
+            char* arg_ptr = &str[i+3];
             int custom_x = parse_number(&arg_ptr);
             int custom_y = parse_number(&arg_ptr);
+            int custom_w = parse_number(&arg_ptr);
+            int custom_h = parse_number(&arg_ptr);
             if (custom_x < 0 || custom_x > 960) custom_x = 0;
             if (custom_y < 0 || custom_y > 728) custom_y = 0;
-            for (int y = custom_y; y < custom_y + 40; y++) {
-                for (int x = custom_x; x < custom_x + 40; x++) {
-                    gfx_memory[y * 1024 + x] = 0x0000;
+            for (int y = custom_y; y < custom_y + custom_h; y++) {
+                for (int x = custom_x; x < custom_x + custom_w; x++) {
+                    if (custom_h + y < 768) {
+                        gfx_memory[y * 1024 + x] = 0x0000;
+                    }
                 }
             }
             i = (int)(arg_ptr - str);
             continue;
         }
-        else if (str[i] == 's' && str[i+1] == 'q' && str[i+2] == '#' && str[i+3] == 'x' && str[i+4] == '#' && str[i+5] == 'y') {
-            i += 6;
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == 'q' && str[i+3] == '#' && str[i+4] == 'x' && str[i+5] == '#' && str[i+6] == 'y') {
+            i += 7;
             for (int y = 0; y < 40; y++) {
                 for (int x = 0; x < 40; x++) {
                     int screen_x = user_x + x;
@@ -2143,8 +2147,8 @@ void open_explorer() {
                 }
             }
         }
-        print_string("Explorer: F to format, Esc to close. Press 1-0 to open the file.", win_x + 28, win_y + 28, 0x0000);
-        print_string("Explorer: F to format, Esc to close. Press 1-0 to open the file.", win_x + 27, win_y + 27, 0xFFFF);
+        print_string("Explorer: F to format, Esc to close, 1-0 to open the file.", win_x + 28, win_y + 28, 0x0000);
+        print_string("Explorer: F to format, Esc to close, 1-0 to open the file.", win_x + 27, win_y + 27, 0xFFFF);
         print_string("File:", win_x + 35, win_y + 45, 0x0000);
         print_string("Id & sector:", win_x + 300, win_y + 45, 0x0000);
         print_string("Size:", (win_x + win_h) - 14, win_y + 45, 0x0000);
