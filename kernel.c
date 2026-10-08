@@ -497,11 +497,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (delta_x != 0 || delta_y != 0) {
                         if (tail == 0) { prev_cursor(); }
                         timer = 0;
-                        pos_x += delta_x / 2;
-                        pos_y -= delta_y / 2;
-                        if (pos_x > 1012) {pos_x = 1012;}
+                        pos_x += delta_x / 1.5;
+                        pos_y -= delta_y / 1.5;
+                        if (pos_x > 1022) {pos_x = 1022;}
                         if (pos_x < 0) {pos_x = 0;}
-                        if (pos_y > 756) {pos_y = 756;}
+                        if (pos_y > 767) {pos_y = 767;}
                         if (pos_y < 0) {pos_y = 0;}
                         draw_cursor(pos_x, pos_y);
                     }
@@ -726,22 +726,22 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (ascii_char == 'U' && km_mode == 1 && pos_y > 15 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_y -= 6;
+                        pos_y -= 10;
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'D' && km_mode == 1 && pos_y < 750 && drag == 0) {
+                    if (ascii_char == 'D' && km_mode == 1 && pos_y < 767 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_y += 6;
+                        pos_y += 10;
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'R' && km_mode == 1 && pos_x < 997 && drag == 0) {
+                    if (ascii_char == 'R' && km_mode == 1 && pos_x < 1022 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_x += 6;
+                        pos_x += 10;
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'L' && km_mode == 1 && pos_x > 15 && drag == 0) {
                         if (tail == 0) { prev_cursor(); }
-                        pos_x -= 6;
+                        pos_x -= 10;
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'G' && km_mode == 1 && drag == 0) {
@@ -1271,7 +1271,7 @@ void execute_commands(char* str) {
             error("Caused by user programm. Code: 0x03");
             continue;
         }
-        else if (str[i] == 's' && str[i+1] == 'h' && str[i+2] == 'n') {
+        else if (str[i] == 's' && str[i+1] == 'h' && str[i+2] == 't') {
             i += 3;
             shutdown();
             continue;
