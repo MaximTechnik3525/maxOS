@@ -454,7 +454,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         }
     }
     print_string("maxOS is starting up...", 425, 420, 0x05E5);
-    print_string("By MaximTechnik3525", 10, 10, 0x05E5);
+    print_string("By MaximTechnik3525", 10, 750, 0x05E5);
     update_screen();
     play_sound(100); sleep(250); play_sound(350); sleep(150); play_sound(500); sleep(150); play_sound(600); sleep(150); play_sound(100); sleep(300); no_sound();
     sleep(1700);
@@ -508,7 +508,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_cursor(pos_x, pos_y);
                     }
                     if (click == 1 && menuOpened == 0) { // MOUSE CLICKS
-                        if (pos_x <= 20 && pos_y >= 750 && drag == 0)  {
+                        if (pos_x <= 25 && pos_y >= 743 && drag == 0)  {
                             draw_menu();
                         }
                     }
@@ -721,7 +721,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'e') {
-                        if (pos_x <= 20 && pos_y >= 750)  {
+                        if (pos_x <= 25 && pos_y >= 743)  {
                             if (menuOpened == 0 && drag == 0) {
                                 draw_menu();
                             }
@@ -2320,8 +2320,13 @@ void draw_cursor(int mouse_x, int mouse_y) {
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
                 if (theme == 10) {
-                    if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x0000;}
+                    if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x10A2;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xCE79;}
+                    if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
+                }
+                if (theme == 11) {
+                    if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x79A0;}
+                    if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xFE4B;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
                 }
             }
@@ -2582,7 +2587,7 @@ void draw_window() {
     }
     for (int y = win_y; y < win_y + win_h; y++) {
         for (int x = win_x; x < win_x + win_w; x++) {
-            if (y == win_y || y == win_y + win_h - 1 || x == win_x || x == win_x + win_w - 1) {
+            if (y == win_y || y == win_y + win_h - 1 || x == win_x || x == win_x + win_w - 1 || x == 885 || x == 25) {
                 if (theme == 11) { gfx_memory[y * 1024 + x] = 0x9A40; }
                 if (theme == 1) {
                     gfx_memory[y * 1024 + x] = 0xC618;}
@@ -2655,7 +2660,7 @@ void draw_window() {
             int screen_x = 0;
             int screen_y = 0;
             screen_x = (win_x + 890) + x;
-            screen_y = (win_y + 4) + y;
+            screen_y = (win_y + 6) + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = clock12[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0x2100; }
@@ -2668,7 +2673,7 @@ void draw_window() {
     clock();
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
-            int screen_x = 5 + x;
+            int screen_x = 7 + x;
             int screen_y = 748 + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = clear_icon[y][x];
