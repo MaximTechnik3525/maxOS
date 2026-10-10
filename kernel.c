@@ -1831,7 +1831,7 @@ void progressbar(char* file_des, int xend) {
                     gfx_memory[y * 1024 + x] = 0x0DE5;
                 }
                 else if (y < 570) { gfx_memory[y * 1024 + x] = 0x03EA; }
-                else if (y < 575){ gfx_memory[y * 1024 + x] = 0x01A4; }
+                else if (y < 573){ gfx_memory[y * 1024 + x] = 0x01A4; }
             }
         }
         print_string(file_des, 420, 585, 0x0000);
@@ -1959,9 +1959,9 @@ void open_explorer() {
             char sector_str[10];
             int_str(file_id, file_id_str);
             int_str(currentFile, sector_str);
-            print_string(file_id_str, 410, line, 0x0000);
-            print_string("/", 430, line, 0x0000);
-            print_string(sector_str, 440, line, 0x0000);
+            print_string(file_id_str, 430, line, 0x0000);
+            print_string("/", 450, line, 0x0000);
+            print_string(sector_str, 460, line, 0x0000);
             line += 15;
             file_id++;
         }
@@ -2079,8 +2079,8 @@ void error(char* err) {
             gfx_memory[y * 1024 + x] = 0x9800;
         }
     }
-    print_string("maxOS critical error!", 456, 11, 0x0000);
-    print_string("maxOS critical error!", 455, 10, 0xFFFF);
+    print_string("maxOS critical error!", 436, 11, 0x0000);
+    print_string("maxOS critical error!", 435, 10, 0xFFFF);
     print_string(err, 11, 31, 0x0000);
     print_string(err, 10, 30, 0xFFFF);
     print_string("Your PC will be restarted in a few seconds...", 11, 51, 0x0000);
@@ -2102,7 +2102,7 @@ void error(char* err) {
         }
     }
     update_screen();
-    play_sound(100); sleep(350); no_sound(); sleep(100); play_sound(150); sleep(350); no_sound(100); play_sound(100); sleep(250); no_sound();
+    play_sound(100); sleep(400); no_sound(); sleep(100); play_sound(150); sleep(350); no_sound(100); sleep(100); play_sound(100); sleep(400); no_sound();
     sleep(5000); reboot();
 }
 int str_in(char* main_string, char* substring) {
