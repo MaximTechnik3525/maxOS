@@ -2459,9 +2459,18 @@ void draw_menu() {
     draw_offbtn(15, 470, 42, 12, 15, 470, 40, 10, 25, 472);
     draw_passbtn(15, 490, 42, 12, 15, 490, 40, 10, 25, 492);
     if (theme == 8 || theme == 11) { print_string("maxOS 3.9", 80, 360, 0x0000);}
-    else if (theme == 3) { print_string("maxOS 3.9 Abrikos", 40, 360, 0xFFFF);}
-    else if (theme == 4) { print_string("maxOS 3.9 Tora", 60, 360, 0xFFFF);}
-    else { print_string("maxOS 3.9", 80, 360, 0xFFFF); }
+    else if (theme == 3) {
+        print_string("maxOS 3.9 Abrikos", 41, 361, 0x0000);
+        print_string("maxOS 3.9 Abrikos", 40, 360, 0xFFFF);
+    }
+    else if (theme == 4) {
+        print_string("maxOS 3.9 Tora", 61, 361, 0x0000);
+        print_string("maxOS 3.9 Tora", 60, 360, 0xFFFF);
+    }
+    else {
+        print_string("maxOS 3.9", 81, 361, 0x0000);
+        print_string("maxOS 3.9", 80, 360, 0xFFFF);
+    }
 }
 void draw_window() {
     int win_x = 0;
