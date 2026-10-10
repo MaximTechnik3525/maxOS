@@ -623,13 +623,13 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();                    
                     }
-                    if (ascii_char == 'C' && drag == 0 && tail == 0) {
+                    if (ascii_char == 'T' && drag == 0 && tail == 0) {
                         tail = 1;
                         play_sound(1200); sleep(70); no_sound();
                         sleep(70);
                         play_sound(1200); sleep(70); no_sound();
                     }
-                    if (ascii_char == 'O' && drag == 0 && tail == 1) {
+                    if (ascii_char == 'G' && drag == 0 && tail == 1) {
                         tail = 0;
                         draw_window();
                         play_sound(200); sleep(70); no_sound();
@@ -1739,7 +1739,7 @@ void help() {
         print_string("1-0 and - to change system theme.", 170, 230, 0x0000);
         print_string("F1 to save and run, F2 to save and exit in notepad.", 170, 245, 0x0000);
         print_string("F to format disk to maxFS2 in explorer.", 170, 260, 0x0000);
-        print_string("F5/F6 to enable and disable cursor trail.", 170, 275, 0x0000);
+        print_string("F3/F4 to enable and disable cursor trail.", 170, 275, 0x0000);
 }
 
 void power() {
