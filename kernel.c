@@ -365,10 +365,9 @@ const unsigned char max_font[] = {
     0x70,0x18,0x18,0x0C,0x18,0x18,0x70,0x00, // 125 }
     0x76,0xDC,0x00,0x00,0x00,0x00,0x00,0x00  // 126 ~
 };
-int win_x = 150;
-int win_y = 140;
-int win_w = 740;
-int win_h = 550;
+
+int win_w = 1024;
+int win_h = 25;
 int pos_x = 512;
 int pos_y = 384;
 int theme = 1;
@@ -403,6 +402,7 @@ int disk_exists = 1;
 int timer = 0;
 int windowOpened = 1;
 int drawText = 1;
+int menuOpened = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
     ready_min = bcd_to_binary(raw_min2);
@@ -413,7 +413,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     if (mbi->framebuffer_pitch > 0) { REAL_PITCH = mbi->framebuffer_pitch / 2; }
     unsigned short width = mbi->framebuffer_width;
     unsigned short height = mbi->framebuffer_height;
-    ram_mb = (mbi->mem_upper / 1024) + 1;
+    ram_mb = ((mbi->mem_upper + 1023) / 1024) + 1;
     if (mbi->flags & (1 << 9)) {
         bootloader = (char*)(unsigned long)mbi->boot_loader_name;
     }
@@ -435,8 +435,16 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         disk_exists = 0;
         sectors = 5000;
     }
-    help_col = win_y + 35;
     init_mouse();
+    for (int y = 0; y < 768; y++) {
+        int row_offset = y << 10;
+        for (int x = 0; x < 1024; x++) {
+                if (((x ^ y) & 16) == 0) {
+                    gfx_memory[row_offset + x] = 0x10A2;
+                }
+                else { gfx_memory[row_offset + x] = 0x2124; }
+        }
+    }
     for (int y = 0; y < 768; y++) {
         for (int x = 0; x < 1024; x++) {
             if (y <= 390 && y >= 388) {
@@ -448,10 +456,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             else if (y <= 402 && y >= 397) {
                 gfx_memory[y * 1024 + x] = 0x01A4;
             }
-            else { gfx_memory[y * 1024 + x] = 0x0040; }
         }
     }
-    print_string("maxOS is starting up...", 425, 420, 0x05E5);
+    print_string("maxOS is starting up...", 425, 420, 0xFFFF);
     print_string("By MaximTechnik3525", 10, 10, 0x05E5);
     update_screen();
     play_sound(100); sleep(250); play_sound(350); sleep(150); play_sound(500); sleep(150); play_sound(600); sleep(150); play_sound(100); sleep(300); no_sound();
@@ -477,7 +484,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         }
         unsigned char status = inb(0x64);
         if (status & 0x01) {
-            if (status & 0x20 && drag == 0 && w_mode == 0) {
+            if (status & 0x20 && w_mode == 0) {
                 packet[0] = inb(0x60);
                 if ((packet[0] & 0x08) == 0) {continue;}
                 int timeout = 100000;
@@ -505,61 +512,50 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (pos_y < 0) {pos_y = 0;}
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (click == 1 && windowOpened == 1) { // MOUSE CLICKS
-                        if (pos_x <= 20 && pos_y >= 750)  {
-                            drawText = 0;
-                            win_x -= 55;
-                            win_y += 45;
-                            win_h -= 100;
-                            win_w -= 300;
-                            draw_window(); update_screen();
-                            sleep(50);
-                            win_x -= 55;
-                            win_y += 45;
-                            win_h -= 100;
-                            win_w -= 300;
-                            draw_window(); update_screen();
-                            sleep(50);
-                            win_x -= 35;
-                            win_y += 45;
-                            win_h -= 100;
-                            win_w -= 300;
-                            draw_window(); update_screen();
-                            sleep(50);
-                            windowOpened = 0;
-                            draw_window(); update_screen();
+                    if (click == 1 && menuOpened == 0) { // MOUSE CLICKS
+                        if (pos_x <= 20 && pos_y >= 750 && drag == 0)  {
+                            draw_menu();
                         }
-                        if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { pong(); }
-                        if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { power(); }
-                        if (pos_x <= win_x + 50 && pos_y <= win_y + 30 && pos_y >= win_y + 20 && pos_x >= win_x + 10) { help(); }
-                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && pos_y >= win_y + 10) { cpu_win(); }
-                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && pos_y >= win_y + 20) { filew(); }
-                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30 && pos_y >= win_y + 20) { open_explorer(); }
-                        if (pos_x >= win_x + 370 && pos_x <= win_x + 410 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { pass(); }
                     }
-                    else if (click == 1 && windowOpened == 0) {
+                    else if (click == 1 && menuOpened == 1) {
                         if (pos_x <= 20 && pos_y >= 750)  {
-                            windowOpened = 1;
-                            win_x += 55;
-                            win_y -= 45;
-                            win_h += 100;
-                            win_w += 300;
-                            draw_window(); update_screen();
-                            sleep(50);
-                            win_x += 55;
-                            win_y -= 45;
-                            win_h += 100;
-                            win_w += 300;
-                            draw_window(); update_screen();
-                            sleep(50);
-                            win_x += 35;
-                            win_y -= 45;
-                            win_h += 100;
-                            win_w += 300;
-                            draw_window(); update_screen();
-                            sleep(50);
-                            drawText = 1;
-                            draw_window(); update_screen();
+                            menuOpened = 0;
+                            draw_window();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y >= 370 && pos_y < 400 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            help();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 400 && pos_y <= 420 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            cpu_win();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 420 && pos_y <= 440 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            filew();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 440 && pos_y <= 460 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            open_explorer();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 460 && pos_y <= 480 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            pong();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 480 && pos_y <= 500 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            power();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 500 && pos_y <= 520 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            pass();
                         }
                     }
                 }   
@@ -645,26 +641,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         sleep(70);
                         play_sound(200); sleep(70); no_sound();
                     }
-                    if (ascii_char == 'R' && win_x < 270 && drag == 0 && km_mode == 0) {
-                        win_x += 30;
-                        draw_window();
-                    }
-                    if (ascii_char == 'L' && win_x > 30 && drag == 0 && km_mode == 0) {
-                        win_x-= 30;
-                        draw_window();
-                    }
-                    if (ascii_char == 'D' && win_y < 200 && drag == 0 && km_mode == 0) {
-                        win_y += 30;
-                        draw_window();
-                    }
-                    if (ascii_char == 'U' && win_y > 30 && drag == 0 && km_mode == 0) {
-                        win_y -= 30;
-                        draw_window();
-                    }
                     if (ascii_char == 'E') {
                         drag = 0;
                         explorer_opened = 0;
                         power_opened = 0;
+                        menuOpened = 0;
                         help_col = 65;
                         draw_window();
                         play_sound(100); sleep(70); no_sound();
@@ -720,90 +701,40 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_window();
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                     }
-                    if (ascii_char == 'T' && km_mode == 0 && drag == 0) {
-                        km_mode = 1;
-                        play_sound(100); sleep(60); play_sound(250); sleep(120); no_sound();
+                    if (ascii_char == '-' && drag == 0) {
+                        theme = 11;
+                        draw_window();
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                     }
-                    if (ascii_char == 'U' && km_mode == 1 && pos_y > 15 && drag == 0) {
+                    if (ascii_char == 'U' && pos_y > 12) {
                         if (tail == 0) { prev_cursor(); }
                         pos_y -= 10;
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'D' && km_mode == 1 && pos_y < 767 && drag == 0) {
+                    if (ascii_char == 'D' && pos_y < 756) {
                         if (tail == 0) { prev_cursor(); }
                         pos_y += 10;
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'R' && km_mode == 1 && pos_x < 1022 && drag == 0) {
+                    if (ascii_char == 'R' && pos_x < 1012) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x += 10;
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'L' && km_mode == 1 && pos_x > 15 && drag == 0) {
+                    if (ascii_char == 'L' && pos_x > 12) {
                         if (tail == 0) { prev_cursor(); }
                         pos_x -= 10;
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'G' && km_mode == 1 && drag == 0) {
-                        km_mode = 0;
-                        play_sound(50); sleep(60); play_sound(200); sleep(120); no_sound();
-                        draw_window();
-                    }
-                    if (ascii_char == 'e' && km_mode == 1 && drag == 0 && windowOpened == 1) {
+                    if (ascii_char == 'e') {
                         if (pos_x <= 20 && pos_y >= 750)  {
-                            drawText = 0;
-                            win_x -= 55;
-                            win_y += 45;
-                            win_h -= 100;
-                            win_w -= 300;
-                            draw_window(); update_screen();
-                            sleep(50);
-                            win_x -= 55;
-                            win_y += 45;
-                            win_h -= 100;
-                            win_w -= 300;
-                            draw_window(); update_screen();
-                            sleep(50);
-                            win_x -= 35;
-                            win_y += 45;
-                            win_h -= 100;
-                            win_w -= 300;
-                            draw_window(); update_screen();
-                            sleep(50);
-                            windowOpened = 0;
-                            draw_window();
-                        }
-                        if (pos_x >= win_x + 250 && pos_x <= win_x + 290 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { pong(); }
-                        if (pos_x >= win_x + 310 && pos_x <= win_x + 350 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { power(); }
-                        if (pos_x <= win_x + 50 && pos_y <= win_y + 30  && drag == 0 && pos_x >= win_x + 10 && pos_y >= win_y + 20) { help(); }
-                        if (pos_x >= win_x + 70 && pos_x <= win_x + 110 && pos_y <= win_y + 30 && drag == 0 && pos_y >= win_y + 20) { cpu_win(); }
-                        if (pos_x >= win_x + 130 && pos_x <= win_x + 170 && pos_y <= win_y + 30 && drag == 0 && pos_y >= win_y + 20) { filew(); }
-                        if (pos_x >= win_x + 190 && pos_x <= win_x + 230 && pos_y <= win_y + 30 && pos_y >= win_y + 20) { open_explorer(); }
-                        if (pos_x >= win_x + 370 && pos_x <= win_x + 410 && pos_y <= win_y + 30 && pos_y >= win_y + 20)  { pass(); }
-                    }
-                    else if (ascii_char == 'e' && km_mode == 1 && drag == 0 && windowOpened == 0) {
-                        if (pos_x <= 20 && pos_y >= 750)  {
-                            windowOpened = 1;
-                            win_x += 55;
-                            win_y -= 45;
-                            win_h += 100;
-                            win_w += 300;
-                            draw_window(); update_screen();
-                            sleep(50);
-                            win_x += 55;
-                            win_y -= 45;
-                            win_h += 100;
-                            win_w += 300;
-                            draw_window(); update_screen();
-                            sleep(50);
-                            win_x += 35;
-                            win_y -= 45;
-                            win_h += 100;
-                            win_w += 300;
-                            draw_window(); update_screen();
-                            sleep(50);
-                            drawText = 1;
-                            draw_window(); update_screen();
+                            if (menuOpened == 0) {
+                                draw_menu();
+                            }
+                            else {
+                                menuOpened = 0;
+                                draw_window();
+                            }
                         }
                     }
                     if (ascii_char == 'f' && explorer_opened == 1) {
@@ -829,26 +760,26 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
 int score = 0;
 void pong() {
         drag = 1;
-        pad_x = win_x + (win_w / 2) - (pad_w / 2);
-        pad_y = win_y + win_h - 40;
-        ball_x = win_x + (win_w / 2);
-        ball_y = win_y + 100;
+        pad_x = 140 + (140 / 2) - (pad_w / 2);
+        pad_y = 150 + 550 - 40;
+        ball_x = 140 + (600 / 2);
+        ball_y = 150 + 100;
         collisions = 0;
         ball_dx = 3;
         ball_dy = 3;
         score = 0;
-        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
                     gfx_memory[y * 1024 + x] = 0x0320;
                 }
-                else if (y < win_y + 25) {
+                else if (y < 181) {
                     gfx_memory[y * 1024 + x] = 0x3DEF;
                 }
-                else if (y < win_y + 31) {
+                else if (y < 186) {
                     gfx_memory[y * 1024 + x] = 0x24EE;
                 }
-                else if (y < win_y + 37) {
+                else if (y < 192) {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else {
@@ -856,10 +787,10 @@ void pong() {
                 }
             }
         }
-        int swin_x = win_x + 20;
-        int swin_y = win_y + 22;
-        print_string("Pong game - score: 0", win_x + 28, win_y + 28, 0x0000);
-        print_string("Pong game - score: 0", win_x + 27, win_y + 27, 0xFFFF);
+        int swin_x = 160;
+        int swin_y = 172;
+        print_string("Pong game - score: 0", 168, 183, 0x0000);
+        print_string("Pong game - score: 0", 167, 182, 0xFFFF);
         update_screen();
         while (1) {
             unsigned char status = inb(0x64);
@@ -879,7 +810,7 @@ void pong() {
                     play_sound(40); sleep(140); no_sound();
                     break;
                 }
-                if (ascii_char == 'd' && pad_x <= win_x + 630) {
+                if (ascii_char == 'd' && pad_x <= 770) {
                     for (int x = 0; x < pad_w; x++) {
                         for (int y = 0; y < pad_h; y++) {
                             int screen_x = pad_x + x;
@@ -898,7 +829,7 @@ void pong() {
                     sleep(12);
                     update_screen();
                 }
-                if (ascii_char == 'a' && pad_x >= win_x + 50) {
+                if (ascii_char == 'a' && pad_x >= 190) {
                     for (int x = 0; x < pad_w; x++) {
                         for (int y = 0; y < pad_h; y++) {
                             int screen_x = pad_x + x;
@@ -926,15 +857,15 @@ void pong() {
             }
             ball_x += ball_dx;
             ball_y += ball_dy;
-            if (ball_x < win_x + 30) {
+            if (ball_x < 170) {
                 ball_x = swin_x + 10;
                 ball_dx = -ball_dx;
                 play_sound(500);
                 sleep(100);
                 no_sound();
             }
-            if (ball_x > win_x + 710) {
-                ball_x = win_x + 710;
+            if (ball_x > 830) {
+                ball_x = 830;
                 ball_dx = -ball_dx;
                 play_sound(500);
                 sleep(100);
@@ -958,26 +889,29 @@ void pong() {
                     score++;
                     char str_score[10];
                     int_str(score, str_score);
-                    for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                        for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                            if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                                gfx_memory[y * 1024 + x] = 0x0320;
-                            }
-                            else if (y < win_y + 25) {
-                                gfx_memory[y * 1024 + x] = 0x3DEF;
-                            }
-                            else if (y < win_y + 31) {
-                                gfx_memory[y * 1024 + x] = 0x24EE;
-                            }
-                            else if (y < win_y + 37) {
-                                gfx_memory[y * 1024 + x] = 0x11EB;
-                            }
-                        }
-                    }
-                    print_string("Pong game - score:", win_x + 28, win_y + 28, 0x0000);
-                    print_string("Pong game - score:", win_x + 27, win_y + 27, 0xFFFF);
-                    print_string(str_score, win_x + 198, win_y + 28, 0x0000);
-                    print_string(str_score, win_x + 197, win_y + 27, 0xFFFF);
+         for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
+                    gfx_memory[y * 1024 + x] = 0x0320;
+                }
+                else if (y < 181) {
+                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                }
+                else if (y < 186) {
+                    gfx_memory[y * 1024 + x] = 0x24EE;
+                }
+                else if (y < 192) {
+                    gfx_memory[y * 1024 + x] = 0x11EB;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xF77D;
+                }
+            }
+        }
+                    print_string("Pong game - score:", 168, 183, 0x0000);
+                    print_string("Pong game - score:", 167, 182, 0xFFFF);
+                    print_string(str_score, 140 + 198, 183, 0x0000);
+                    print_string(str_score, 140 + 197, 182, 0xFFFF);
                     if (collisions == 5) {
                         collisions = 0;
                         ball_dx -= 1;
@@ -1110,32 +1044,6 @@ void execute_commands(char* str) {
             draw_window();
             continue;
         }
-        else if (str[i] == 'w' && str[i+1] == 'r' && str[i+2] == 'i' && str[i+3] == 'g') {
-            win_x += 70; i += 4;
-            draw_window();
-            continue;
-        }
-        else if (str[i] == 'w' && str[i+1] == 'l' && str[i+2] == 'e' && str[i+3] == 'f') {
-            win_x -= 70; i += 4;
-            draw_window();
-            continue;
-        }
-        else if (str[i] == 'w' && str[i+1] == 'u' && str[i+2] == 'p') {
-            win_y -= 70; i += 3;
-            draw_window();
-            continue;
-        }
-        else if (str[i] == 'w' && str[i+1] == 'd' && str[i+2] == 'o' && str[i+3] == 'w') {
-            win_y += 70; i += 4;
-            draw_window();
-            continue;
-        }
-        else if (str[i] == 'w' && str[i+1] == 'c' && str[i+2] == 'e' && str[i+3] == 'n') {
-            i += 4;
-            win_x = 140; win_y = 150;
-            draw_window();
-            continue;
-        }
         else if (str[i] == 'b' && str[i+1] == 'e' && str[i+2] == 'e' && str[i+3] == 'p' && str[i+4] == '#') {
             char* arg_ptr = &str[i+5];
             int freq = parse_number(&arg_ptr);
@@ -1181,8 +1089,8 @@ void execute_commands(char* str) {
         }
         else if (str[i] == 'o' && str[i+1] == 'u' && str[i+2] == 't' && str[i+3] == 't' && str[i+4] == '#') {
             char* arg_ptr = &str[i + 5];
-            int text_x = win_x + 30;
-            int text_y = win_y + 45;
+            int text_x = 170;
+            int text_y = 200;
             while (*arg_ptr != ' ' && *arg_ptr != '\0' && *arg_ptr != '\n' && *arg_ptr != '\r') {
                 draw_char(*arg_ptr, text_x, text_y, 0x0000);
                 text_x += 9;
@@ -1302,34 +1210,27 @@ void execute_commands(char* str) {
         }
         else if (str[i] == 'w' && str[i+1] == 'i' && str[i+2] == 'n') {
             i += 3;
-                    for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) 
-                    {
-                        for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) 
-                        {
-                            if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) 
-                            {
-                                gfx_memory[y * 1024 + x] = 0x0320;
-                            }
-                            else if (y < win_y + 25) 
-                            {
-                                gfx_memory[y * 1024 + x] = 0x3DEF;
-                            }
-                            else if (y < win_y + 31) 
-                            {
-                                gfx_memory[y * 1024 + x] = 0x24EE;
-                            }
-                            else if (y < win_y + 37) 
-                            {
-                                gfx_memory[y * 1024 + x] = 0x11EB;
-                            }
-                            else 
-                            {
-                                gfx_memory[y * 1024 + x] = 0xF77D;
-                            }
-                        }
-                    }
-                    print_string("Application", win_x + 28, win_y + 28, 0x0000);
-                    print_string("Application", win_x + 27, win_y + 27, 0xFFFF);
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
+                    gfx_memory[y * 1024 + x] = 0x0320;
+                }
+                else if (y < 181) {
+                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                }
+                else if (y < 186) {
+                    gfx_memory[y * 1024 + x] = 0x24EE;
+                }
+                else if (y < 192) {
+                    gfx_memory[y * 1024 + x] = 0x11EB;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xF77D;
+                }
+            }
+        }
+                    print_string("Application", 168, 183, 0x0000);
+                    print_string("Application", 167, 182, 0xFFFF);
         }
         else if (str[i] == 'f' && str[i+1] == 's' && str[i+2] == 'c' && str[i+3] == 'r' && str[i+4] == '#') {
             char* arg_ptr = &str[i+5];
@@ -1370,69 +1271,55 @@ void open_file(int sector)
     }
     else
     {
-        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) 
-        {
-            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) 
-            {
-                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) 
-                {
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
                     gfx_memory[y * 1024 + x] = 0x0320;
                 }
-                else if (y < win_y + 25) 
-                {
+                else if (y < 181) {
                     gfx_memory[y * 1024 + x] = 0x3DEF;
                 }
-                else if (y < win_y + 31) 
-                {
+                else if (y < 186) {
                     gfx_memory[y * 1024 + x] = 0x24EE;
                 }
-                else if (y < win_y + 37) 
-                {
+                else if (y < 192) {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
-                else 
-                {
+                else {
                     gfx_memory[y * 1024 + x] = 0xF77D;
                 }
             }
         }
-        print_string("Text file", win_x + 28, win_y + 28, 0x0000);
-        print_string("Text file", win_x + 27, win_y + 27, 0xFFFF);
-        print_string(file_output, win_x + 30, win_y + 45, text_col);
-        print_string("Press Esc to close this window.", win_x + 30, win_y + 510, 0x0000);
+        print_string("Text file", 168, 183, 0x0000);
+        print_string("Text file", 167, 182, 0xFFFF);
+        print_string(file_output, 170, 200, text_col);
+        print_string("Press Esc to close this window.", 170, 150 + 510, 0x0000);
     }
 }
 else {
-        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) 
-        {
-            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) 
-            {
-                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) 
-                {
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
                     gfx_memory[y * 1024 + x] = 0x0320;
                 }
-                else if (y < win_y + 25) 
-                {
+                else if (y < 181) {
                     gfx_memory[y * 1024 + x] = 0x3DEF;
                 }
-                else if (y < win_y + 31) 
-                {
+                else if (y < 186) {
                     gfx_memory[y * 1024 + x] = 0x24EE;
                 }
-                else if (y < win_y + 37) 
-                {
+                else if (y < 192) {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
-                else 
-                {
+                else {
                     gfx_memory[y * 1024 + x] = 0xF77D;
                 }
             }
         }
-        print_string("No file", win_x + 28, win_y + 28, 0x0000);
-        print_string("No file", win_x + 27, win_y + 27, 0xFFFF);
-        print_string("File not found or empty!", win_x + 30, win_y + 45, text_col);
-        print_string("Press Esc to close this window.", win_x + 30, win_y + 510, 0x0000);
+        print_string("No file", 168, 183, 0x0000);
+        print_string("No file", 167, 182, 0xFFFF);
+        print_string("File not found or empty!", 170, 200, text_col);
+        print_string("Press Esc to close this window.", 170, 660, 0x0000);
 }
 }
 int str_cmp(char* str1, char* str2) {
@@ -1476,495 +1363,319 @@ void read(int sector, char* output) {
 int enter_counter = 0;
 int symbols_counter = 0;
 void filew() {
-    if (1 != 0) {
-        char str[512] = {0};
-        if (disk_exists == 1) {
-            read((sectors - 1), str);
-        }
-        int help_col = win_y + 45;
-        w_mode = 1;
-        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < win_y + 25) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < win_y + 31) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < win_y + 37) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
+    char str[512] = {0};
+    if (disk_exists == 1) {
+        read((sectors - 1), str);
+    }
+    w_mode = 1;
+    for (int y = 177; y < 687; y++) {
+        for (int x = 160; x < 850; x++) {
+            if (y == 177 || y == 686 || x == 160 || x == 849) {
+                gfx_memory[y * 1024 + x] = 0x0320;
+            }
+            else if (y < 181) {
+                gfx_memory[y * 1024 + x] = 0x3DEF;
+            }
+            else if (y < 186) {
+                gfx_memory[y * 1024 + x] = 0x24EE;
+            }
+            else if (y < 192) {
+                gfx_memory[y * 1024 + x] = 0x11EB;
+            }
+            else {
+                gfx_memory[y * 1024 + x] = 0xF77D;
             }
         }
-                            if (str_cmp(ftext, str)) {
-                                if (str_in(ftext, "#app#")) {
-                                    print_string("Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                                else {
-                                    print_string("Notepad: text file", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                            }
-                            else {
-                                if (str_in(ftext, "#app#")) {
-                                    print_string("*Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("*Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                                else {
-                                    print_string("*Notepad: text file", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("*Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                            }
-        print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 440, 0x0000);
-        print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 455, 0x0000);
-        print_string("To make app write '#app#'.", win_x + 30, help_col + 470, 0x0000);
+    }
+    if (str_cmp(ftext, str)) {
+        if (str_in(ftext, "#app#")) {
+            print_string("Notepad: scripting", 168, 183, 0x0000);
+            print_string("Notepad: scripting", 167, 182, 0xFFFF);
+        }
+        else {
+            print_string("Notepad: text file", 168, 183, 0x0000);
+            print_string("Notepad: text file", 167, 182, 0xFFFF);
+        }
+    }
+    else {
+        if (str_in(ftext, "#app#")) {
+            print_string("*Notepad: scripting", 168, 183, 0x0000);
+            print_string("*Notepad: scripting", 167, 182, 0xFFFF);
+        }
+        else {
+            print_string("*Notepad: text file", 168, 183, 0x0000);
+            print_string("*Notepad: text file", 167, 182, 0xFFFF);
+        }
+    }
+    print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", 170, 640, 0x0000);
+    print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", 170, 655, 0x0000);
+    print_string("To make app write '#app#'.", 170, 670, 0x0000);
+    update_screen();
+    print_string(ftext, 170, 200, text_col);
+    while (1) {
         update_screen();
-        print_string(ftext, win_x + 30, help_col, text_col);
-        while (1) {
-            update_screen();
-            unsigned char status = inb(0x64);
-            if (status & 0x01) {
-                if (status & 0x20) {
-                    inb(0x60);
-                    continue;
-                }
-                unsigned char scan_code = inb(0x60);
-                if (scan_code == 0x2A || scan_code == 0x36) { shift_p = 1; }
-                else if (scan_code == 0xAA || scan_code == 0xB6) { shift_p = 0; }
-                if (scan_code < 0x80 && w_mode == 1 && drag != 2 && scan_code != 0x2A && scan_code != 0x36 && scan_code != 0xAA && scan_code != 0xB6) {
-                    char ascii_char = scan_code_to_ascii(scan_code);
-                    if (shift_p == 0 && ascii_char != 'E' && ascii_char != 'F' && ascii_char != 'B' && ascii_char != 'S' && ascii_char != 'U' && ascii_char != 'D' && ascii_char != 'L' && ascii_char != 'R' && ascii_char != 'T' && ascii_char != 'G' && ascii_char != 'C' && ascii_char != 'O' && ascii_char != 'M' && ascii_char != 'N') {
-                        if (symbols_counter < 70 && textid < 509) {
-                            ftext[textid] = ascii_char;
-                            textid++;
-                            ftext[textid] = '\0';
-                            symbols_counter++;
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                    else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xF77D;
-                                    }
-                                }
-                            }
-                            print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 440, 0x0000);
-                            print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 455, 0x0000);
-                            print_string("To make app write '#app#'.", win_x + 30, help_col + 470, 0x0000);
-                            print_string(ftext, win_x + 30, help_col, text_col);
-                            read((sectors - 1), str);
-                            if (str_cmp(ftext, str)) {
-                                if (str_in(ftext, "#app#")) {
-                                    print_string("Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                                else {
-                                    print_string("Notepad: text file", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                            }
-                            else {
-                                if (str_in(ftext, "#app#")) {
-                                    print_string("*Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("*Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                                else {
-                                    print_string("*Notepad: text file", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("*Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                            }
-                            print_string(ftext, win_x + 30, help_col, text_col);
-                            update_screen();
-                        }
-                    }
-                    else if (ascii_char == 'B') {
-                        if (textid > 0) {
-                            textid--;
-                            
-                            if (ftext[textid] == '\n')
-                            {
-                                enter_counter--;
-                                int str_id = textid - 1;
-                                symbols_counter = 0;
-                                while (str_id >= 0 && ftext[str_id] != '\n') {
-                                    symbols_counter++;
-                                    str_id--;
-                                }
-                            }
-                            else {
-                                symbols_counter--;
-                            }
-                            ftext[textid] = '\0';
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                    else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xF77D;
-                                    }
-                                }
-                            }
-                            print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 440, 0x0000);
-                            print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 455, 0x0000);
-                            print_string("To make app write '#app#'.", win_x + 30, help_col + 470, 0x0000); 
-                            print_string(ftext, win_x + 30, help_col, text_col);
-                            read((sectors - 1), str);
-                            if (str_cmp(ftext, str)) {
-                                if (str_in(ftext, "#app#")) {
-                                    print_string("Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                                else {
-                                    print_string("Notepad: text file", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                            }
-                            else {
-                                if (str_in(ftext, "#app#")) {
-                                    print_string("*Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("*Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                                else {
-                                    print_string("*Notepad: text file", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("*Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                            }
-                            update_screen();
-                        }
-                    }
-                    if (shift_p == 1 && ascii_char != '00') {
-                        if (symbols_counter < 70 && textid < 509) {
-                            symbols_counter++;
-                            if (ascii_char == '=') {
-                                ftext[textid] = '+';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == '1') {
-                                ftext[textid] = '!';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == '2') {
-                                ftext[textid] = '@';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == '3') {
-                                ftext[textid] = '#';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == '4') {
-                                ftext[textid] = '$';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == '5') {
-                                ftext[textid] = '%';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == '6') {
-                                ftext[textid] = '^';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == '7') {
-                                ftext[textid] = '&';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == '8') {
-                                ftext[textid] = '*';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == '9') {
-                                ftext[textid] = '(';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == '0') {
-                                ftext[textid] = ')';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'F') {
-                                text_col = 0x0000;
-                                print_string(ftext, win_x + 30, help_col, text_col);
-                            }
-                            if (ascii_char == 'S') {
-                                text_col = 0x0112;
-                                print_string(ftext, win_x + 30, help_col, text_col);
-                            }
-                            if (ascii_char == 'T') {
-                                text_col = 0x9000;
-                                print_string(ftext, win_x + 30, help_col, text_col);
-                            }
-                            if (ascii_char == 'G') {
-                                text_col = 0x9400;
-                                print_string(ftext, win_x + 30, help_col, text_col);
-                            }
-                            if (ascii_char == 'C') {
-                                text_col = 0x0320;
-                                print_string(ftext, win_x + 30, help_col, text_col);
-                            }
-                            if (ascii_char == 'q') {
-                                ftext[textid] = 'Q';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'w') {
-                                ftext[textid] = 'W';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'e') {
-                                ftext[textid] = 'E';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'r') {
-                                ftext[textid] = 'R';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 't') {
-                                ftext[textid] = 'T';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'y') {
-                                ftext[textid] = 'Y';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'u') {
-                                ftext[textid] = 'U';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'i') {
-                                ftext[textid] = 'I';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'o') {
-                                ftext[textid] = 'O';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'p') {
-                                ftext[textid] = 'P';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'a') {
-                                ftext[textid] = 'A';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 's') {
-                                ftext[textid] = 'S';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'd') {
-                                ftext[textid] = 'D';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'f') {
-                                ftext[textid] = 'F';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'g') {
-                                ftext[textid] = 'G';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'h') {
-                                ftext[textid] = 'H';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'j') {
-                                ftext[textid] = 'J';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'k') {
-                                ftext[textid] = 'K';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'l') {
-                                ftext[textid] = 'L';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'z') {
-                                ftext[textid] = 'Z';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'x') {
-                                ftext[textid] = 'X';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'c') {
-                                ftext[textid] = 'C';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'v') {
-                                ftext[textid] = 'V';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'b') {
-                                ftext[textid] = 'B';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'n') {
-                                ftext[textid] = 'N';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            if (ascii_char == 'm') {
-                                ftext[textid] = 'M';
-                                textid++;
-                                ftext[textid] = '\0';
-                            }
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                    else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xF77D;
-                                    }
-                                }
-                            }
-                            print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", win_x + 30, help_col + 440, 0x0000);
-                            print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", win_x + 30, help_col + 455, 0x0000);
-                            print_string("To make app write '#app#'.", win_x + 30, help_col + 470, 0x0000);
-                            print_string(ftext, win_x + 30, help_col, text_col);
-                            read((sectors - 1), str);
-                            if (str_cmp(ftext, str)) {
-                                if (str_in(ftext, "#app#")) {
-                                    print_string("Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                                else {
-                                    print_string("Notepad: text file", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                            }
-                            else {
-                                if (str_in(ftext, "#app#")) {
-                                    print_string("*Notepad: scripting", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("*Notepad: scripting", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                                else {
-                                    print_string("*Notepad: text file", win_x + 28, win_y + 28, 0x0000);
-                                    print_string("*Notepad: text file", win_x + 27, win_y + 27, 0xFFFF);
-                                }
-                            }
-                            print_string(ftext, win_x + 30, help_col, text_col);
-                            update_screen();
-                        }
-                    }
-                    else if (shift_p == 0 && ascii_char == '\E' && enter_counter < 24) {
-                        ftext[textid] = '\n';
+        unsigned char status = inb(0x64);
+        if (status & 0x01) {
+            if (status & 0x20) {
+                inb(0x60);
+                continue;
+            }
+            unsigned char scan_code = inb(0x60);
+            if (scan_code == 0x2A || scan_code == 0x36) { shift_p = 1; }
+            else if (scan_code == 0xAA || scan_code == 0xB6) { shift_p = 0; }
+            if (scan_code < 0x80 && w_mode == 1 && drag != 2 && scan_code != 0x2A && scan_code != 0x36 && scan_code != 0xAA && scan_code != 0xB6) {
+                char ascii_char = scan_code_to_ascii(scan_code);
+                if (shift_p == 0 && ascii_char != 'E' && ascii_char != 'F' && ascii_char != 'B' && ascii_char != 'S' && ascii_char != 'U' && ascii_char != 'D' && ascii_char != 'L' && ascii_char != 'R' && ascii_char != 'T' && ascii_char != 'G' && ascii_char != 'C' && ascii_char != 'O' && ascii_char != 'M' && ascii_char != 'N') {
+                    if (symbols_counter < 70 && textid < 509) {
+                        ftext[textid] = ascii_char;
                         textid++;
                         ftext[textid] = '\0';
-                        enter_counter++;
-                        symbols_counter = 0;
-                    }
-                    else if (ascii_char == 'F') {
-                        if (createdFiles < 10 && disk_exists == 1) {
-                            write(ftext, sectors);
-                            play_sound(800); sleep(100); no_sound();
-                            play_sound(1200); sleep(120); no_sound();
-                            w_mode = 0;
-                            draw_window();
-                            open_file(sectors);
-                            sectors++;
-                            createdFiles++;
-                            break;
+                        symbols_counter++;
+                        for (int y = 177; y < 687; y++) {
+                            for (int x = 160; x < 850; x++) {
+                                if (y == 177 || y == 686 || x == 160 || x == 849) {
+                                    gfx_memory[y * 1024 + x] = 0x0320;
+                                }
+                                else if (y < 181) {
+                                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                                }
+                                else if (y < 186) {
+                                    gfx_memory[y * 1024 + x] = 0x24EE;
+                                }
+                                else if (y < 192) {
+                                    gfx_memory[y * 1024 + x] = 0x11EB;
+                                }
+                                else {
+                                    gfx_memory[y * 1024 + x] = 0xF77D;
+                                }
+                            }
+                        }
+                        if (str_cmp(ftext, str)) {
+                            if (str_in(ftext, "#app#")) {
+                                print_string("Notepad: scripting", 168, 183, 0x0000);
+                                print_string("Notepad: scripting", 167, 182, 0xFFFF);
+                            }
+                            else {
+                                print_string("Notepad: text file", 168, 183, 0x0000);
+                                print_string("Notepad: text file", 167, 182, 0xFFFF);
+                            }
                         }
                         else {
-                            play_sound(100); sleep(60); no_sound();
-                            sleep(60);
-                            play_sound(100); sleep(60); no_sound();
+                            if (str_in(ftext, "#app#")) {
+                                print_string("*Notepad: scripting", 168, 183, 0x0000);
+                                print_string("*Notepad: scripting", 167, 182, 0xFFFF);
+                            }
+                            else {
+                                print_string("*Notepad: text file", 168, 183, 0x0000);
+                                print_string("*Notepad: text file", 167, 182, 0xFFFF);
+                            }
                         }
+                        print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", 170, 640, 0x0000);
+                        print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", 170, 655, 0x0000);
+                        print_string("To make app write '#app#'.", 170, 670, 0x0000);
+                        update_screen();
+                        print_string(ftext, 170, 200, text_col);
                     }
-                    else if (ascii_char == 'S') {
-                        if (createdFiles < 10 && disk_exists == 1) {
-                            write(ftext, sectors);
-                            play_sound(800); sleep(100); no_sound();
-                            play_sound(1200); sleep(120); no_sound();
-                            w_mode = 0;
-                            draw_window();
-                            sectors++;
-                            createdFiles++;
-                            break;
+                }
+                else if (ascii_char == 'B') {
+                    if (textid > 0) {
+                        textid--;
+                        if (ftext[textid] == '\n') {
+                            enter_counter--;
+                            int str_id = textid - 1;
+                            symbols_counter = 0;
+                            while (str_id >= 0 && ftext[str_id] != '\n') {
+                                symbols_counter++;
+                                str_id--;
+                            }
                         }
                         else {
-                            play_sound(100); sleep(60); no_sound();
-                            sleep(60);
-                            play_sound(100); sleep(60); no_sound();
+                            symbols_counter--;
                         }
+                        ftext[textid] = '\0';
+                        for (int y = 177; y < 687; y++) {
+                            for (int x = 160; x < 850; x++) {
+                                if (y == 177 || y == 686 || x == 160 || x == 849) {
+                                    gfx_memory[y * 1024 + x] = 0x0320;
+                                }
+                                else if (y < 181) {
+                                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                                }
+                                else if (y < 186) {
+                                    gfx_memory[y * 1024 + x] = 0x24EE;
+                                }
+                                else if (y < 192) {
+                                    gfx_memory[y * 1024 + x] = 0x11EB;
+                                }
+                                else {
+                                    gfx_memory[y * 1024 + x] = 0xF77D;
+                                }
+                            }
+                        }
+                        if (str_cmp(ftext, str)) {
+                            if (str_in(ftext, "#app#")) {
+                                print_string("Notepad: scripting", 168, 183, 0x0000);
+                                print_string("Notepad: scripting", 167, 182, 0xFFFF);
+                            }
+                            else {
+                                print_string("Notepad: text file", 168, 183, 0x0000);
+                                print_string("Notepad: text file", 167, 182, 0xFFFF);
+                            }
+                        }
+                        else {
+                            if (str_in(ftext, "#app#")) {
+                                print_string("*Notepad: scripting", 168, 183, 0x0000);
+                                print_string("*Notepad: scripting", 167, 182, 0xFFFF);
+                            }
+                            else {
+                                print_string("*Notepad: text file", 168, 183, 0x0000);
+                                print_string("*Notepad: text file", 167, 182, 0xFFFF);
+                            }
+                        }
+                        print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", 170, 640, 0x0000);
+                        print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", 170, 655, 0x0000);
+                        print_string("To make app write '#app#'.", 170, 670, 0x0000);
+                        update_screen();
+                        print_string(ftext, 170, 200, text_col);
                     }
-                    else if (ascii_char == 'E') {
-                        play_sound(100); sleep(70); no_sound();
-                        play_sound(40); sleep(140); no_sound();
+                }
+                                if (shift_p == 1 && ascii_char != '00') {
+                    if (symbols_counter < 70 && textid < 509) {
+                        symbols_counter++;
+                        if (ascii_char == '=') { ftext[textid] = '+'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == '1') { ftext[textid] = '!'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == '2') { ftext[textid] = '@'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == '3') { ftext[textid] = '#'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == '4') { ftext[textid] = '$'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == '5') { ftext[textid] = '%'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == '6') { ftext[textid] = '^'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == '7') { ftext[textid] = '&'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == '8') { ftext[textid] = '*'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == '9') { ftext[textid] = '('; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == '0') { ftext[textid] = ')'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'F') { text_col = 0x0000; print_string(ftext, 170, 200, text_col); }
+                        if (ascii_char == 'S') { text_col = 0x0112; print_string(ftext, 170, 200, text_col); }
+                        if (ascii_char == 'T') { text_col = 0x9000; print_string(ftext, 170, 200, text_col); }
+                        if (ascii_char == 'G') { text_col = 0x9400; print_string(ftext, 170, 200, text_col); }
+                        if (ascii_char == 'C') { text_col = 0x0320; print_string(ftext, 170, 200, text_col); }
+                        if (ascii_char == 'q') { ftext[textid] = 'Q'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'w') { ftext[textid] = 'W'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'e') { ftext[textid] = 'E'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'r') { ftext[textid] = 'R'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 't') { ftext[textid] = 'T'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'y') { ftext[textid] = 'Y'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'u') { ftext[textid] = 'U'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'i') { ftext[textid] = 'I'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'o') { ftext[textid] = 'O'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'p') { ftext[textid] = 'P'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'a') { ftext[textid] = 'A'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 's') { ftext[textid] = 'S'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'd') { ftext[textid] = 'D'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'f') { ftext[textid] = 'F'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'g') { ftext[textid] = 'G'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'h') { ftext[textid] = 'H'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'j') { ftext[textid] = 'J'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'k') { ftext[textid] = 'K'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'l') { ftext[textid] = 'L'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'z') { ftext[textid] = 'Z'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'x') { ftext[textid] = 'X'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'c') { ftext[textid] = 'C'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'v') { ftext[textid] = 'V'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'b') { ftext[textid] = 'B'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'n') { ftext[textid] = 'N'; textid++; ftext[textid] = '\0'; }
+                        if (ascii_char == 'm') { ftext[textid] = 'M'; textid++; ftext[textid] = '\0'; }
+                        for (int y = 177; y < 687; y++) {
+                            for (int x = 160; x < 850; x++) {
+                                if (y == 177 || y == 686 || x == 160 || x == 849) {
+                                    gfx_memory[y * 1024 + x] = 0x0320;
+                                }
+                                else if (y < 181) {
+                                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                                }
+                                else if (y < 186) {
+                                    gfx_memory[y * 1024 + x] = 0x24EE;
+                                }
+                                else if (y < 192) {
+                                    gfx_memory[y * 1024 + x] = 0x11EB;
+                                }
+                                else {
+                                    gfx_memory[y * 1024 + x] = 0xF77D;
+                                }
+                            }
+                        }
+                        if (str_cmp(ftext, str)) {
+                            if (str_in(ftext, "#app#")) {
+                                print_string("Notepad: scripting", 168, 183, 0x0000);
+                                print_string("Notepad: scripting", 167, 182, 0xFFFF);
+                            }
+                            else {
+                                print_string("Notepad: text file", 168, 183, 0x0000);
+                                print_string("Notepad: text file", 167, 182, 0xFFFF);
+                            }
+                        }
+                        else {
+                            if (str_in(ftext, "#app#")) {
+                                print_string("*Notepad: scripting", 168, 183, 0x0000);
+                                print_string("*Notepad: scripting", 167, 182, 0xFFFF);
+                            }
+                            else {
+                                print_string("*Notepad: text file", 168, 183, 0x0000);
+                                print_string("*Notepad: text file", 167, 182, 0xFFFF);
+                            }
+                        }
+                        print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", 170, 640, 0x0000);
+                        print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", 170, 655, 0x0000);
+                        print_string("To make app write '#app#'.", 170, 670, 0x0000);
+                        update_screen();
+                        print_string(ftext, 170, 200, text_col);
+                    }
+                }
+                else if (ascii_char == '\E') {
+                    if (textid2 < 10) {
+                    }
+                }
+                else if (ascii_char == 'F') {
+                    if (createdFiles < 10 && disk_exists == 1) {
+                        write(ftext, sectors);
+                        play_sound(800); sleep(100); no_sound();
+                        play_sound(1200); sleep(120); no_sound();
                         w_mode = 0;
-                        drag = 0;
                         draw_window();
+                        open_file(sectors);
+                        sectors++;
+                        createdFiles++;
                         break;
                     }
+                    else {
+                        play_sound(100); sleep(60); no_sound();
+                        sleep(60);
+                        play_sound(100); sleep(60); no_sound();
+                    }
+                }
+                else if (ascii_char == 'S') {
+                    if (createdFiles < 10 && disk_exists == 1) {
+                        write(ftext, sectors);
+                        play_sound(800); sleep(100); no_sound();
+                        play_sound(1200); sleep(120); no_sound();
+                        w_mode = 0;
+                        draw_window();
+                        sectors++;
+                        createdFiles++;
+                        break;
+                    }
+                    else {
+                        play_sound(100); sleep(60); no_sound();
+                        sleep(60);
+                        play_sound(100); sleep(60); no_sound();
+                    }
+                }
+                else if (ascii_char == 'E') {
+                    play_sound(100); sleep(70); no_sound();
+                    play_sound(40); sleep(140); no_sound();
+                    w_mode = 0;
+                    drag = 0;
+                    draw_window();
+                    break;
                 }
             }
         }
@@ -1972,20 +1683,19 @@ void filew() {
 }
 
 void help() {
-        int help_col = win_y + 45;
         drag = 1;
-        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
                     gfx_memory[y * 1024 + x] = 0x0320;
                 }
-                else if (y < win_y + 25) {
+                else if (y < 181) {
                     gfx_memory[y * 1024 + x] = 0x3DEF;
                 }
-                else if (y < win_y + 31) {
+                else if (y < 186) {
                     gfx_memory[y * 1024 + x] = 0x24EE;
                 }
-                else if (y < win_y + 37) {
+                else if (y < 192) {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else {
@@ -1993,43 +1703,31 @@ void help() {
                 }
             }
         }
-        // int swin_x = win_x + 20;
-        // int swin_y = win_y + 22;
-        // int swin_w = win_w - 40;
-        // gfx_memory[swin_y * 1024 + swin_x] = 0x0000;
-        // gfx_memory[swin_y * 1024 + (swin_x + 1)] = 0x0000;
-        // gfx_memory[(swin_y + 1) * 1024 + swin_x] = 0x0000;
-        // int right_edges = swin_x + swin_w - 1;
-        // gfx_memory[swin_y * 1024 + right_edges] = 0xFFFF;
-        // gfx_memory[swin_y * 1024 + (right_edges + 1)] = 0xFFFF;
-        // gfx_memory[(swin_y + 1) * 1024 + right_edges] = 0xFFFF;
-        print_string("Help", win_x + 28, win_y + 28, 0x0000);
-        print_string("Help", win_x + 27, win_y + 27, 0xFFFF);
-        print_string("Arrows to move window.", win_x + 30, help_col, 0x0000);
-        print_string("Esc to redraw desktop and close windows.", win_x + 30, help_col + 15, 0x0000);
-        print_string("1-0 to change system theme.", win_x + 30, help_col + 30, 0x0000);
-        print_string("F1 to save and run, F2 to save and exit in notepad.", win_x + 30, help_col + 45, 0x0000);
-        print_string("F to format disk to maxFS2 in explorer.", win_x + 30, help_col + 60, 0x0000);
-        print_string("F3/F4 to enable and disable cursor control with keyboard.", win_x + 30, help_col + 75, 0x0000);
-        print_string("F5/F6 to enable and disable cursor trail.", win_x + 30, help_col + 90, 0x0000);
+        print_string("Help", 168, 183, 0x0000);
+        print_string("Help", 167, 182, 0xFFFF);
+        print_string("Mouse or arrows to move cursor.", 170, 200, 0x0000);
+        print_string("Esc to redraw desktop and close windows.", 170, 215, 0x0000);
+        print_string("1-0 and - to change system theme.", 170, 230, 0x0000);
+        print_string("F1 to save and run, F2 to save and exit in notepad.", 170, 245, 0x0000);
+        print_string("F to format disk to maxFS2 in explorer.", 170, 260, 0x0000);
+        print_string("F5/F6 to enable and disable cursor trail.", 170, 275, 0x0000);
 }
 
 void power() {
-        int help_col = win_y + 45;
         drag = 1;
         power_opened = 1;
-        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
                     gfx_memory[y * 1024 + x] = 0x0320;
                 }
-                else if (y < win_y + 25) {
+                else if (y < 181) {
                     gfx_memory[y * 1024 + x] = 0x3DEF;
                 }
-                else if (y < win_y + 31) {
+                else if (y < 186) {
                     gfx_memory[y * 1024 + x] = 0x24EE;
                 }
-                else if (y < win_y + 37) {
+                else if (y < 192) {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else {
@@ -2037,47 +1735,46 @@ void power() {
                 }
             }
         }
-        print_string("Power control", win_x + 28, win_y + 28, 0x0000);
-        print_string("Power control", win_x + 27, win_y + 27, 0xFFFF);
-        print_string("Press 1 to off pc.", win_x + 30, help_col, 0x0000);
-        print_string("Press 2 to reboot pc.", win_x + 30, help_col + 15, 0x0000);
-        print_string("This will delete all unsaved data!", win_x + 30, help_col + 40, 0x9000);
-        print_string("Press Esc to close this window.", win_x + 30, help_col + 55, 0x0000);
+        print_string("Power control", 168, 183, 0x0000);
+        print_string("Power control", 167, 182, 0xFFFF);
+        print_string("Press 1 to off pc.", 170, 200, 0x0000);
+        print_string("Press 2 to reboot pc.", 170, 215, 0x0000);
+        print_string("This will delete all unsaved data!", 170, 240, 0x9000);
+        print_string("Press Esc to close this window.", 170, 255, 0x0000);
     }
 
 void progressbar(char* file_des, int xend) {
-        for (int y = win_y + 410; y < win_y + 425; y++) {
-            for (int x = win_x + 300; x < win_x + 450; x++) {
+        for (int y = 560; y < 575; y++) {
+            for (int x = 440; x < 590; x++) {
                 gfx_memory[y * 1024 + x] = 0x0120;
             }
         }
-        for (int y = win_y + 412; y < win_y + 423; y++) {
-            for (int x = win_x + 302; x < xend; x++) {
-                if (y < (win_y + 416)) {
+        for (int y = 562; y < 150 + 577; y++) {
+            for (int x = 442; x < xend; x++) {
+                if (y < 566) {
                     gfx_memory[y * 1024 + x] = 0x0DE5;
                 }
-                else if (y < (win_y + 420)) { gfx_memory[y * 1024 + x] = 0x03EA; }
-                else { gfx_memory[y * 1024 + x] = 0x01A4; }
+                else if (y < 570) { gfx_memory[y * 1024 + x] = 0x03EA; }
+                else if (y < 575){ gfx_memory[y * 1024 + x] = 0x01A4; }
             }
         }
-        print_string(file_des, win_x + 280, win_y + 435, 0x0000);
+        print_string(file_des, 420, 585, 0x0000);
 }
 
 void cpu_win() {
-        int help_col = win_y + 45;
         drag = 1;
-        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
                     gfx_memory[y * 1024 + x] = 0x0320;
                 }
-                else if (y < win_y + 25) {
+                else if (y < 181) {
                     gfx_memory[y * 1024 + x] = 0x3DEF;
                 }
-                else if (y < win_y + 31) {
+                else if (y < 186) {
                     gfx_memory[y * 1024 + x] = 0x24EE;
                 }
-                else if (y < win_y + 37) {
+                else if (y < 192) {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else {
@@ -2094,67 +1791,64 @@ void cpu_win() {
             write("ATA driver and maxFS2 OK!", 5011);
             read(5011, fs_msg);
         }
-        print_string("System information. Press Esc to close.", win_x + 28, win_y + 28, 0x0000);
-        print_string("System information. Press Esc to close.", win_x + 27, win_y + 27, 0xFFFF);
-        print_string("Your CPU:", win_x + 30, help_col, 0x0000);
-        print_string(cpu_name, win_x + 120, help_col, 0x0000);
-        print_string("Total RAM:", win_x + 30, help_col + 15, 0x0000);
-        print_string(ram, win_x + 130, help_col + 15, 0x0000);
-        print_string("Bootloader:", win_x + 30, help_col + 30, 0x0000);
-        print_string(bootloader, win_x + 135, help_col + 30, 0x0000);
-        print_string("APM support:", win_x + 30, help_col + 45, 0x0000);
+        print_string("Configuration information. Press Esc to close.", 168, 183, 0x0000);
+        print_string("Configuration information. Press Esc to close.", 167, 182, 0xFFFF);
+        print_string("Your CPU:", 170, 200, 0x0000);
+        print_string(cpu_name, 260, 200, 0x0000);
+        print_string("Total RAM:", 170, 215, 0x0000);
+        print_string(ram, 270, 215, 0x0000);
+        print_string("Bootloader:", 170, 230, 0x0000);
+        print_string(bootloader, 275, 230, 0x0000);
+        print_string("APM support:", 170, 245, 0x0000);
         if (apm_supp == 1) {
-            print_string("OK", win_x + 145, help_col + 45, 0x0320);
+            print_string("OK", 285, 245, 0x0320);
         }
         else {
-            print_string("No", win_x + 145, help_col + 45, 0x9000);
+            print_string("No", 285, 245, 0x9000);
         }
-        print_string("Disk:", win_x + 30, help_col + 60, 0x0000);
+        print_string("Disk:", 170, 260, 0x0000);
         if (fs_msg[0] != '\0' && disk_exists == 1) {
-            print_string(fs_msg, win_x + 86, help_col + 60, 0x0320);
+            print_string(fs_msg, 226, 260, 0x0320);
         }
         else {
-            print_string("Disk for read and write not found!", win_x + 86, help_col + 60, 0x9000);
+            print_string("Disk for read and write not found!", 226, 260, 0x9000);
         }
-        print_string("OS: maxOS v3.9 official build", win_x + 30, help_col + 75, 0x0000);
-        pci_scan(win_x + 30, help_col + 90);
+        print_string("OS: maxOS v3.9 official build", 170, 275, 0x0000);
+        pci_scan(170, 290);
     }
 
 void open_explorer() {
-        int help_col = win_y + 45;
-        int line = win_y + 65;
+        int line = 230;
         drag = 1;
         explorer_opened = 1;
-        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
                     gfx_memory[y * 1024 + x] = 0x0320;
                 }
-                else if (y < win_y + 25) {
+                else if (y < 181) {
                     gfx_memory[y * 1024 + x] = 0x3DEF;
                 }
-                else if (y < win_y + 31) {
+                else if (y < 186) {
                     gfx_memory[y * 1024 + x] = 0x24EE;
                 }
-                else if (y < win_y + 37) {
+                else if (y < 192) {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
-                else if (y < win_y + 60) {
-                    gfx_memory[y * 1024 + x] = 0x7BEF;
-                }
+                else if (y < 220) { gfx_memory[y * 1024 + x] = 0x7BEF; }
                 else {
                     gfx_memory[y * 1024 + x] = 0xF77D;
                 }
             }
         }
-        print_string("Explorer: F to format, Esc to close, 1-0 to open the file.", win_x + 28, win_y + 28, 0x0000);
-        print_string("Explorer: F to format, Esc to close, 1-0 to open the file.", win_x + 27, win_y + 27, 0xFFFF);
-        print_string("File:", win_x + 35, win_y + 45, 0x0000);
-        print_string("Id & sector:", win_x + 300, win_y + 45, 0x0000);
-        print_string("Size:", (win_x + win_h) - 14, win_y + 45, 0x0000);
-        print_string("File:", win_x + 34, win_y + 44, 0xFFFF);
-        print_string("Id & sector:", win_x + 299, win_y + 44, 0xFFFF);
-        print_string("Size:", (win_x + win_h) - 15, win_y + 44, 0xFFFF);
+        print_string("Explorer: F to format, Esc to close, 1-0 to open the file.", 168, 183, 0x0000);
+        print_string("Explorer: F to format, Esc to close, 1-0 to open the file.", 167, 182, 0xFFFF);
+        print_string("File:", 175, 206, 0x0000);
+        print_string("Id & sector:", 440, 206, 0x0000);
+        print_string("Size:", 726, 206, 0x0000);
+        print_string("File:", 174, 205, 0xFFFF);
+        print_string("Id & sector:", 439, 205, 0xFFFF);
+        print_string("Size:", 725, 205, 0xFFFF);
         int file_id = 1;
         for (int i = 0; i < (sectors - 5000); i++) {
             char str[77];
@@ -2172,7 +1866,7 @@ void open_explorer() {
                     fileName[char_id] = str[char_id];
                     fileName[20] = '\0';
                 }
-                print_string(fileName, win_x + 30, line, 0x0000);
+                print_string(fileName, 170, line, 0x0000);
             }
             int real_size = 0;
             char real_size_str[16];
@@ -2183,29 +1877,29 @@ void open_explorer() {
                 real_size++;
             }
             int_str(real_size, real_size_str);
-            print_string(real_size_str, (win_x + win_h) - 8, line, 0x0000);
-            print_string("b", (win_x + win_h) + 21, line, 0x0000);
+            print_string(real_size_str, 732, line, 0x0000);
+            print_string("b", 762, line, 0x0000);
             char file_id_str[509];
             char sector_str[10];
             int_str(file_id, file_id_str);
             int_str(currentFile, sector_str);
-            print_string(file_id_str, win_x + 290, line, 0x0000);
-            print_string("/", win_x + 310, line, 0x0000);
-            print_string(sector_str, win_x + 320, line, 0x0000);
+            print_string(file_id_str, 410, line, 0x0000);
+            print_string("/", 430, line, 0x0000);
+            print_string(sector_str, 440, line, 0x0000);
             line += 15;
             file_id++;
         }
-        if (createdFiles == 0) { progressbar("You can save 10 files", win_x + 305); }
-        if (createdFiles == 1) { progressbar("You can save 9 files", win_x + 319); }
-        if (createdFiles == 2) { progressbar("You can save 8 files", win_x + 334); }
-        if (createdFiles == 3) { progressbar("You can save 7 files", win_x + 347); }
-        if (createdFiles == 4) { progressbar("You can save 6 files", win_x + 360); }
-        if (createdFiles == 5) { progressbar("You can save 5 files", win_x + 373); }
-        if (createdFiles == 6) { progressbar("You can save 4 files", win_x + 386); }
-        if (createdFiles == 7) { progressbar("You can save 3 files", win_x + 399); }
-        if (createdFiles == 8) { progressbar("You can save 2 files", win_x + 412); }
-        if (createdFiles == 9) { progressbar("You can save 1 files", win_x + 425); }
-        if (createdFiles == 10) { progressbar("You can save 0 files", win_x + 448); }
+        if (createdFiles == 0) { progressbar("You can save 10 files", 445); }
+        if (createdFiles == 1) { progressbar("You can save 9 files", 460); }
+        if (createdFiles == 2) { progressbar("You can save 8 files", 475); }
+        if (createdFiles == 3) { progressbar("You can save 7 files", 490); }
+        if (createdFiles == 4) { progressbar("You can save 6 files", 505); }
+        if (createdFiles == 5) { progressbar("You can save 5 files", 520); }
+        if (createdFiles == 6) { progressbar("You can save 4 files", 535); }
+        if (createdFiles == 7) { progressbar("You can save 3 files", 550); }
+        if (createdFiles == 8) { progressbar("You can save 2 files", 565); }
+        if (createdFiles == 9) { progressbar("You can save 1 files", 580); }
+        if (createdFiles == 10) { progressbar("You can save 0 files", 590); }
 }
 
 void int_str(int num, char* str) {
@@ -2426,8 +2120,8 @@ void get_cpu(char* buffer) {
 void draw_btn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
-            int screen_x = (win_x + 20) + x;
-            int screen_y = (win_y + 22) + y;
+            int screen_x = 5 + x;
+            int screen_y = 384 + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = help_icon[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0x2417; }
@@ -2447,14 +2141,14 @@ void draw_btn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn
     //         gfx_memory[y * 1024 + x] = 0xC618;
     //     }
     // }
-    print_string("Help", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Help", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 
 void draw_cpubtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
-            int screen_x = (win_x + 82) + x;
-            int screen_y = (win_y + 22) + y;
+            int screen_x = 5 + x;
+            int screen_y = 404 + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = arch_icon[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0x528A; }
@@ -2464,13 +2158,13 @@ void draw_cpubtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
             }
         }
     }
-    print_string("Arch", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Configuration info", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_filebtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
-            int screen_x = (win_x + 142) + x;
-            int screen_y = (win_y + 22) + y;
+            int screen_x = 5 + x;
+            int screen_y = 424 + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = note_icon[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0xA4AC; }
@@ -2480,13 +2174,13 @@ void draw_filebtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
             }
         }
     }
-    print_string("Note", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Notepad", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
-            int screen_x = (win_x + 198) + x;
-            int screen_y = (win_y + 22) + y;
+            int screen_x = 5 + x;
+            int screen_y = 444 + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = exp_icon[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0xCE79; }
@@ -2496,13 +2190,13 @@ void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
             }
         }
     }
-    print_string("Exp", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Explorer", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
-            int screen_x = (win_x + 263) + x;
-            int screen_y = (win_y + 22) + y;
+            int screen_x = 5 + x;
+            int screen_y = 464 + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = pong_icon[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0xF800; }
@@ -2511,13 +2205,13 @@ void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
             }
         }
     }
-    print_string("Pong", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Pong game", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
-            int screen_x = (win_x + 326) + x;
-            int screen_y = (win_y + 22) + y;
+            int screen_x = 5 + x;
+            int screen_y = 484 + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = off_icon[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0xF800; }
@@ -2526,13 +2220,13 @@ void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
             }
         }
     }
-    print_string("Power", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Power control", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_passbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
-            int screen_x = (win_x + 384) + x;
-            int screen_y = (win_y + 22) + y;
+            int screen_x = 5 + x;
+            int screen_y = 504 + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = pass_icon[y][x];
                 if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0xFFE0; }
@@ -2541,7 +2235,7 @@ void draw_passbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
             }
         }
     }
-    print_string("Pass", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Password setup", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
@@ -2551,7 +2245,7 @@ void draw_cursor(int mouse_x, int mouse_y) {
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 cursor_back[y][x] = gfx_memory[screen_y * 1024 + screen_x];
                 unsigned char pixel_type = mouse_arrow[y][x];
-                if (theme == 1) {
+                if (theme == 1 || theme == 11) {
                     if (pixel_type == 1) {gfx_memory[screen_y * 1024 + screen_x] = 0x0000;}
                     if (pixel_type == 2) {gfx_memory[screen_y * 1024 + screen_x] = 0xFFFF;}
                     if (pixel_type == 3) {gfx_memory[screen_y * 1024 + screen_x] = 0x9CD3;}
@@ -2712,39 +2406,80 @@ void clock() {
     int_str(hour, h);
     int_str(day, d);
     int_str(month, mo);
-    if (windowOpened == 1) {
-        print_string(h, win_x + 691, win_y + 7, 0x0000);
-        print_string(":", win_x + 711, win_y + 7, 0x0000);
-        print_string(m, win_x + 721, win_y + 7, 0x0000);
-        print_string(h, win_x + 690, win_y + 6, 0xFFFF);
-        print_string(":", win_x + 710, win_y + 6, 0xFFFF);
-        print_string(m, win_x + 720, win_y + 6, 0xFFFF);
-        print_string(d, win_x + 660, win_y + 7, 0x0000);
-        print_string(d, win_x + 659, win_y + 6, 0xFFFF);
-        print_string(mo, win_x + 626, win_y + 7, 0x0000);
-        print_string(mo, win_x + 625, win_y + 6, 0xFFFF);
-        print_string("/", win_x + 645, win_y + 7, 0x0000);
-        print_string("/", win_x + 644, win_y + 6, 0xFFFF);
+    print_string(h, 966, 752, 0x0000);
+    print_string(":", 986, 752, 0x0000);
+    print_string(m, 996, 752, 0x0000);
+    print_string(h, 965, 751, 0xFFFF);
+    print_string(":", 985, 751, 0xFFFF);
+    print_string(m, 995, 751, 0xFFFF);
+    print_string(d, 906, 752, 0x0000);
+    print_string(d, 905, 751, 0xFFFF);
+    print_string(mo, 936, 752, 0x0000);
+    print_string(mo, 935, 751, 0xFFFF);
+    print_string("/", 926, 752, 0x0000);
+    print_string("/", 925, 751, 0xFFFF);
+}
+void draw_menu() {
+    menuOpened = 1;
+    for (int y = 350; y < 743; y++) {
+        for (int x = 0; x < 250; x++) {
+            if (y < 375) {
+                if (theme == 1) { gfx_memory[y * 1024 + x] = 0x3D7F; }
+                if (theme == 10) { gfx_memory[y * 1024 + x] = 0x31A6; }
+                if (theme == 11) { gfx_memory[y * 1024 + x] = 0xFE4B; }
+                if (theme == 9) { gfx_memory[y * 1024 + x] = 0xFBEF; }
+                if (theme == 8) { gfx_memory[y * 1024 + x] = 0xFFFA; }
+                if (theme == 7) { gfx_memory[y * 1024 + x] = 0xFCEF; }
+                if (theme == 6) { gfx_memory[y * 1024 + x] = 0x05E5; }
+                if (theme == 5) { gfx_memory[y * 1024 + x] = 0x0DE5; }
+                if (theme == 4) { gfx_memory[y * 1024 + x] = 0x4A29; }
+                if (theme == 3) { gfx_memory[y * 1024 + x] = 0xD460; }
+                if (theme == 2) { gfx_memory[y * 1024 + x] = 0xB269; }
+            }
+            else {
+                if (theme == 1) { gfx_memory[y * 1024 + x] = 0x0A53; }
+                if (theme == 10) { gfx_memory[y * 1024 + x] = 0x2124; }
+                if (theme == 11) { gfx_memory[y * 1024 + x] = 0xC240; }
+                if (theme == 9) { gfx_memory[y * 1024 + x] = 0xF800; }
+                if (theme == 8) { gfx_memory[y * 1024 + x] = 0x9BC5; }
+                if (theme == 7) { gfx_memory[y * 1024 + x] = 0xB9CD; }
+                if (theme == 6) { gfx_memory[y * 1024 + x] = 0x03E3; }
+                if (theme == 5) { gfx_memory[y * 1024 + x] = 0x03EA; }
+                if (theme == 4) { gfx_memory[y * 1024 + x] = 0x31C6; }
+                if (theme == 3) { gfx_memory[y * 1024 + x] = 0x92E0; }
+                if (theme == 2) { gfx_memory[y * 1024 + x] = 0x81C6; }
+            }
+        }
     }
-    else if (windowOpened == 0) {
-        print_string(h, 491, 384, 0x0000);
-        print_string(":", 511, 384, 0x0000);
-        print_string(m, 521, 384, 0x0000);
-        print_string(h, 490, 383, 0xFFFF);
-        print_string(":", 510, 383, 0xFFFF);
-        print_string(m, 520, 383, 0xFFFF);
-        print_string(d, 460, 384, 0x0000);
-        print_string(d, 459, 383, 0xFFFF);
-        print_string(mo, 426, 384, 0x0000);
-        print_string(mo, 425, 383, 0xFFFF);
-        print_string("/", 445, 384, 0x0000);
-        print_string("/", 444, 383, 0xFFFF);
-    }
+    draw_btn(15, 370, 42, 12, 15, 370, 40, 10, 25, 372);
+    draw_cpubtn(15, 390, 42, 12, 15, 390, 40, 10, 25, 392);
+    draw_filebtn(15, 410, 42, 12, 15, 410, 40, 10, 25, 412);
+    draw_expbtn(15, 430, 42, 12, 15, 430, 40, 10, 25, 432);
+    draw_pongbtn(15, 450, 42, 12, 15, 450, 40, 10, 25, 452);
+    draw_offbtn(15, 470, 42, 12, 15, 470, 40, 10, 25, 472);
+    draw_passbtn(15, 490, 42, 12, 15, 490, 40, 10, 25, 492);
+    if (theme == 8 || theme == 11) { print_string("maxOS 3.9", 80, 360, 0x0000);}
+    else if (theme == 3) { print_string("maxOS 3.9 Abrikos", 40, 360, 0xFFFF);}
+    else if (theme == 4) { print_string("maxOS 3.9 Tora", 60, 360, 0xFFFF);}
+    else { print_string("maxOS 3.9", 80, 360, 0xFFFF); }
 }
 void draw_window() {
+    int win_x = 0;
+    int win_y = 743;
     for (int y = 0; y < 768; y++) {
         int row_offset = y << 10;
         for (int x = 0; x < 1024; x++) {
+            if (theme == 11) {
+                unsigned short bg_col = 0xF3E0;
+                int wave1 = 200 + ((x - 512) * (x - 512)) / 1500;
+                int wave2 = 450 - ((x - 400) * (x - 400)) / 2200;
+                int wave3 = 600 - (x * 3) / 4;
+                if (y >= wave1 && y < wave1 + 6) { bg_col = 0xE420; }
+                else if (y >= wave1 - 4 && y < wave1 + 10) { bg_col = 0xD300; }
+                else if (y >= wave2 && y < wave2 + 8) { bg_col = 0xFE4B; }
+                else if (y >= wave3 && y < wave3 + 4) { bg_col = 0x9A00; }
+                gfx_memory[y * 1024 + x] = bg_col;
+            }
             if (theme == 1) {
                 if (((x ^ y) & 16) == 0) {
                     gfx_memory[row_offset + x] = 0x10A2;
@@ -2811,6 +2546,7 @@ void draw_window() {
     for (int y = win_y; y < win_y + win_h; y++) {
         for (int x = win_x; x < win_x + win_w; x++) {
             if (y == win_y || y == win_y + win_h - 1 || x == win_x || x == win_x + win_w - 1) {
+                if (theme == 11) { gfx_memory[y * 1024 + x] = 0x9A40; }
                 if (theme == 1) {
                     gfx_memory[y * 1024 + x] = 0xC618;}
                 if (theme == 2) {
@@ -2824,7 +2560,7 @@ void draw_window() {
                 if (theme == 9) { gfx_memory[y * 1024 + x] = 0xFC00; }
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x5AEB; }
             }
-            else if (y < win_y + 3) {
+            else if (y < win_y + 6) {
                 if (theme == 1) {
                     gfx_memory[y * 1024 + x] = 0x3D7F;}
                 if (theme == 2) {
@@ -2838,8 +2574,9 @@ void draw_window() {
                 if (theme == 8) { gfx_memory[y * 1024 + x] = 0xFFFA; }
                 if (theme == 9) { gfx_memory[y * 1024 + x] = 0xFBEF; }
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x31A6; }
+                if (theme == 11) { gfx_memory[y * 1024 + x] = 0xED60; }
             }
-            else if (y < win_y + 9) {
+            else if (y < win_y + 14) {
                 if (theme == 1) {
                     gfx_memory[y * 1024 + x] = 0x2417;}
                 if (theme == 2) {
@@ -2853,8 +2590,9 @@ void draw_window() {
                 if (theme == 8) { gfx_memory[y * 1024 + x] = 0xE60B; }
                 if (theme == 9) { gfx_memory[y * 1024 + x] = 0xF800; }
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x2124; }
+                if (theme == 11) { gfx_memory[y * 1024 + x] = 0xED60; }
             }
-            else if (y < win_y + 15) {
+            else if (y < win_y + 30) {
                 if (theme == 1) {
                     gfx_memory[y * 1024 + x] = 0x110F;}
                 if (theme == 2) {
@@ -2868,42 +2606,20 @@ void draw_window() {
                 if (theme == 8) { gfx_memory[y * 1024 + x] = 0x9BC5; }
                 if (theme == 9) { gfx_memory[y * 1024 + x] = 0x5000; }
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x10A2; }
+                if (theme == 11) { gfx_memory[y * 1024 + x] = 0xED60; }
             }
             else {
                 gfx_memory[y * 1024 + x] = 0xF77D;
             }
        }
     }
-    if (drawText == 1) {
-    if (theme == 3) {
-        print_string("maxOS 3.9 Abrikos", win_x + 11, win_y + 6, 0x0000);
-        print_string("maxOS 3.9 Abrikos", win_x + 10, win_y + 5, 0xFFFF); }
-    if (theme == 4) {
-        print_string("maxOS 3.9 Tora", win_x + 11, win_y + 6, 0x0000);
-        print_string("maxOS 3.9 Tora", win_x + 10, win_y + 5, 0xFFFF); }
-    else {
-        print_string("maxOS 3.9", win_x + 11, win_y + 6, 0x0000); 
-        print_string("maxOS 3.9", win_x + 10, win_y + 5, 0xFFFF); }
-    draw_btn(win_x + 10, win_y + 20, 42, 12, win_x + 10, win_y + 20, 40, 10, win_x + 15, win_y + 22);
-    draw_cpubtn(win_x + 70, win_y + 20, 42, 12, win_x + 70, win_y + 20, 40, 10, win_x + 75, win_y + 22);
-    draw_filebtn(win_x + 130, win_y + 20, 42, 12, win_x + 130, win_y + 20, 40, 10, win_x + 135, win_y + 22);
-    draw_expbtn(win_x + 190, win_y + 20, 42, 12, win_x + 190, win_y + 20, 40, 10, win_x + 195, win_y + 22);
-    draw_pongbtn(win_x + 250, win_y + 20, 42, 12, win_x + 250, win_y + 20, 40, 10, win_x + 255, win_y + 22);
-    draw_offbtn(win_x + 310, win_y + 20, 42, 12, win_x + 310, win_y + 20, 40, 10, win_x + 315, win_y + 22);
-    draw_passbtn(win_x + 370, win_y + 20, 42, 12, win_x + 370, win_y + 20, 40, 10, win_x + 375, win_y + 22);
-    }
     }
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
             int screen_x = 0;
             int screen_y = 0;
-            if (windowOpened == 1) {
-                screen_x = (win_x + 610) + x;
-                screen_y = (win_y + 3) + y;
-            }
-            else if (windowOpened == 0){
-                screen_x = 551 + x; screen_y = 381 + y;
-            } 
+            screen_x = (win_x + 890) + x;
+            screen_y = (win_y + 4) + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = clock12[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0x2100; }
@@ -2917,7 +2633,7 @@ void draw_window() {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
             int screen_x = 5 + x;
-            int screen_y = 750 + y;
+            int screen_y = 748 + y;
             if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = clear_icon[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0x110F; }
@@ -2927,6 +2643,7 @@ void draw_window() {
             }
         }
     }
+    if (menuOpened == 1) { draw_menu(); }
     draw_cursor(pos_x, pos_y);
 }
 
@@ -2996,21 +2713,20 @@ unsigned int inl(unsigned short port) {
 }
 
 void pass() {
-        int help_col = win_y + 45;
         w_mode = 1;
         drag = 1;
-        for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-            for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
                     gfx_memory[y * 1024 + x] = 0x0320;
                 }
-                else if (y < win_y + 25) {
+                else if (y < 181) {
                     gfx_memory[y * 1024 + x] = 0x3DEF;
                 }
-                else if (y < win_y + 31) {
+                else if (y < 186) {
                     gfx_memory[y * 1024 + x] = 0x24EE;
                 }
-                else if (y < win_y + 37) {
+                else if (y < 192) {
                     gfx_memory[y * 1024 + x] = 0x11EB;
                 }
                 else {
@@ -3018,11 +2734,11 @@ void pass() {
                 }
             }
         }
-        print_string("Password setup", win_x + 28, win_y + 28, 0x0000);
-        print_string("Password setup", win_x + 27, win_y + 27, 0xFFFF);
-        print_string("Press Enter to set password. Press Esc to exit.", win_x + 30, help_col + 15, 0x0000);
-        print_string("Please, remember your password. You can't login without it.", win_x + 30, help_col + 30, 0x9000);
-        print_string(ftext2, win_x + 30, help_col, 0x0000);
+        print_string("Password setup", 168, 183, 0x0000);
+        print_string("Password setup", 167, 182, 0xFFFF);
+        print_string("Press Enter to set password. Press Esc to exit.", 170, 215, 0x0000);
+        print_string("Please, remember your password. You can't login without it.", 170, 230, 0x9000);
+        print_string(ftext2, 170, 200, 0x0000);
         update_screen();
         while (1) {
             update_screen();
@@ -3042,62 +2758,62 @@ void pass() {
                             ftext2[textid2] = ascii_char;
                             textid2++;
                             ftext2[textid2] = '\0';
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                    else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xF77D;
-                                    }
-                                }
-                            }
-                            print_string("Password setup", win_x + 28, win_y + 28, 0x0000);
-                            print_string("Password setup", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Press Enter to set password. Press Esc to exit.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Please, remember your password. You can't login without it.", win_x + 30, help_col + 30, 0x9000);
-                            print_string(ftext2, win_x + 30, help_col, text_col);
-                            update_screen();
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
+                    gfx_memory[y * 1024 + x] = 0x0320;
+                }
+                else if (y < 181) {
+                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                }
+                else if (y < 186) {
+                    gfx_memory[y * 1024 + x] = 0x24EE;
+                }
+                else if (y < 192) {
+                    gfx_memory[y * 1024 + x] = 0x11EB;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xF77D;
+                }
+            }
+        }
+        print_string("Password setup", 168, 183, 0x0000);
+        print_string("Password setup", 167, 182, 0xFFFF);
+        print_string("Press Enter to set password. Press Esc to exit.", 170, 215, 0x0000);
+        print_string("Please, remember your password. You can't login without it.", 170, 230, 0x9000);
+        print_string(ftext2, 170, 200, 0x0000);
+        update_screen();
                         }
                     }
                     else if (ascii_char == 'B') {
                         if (textid2 > 0) {
                             textid2--;
                             ftext2[textid2] = '\0';
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                    else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xF77D;
-                                    }
-                                }
-                            }
-                            print_string("Password setup", win_x + 28, win_y + 28, 0x0000);
-                            print_string("Password setup", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Press Enter to set password. Press Esc to exit.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Please, remember your password. You can't login without it.", win_x + 30, help_col + 30, 0x9000);
-                            print_string(ftext2, win_x + 30, help_col, 0x0000);
-                            update_screen();
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
+                    gfx_memory[y * 1024 + x] = 0x0320;
+                }
+                else if (y < 181) {
+                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                }
+                else if (y < 186) {
+                    gfx_memory[y * 1024 + x] = 0x24EE;
+                }
+                else if (y < 192) {
+                    gfx_memory[y * 1024 + x] = 0x11EB;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xF77D;
+                }
+            }
+        }
+        print_string("Password setup", 168, 183, 0x0000);
+        print_string("Password setup", 167, 182, 0xFFFF);
+        print_string("Press Enter to set password. Press Esc to exit.", 170, 215, 0x0000);
+        print_string("Please, remember your password. You can't login without it.", 170, 230, 0x9000);
+        print_string(ftext2, 170, 200, 0x0000);
+        update_screen();
                         }
                     }
                     if (shift_p == 1 && ascii_char != '00') {
@@ -3159,23 +2875,23 @@ void pass() {
                             }
                             if (ascii_char == 'F') {
                                 text_col = 0x0000;
-                                print_string(ftext2, win_x + 30, help_col, text_col);
+                                print_string(ftext2, 170, 200, text_col);
                             }
                             if (ascii_char == 'S') {
                                 text_col = 0x0112;
-                                print_string(ftext2, win_x + 30, help_col, text_col);
+                                print_string(ftext2, 170, 200, text_col);
                             }
                             if (ascii_char == 'T') {
                                 text_col = 0x9000;
-                                print_string(ftext2, win_x + 30, help_col, text_col);
+                                print_string(ftext2, 170, 200, text_col);
                             }
                             if (ascii_char == 'G') {
                                 text_col = 0x9400;
-                                print_string(ftext2, win_x + 30, help_col, text_col);
+                                print_string(ftext2, 170, 200, text_col);
                             }
                             if (ascii_char == 'C') {
                                 text_col = 0x0320;
-                                print_string(ftext2, win_x + 30, help_col, text_col);
+                                print_string(ftext2, 170, 200, text_col);
                             }
                             if (ascii_char == 'q') {
                                 ftext2[textid2] = 'Q';
@@ -3307,31 +3023,31 @@ void pass() {
                                 textid2++;
                                 ftext2[textid2] = '\0';
                             }
-                            for (int y = win_y + 22; y < win_y + 22 + win_h - 40; y++) {
-                                for (int x = win_x + 20; x < win_x + 20 + win_w - 40; x++) {
-                                    if (y == win_y + 22 || y == win_y + 22 + win_h - 41 || x == win_x + 20 || x == win_x + 20 + win_w - 41) {
-                                        gfx_memory[y * 1024 + x] = 0x0320;
-                                    }
-                                    else if (y < win_y + 25) {
-                                        gfx_memory[y * 1024 + x] = 0x3DEF;
-                                    }
-                                    else if (y < win_y + 31) {
-                                        gfx_memory[y * 1024 + x] = 0x24EE;
-                                    }
-                                    else if (y < win_y + 37) {
-                                        gfx_memory[y * 1024 + x] = 0x11EB;
-                                    }
-                                    else {
-                                        gfx_memory[y * 1024 + x] = 0xF77D;
-                                    }
-                                }
-                            }
-                            print_string("Password setup", win_x + 28, win_y + 28, 0x0000);
-                            print_string("Password setup", win_x + 27, win_y + 27, 0xFFFF);
-                            print_string("Press Enter to set password. Press Esc to exit.", win_x + 30, help_col + 15, 0x0000);
-                            print_string("Please, remember your password. You can't login without it.", win_x + 30, help_col + 30, 0x9000);
-                            print_string(ftext2, win_x + 30, help_col, 0x0000);
-                            update_screen();
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
+                    gfx_memory[y * 1024 + x] = 0x0320;
+                }
+                else if (y < 181) {
+                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                }
+                else if (y < 186) {
+                    gfx_memory[y * 1024 + x] = 0x24EE;
+                }
+                else if (y < 192) {
+                    gfx_memory[y * 1024 + x] = 0x11EB;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xF77D;
+                }
+            }
+        }
+        print_string("Password setup", 168, 183, 0x0000);
+        print_string("Password setup", 167, 182, 0xFFFF);
+        print_string("Press Enter to set password. Press Esc to exit.", 170, 215, 0x0000);
+        print_string("Please, remember your password. You can't login without it.", 170, 230, 0x9000);
+        print_string(ftext2, 170, 200, 0x0000);
+        update_screen();
                         }
                     }
                     else if (ascii_char == '\E') {
@@ -3495,23 +3211,23 @@ void login_screen() {
                             }
                             if (ascii_char == 'F') {
                                 text_col = 0x0000;
-                                print_string(ftext2, win_x + 30, help_col, text_col);
+                                print_string(ftext2, 170, 200, text_col);
                             }
                             if (ascii_char == 'S') {
                                 text_col = 0x0112;
-                                print_string(ftext2, win_x + 30, help_col, text_col);
+                                print_string(ftext2, 170, 200, text_col);
                             }
                             if (ascii_char == 'T') {
                                 text_col = 0x9000;
-                                print_string(ftext2, win_x + 30, help_col, text_col);
+                                print_string(ftext2, 170, 200, text_col);
                             }
                             if (ascii_char == 'G') {
                                 text_col = 0x9400;
-                                print_string(ftext2, win_x + 30, help_col, text_col);
+                                print_string(ftext2, 170, 200, text_col);
                             }
                             if (ascii_char == 'C') {
                                 text_col = 0x0320;
-                                print_string(ftext2, win_x + 30, help_col, text_col);
+                                print_string(ftext2, 170, 200, text_col);
                             }
                             if (ascii_char == 'q') {
                                 ftext2[textid2] = 'Q';
