@@ -1568,7 +1568,7 @@ void filew() {
                         print_string(ftext, 170, 200, text_col);
                     }
                 }
-                                if (shift_p == 1 && ascii_char != '00') {
+                if (shift_p == 1 && ascii_char != '00') {
                     if (symbols_counter < 70 && textid < 509) {
                         symbols_counter++;
                         if (ascii_char == '=') { ftext[textid] = '+'; textid++; ftext[textid] = '\0'; }
@@ -1659,9 +1659,56 @@ void filew() {
                         print_string(ftext, 170, 200, text_col);
                     }
                 }
-                else if (ascii_char == '\E') {
-                    if (textid2 < 10) {
-                    }
+                else if (shift_p == 0 && enter_counter < 24 && ascii_char == '\E') {
+                    ftext[textid] = '\n';
+                    textid++;
+                    ftext[textid] = '\0';
+                    enter_counter++;
+                    symbols_counter = 0;
+                    for (int y = 177; y < 687; y++) {
+                            for (int x = 160; x < 850; x++) {
+                                if (y == 177 || y == 686 || x == 160 || x == 849) {
+                                    gfx_memory[y * 1024 + x] = 0x0320;
+                                }
+                                else if (y < 181) {
+                                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                                }
+                                else if (y < 186) {
+                                    gfx_memory[y * 1024 + x] = 0x24EE;
+                                }
+                                else if (y < 192) {
+                                    gfx_memory[y * 1024 + x] = 0x11EB;
+                                }
+                                else {
+                                    gfx_memory[y * 1024 + x] = 0xF77D;
+                                }
+                            }
+                        }
+                        if (str_cmp(ftext, str)) {
+                            if (str_in(ftext, "#app#")) {
+                                print_string("Notepad: scripting", 168, 183, 0x0000);
+                                print_string("Notepad: scripting", 167, 182, 0xFFFF);
+                            }
+                            else {
+                                print_string("Notepad: text file", 168, 183, 0x0000);
+                                print_string("Notepad: text file", 167, 182, 0xFFFF);
+                            }
+                        }
+                        else {
+                            if (str_in(ftext, "#app#")) {
+                                print_string("*Notepad: scripting", 168, 183, 0x0000);
+                                print_string("*Notepad: scripting", 167, 182, 0xFFFF);
+                            }
+                            else {
+                                print_string("*Notepad: text file", 168, 183, 0x0000);
+                                print_string("*Notepad: text file", 167, 182, 0xFFFF);
+                            }
+                        }
+                        print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", 170, 640, 0x0000);
+                        print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", 170, 655, 0x0000);
+                        print_string("To make app write '#app#'.", 170, 670, 0x0000);
+                        update_screen();
+                        print_string(ftext, 170, 200, text_col);
                 }
                 else if (ascii_char == 'F') {
                     if (createdFiles < 10 && disk_exists == 1) {
