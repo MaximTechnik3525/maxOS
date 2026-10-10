@@ -722,10 +722,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (ascii_char == 'e') {
                         if (pos_x <= 20 && pos_y >= 750)  {
-                            if (menuOpened == 0) {
+                            if (menuOpened == 0 && drag == 0) {
                                 draw_menu();
                             }
-                            else {
+                            else if (drag == 0){
                                 menuOpened = 0;
                                 draw_window();
                             }
