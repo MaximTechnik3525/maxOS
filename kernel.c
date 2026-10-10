@@ -365,14 +365,12 @@ const unsigned char max_font[] = {
     0x70,0x18,0x18,0x0C,0x18,0x18,0x70,0x00, // 125 }
     0x76,0xDC,0x00,0x00,0x00,0x00,0x00,0x00  // 126 ~
 };
-
 int win_w = 1024;
 int win_h = 25;
 int pos_x = 512;
 int pos_y = 384;
 int theme = 1;
 int w_mode = 0;
-int km_mode = 0;
 int pad_x = 0;
 int pad_y = 0;
 int pad_w = 60, pad_h = 20;
@@ -390,7 +388,6 @@ char ftext[1000] = {0};
 int fid = 0;
 int tail = 0;
 int repeats = 1;
-int help_col;
 int explorer_opened = 0;
 int sectors = 5000;
 int createdFiles = 0;
@@ -400,8 +397,6 @@ int currentMin = 0;
 int power_opened = 0;
 int disk_exists = 1;
 int timer = 0;
-int windowOpened = 1;
-int drawText = 1;
 int menuOpened = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
@@ -458,7 +453,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             }
         }
     }
-    print_string("maxOS is starting up...", 425, 420, 0xFFFF);
+    print_string("maxOS is starting up...", 425, 420, 0x05E5);
     print_string("By MaximTechnik3525", 10, 10, 0x05E5);
     update_screen();
     play_sound(100); sleep(250); play_sound(350); sleep(150); play_sound(500); sleep(150); play_sound(600); sleep(150); play_sound(100); sleep(300); no_sound();
@@ -646,7 +641,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         explorer_opened = 0;
                         power_opened = 0;
                         menuOpened = 0;
-                        help_col = 65;
                         draw_window();
                         play_sound(100); sleep(70); no_sound();
                         play_sound(40); sleep(140); no_sound();
@@ -735,6 +729,41 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                                 menuOpened = 0;
                                 draw_window();
                             }
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y >= 370 && pos_y < 400 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            help();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 400 && pos_y <= 420 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            cpu_win();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 420 && pos_y <= 440 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            filew();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 440 && pos_y <= 460 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            open_explorer();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 460 && pos_y <= 480 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            pong();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 480 && pos_y <= 500 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            power();
+                        }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 500 && pos_y <= 520 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            pass();
                         }
                     }
                     if (ascii_char == 'f' && explorer_opened == 1) {
@@ -1040,7 +1069,7 @@ void execute_commands(char* str) {
             continue;
         }
         else if (str[i] == 'r' && str[i+1] == 'e' && str[i+2] == 'd' && str[i+3] == 'r') {
-            help_col = 65; i += 4;
+            i += 4;
             draw_window();
             continue;
         }
@@ -2551,7 +2580,6 @@ void draw_window() {
             }
         }
     }
-    if (windowOpened == 1) {
     for (int y = win_y; y < win_y + win_h; y++) {
         for (int x = win_x; x < win_x + win_w; x++) {
             if (y == win_y || y == win_y + win_h - 1 || x == win_x || x == win_x + win_w - 1) {
@@ -2621,7 +2649,6 @@ void draw_window() {
                 gfx_memory[y * 1024 + x] = 0xF77D;
             }
        }
-    }
     }
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
