@@ -2487,16 +2487,48 @@ void clock() {
     int_str(hour, h);
     int_str(day, d);
     int_str(month, mo);
-    print_string(h, 966, 752, 0x0000);
+    if (hour >= 10) {
+        print_string(h, 966, 752, 0x0000);
+        print_string(h, 965, 751, 0xFFFF);
+    }
+    else if (hour < 10) {
+        print_string("0", 966, 752, 0x0000);
+        print_string("0", 965, 751, 0xFFFF);
+        print_string(h, 976, 752, 0x0000);
+        print_string(h, 975, 751, 0xFFFF);
+    }
+    if (min >= 10) {
+        print_string(m, 996, 752, 0x0000);
+        print_string(m, 995, 751, 0xFFFF);
+    }
+    else if (min < 10) {
+        print_string("0", 996, 752, 0x0000);
+        print_string("0", 995, 751, 0xFFFF);
+        print_string(m, 1006, 752, 0x0000);
+        print_string(m, 1005, 751, 0xFFFF);
+    }
+    if (day >= 10) {
+        print_string(d, 906, 752, 0x0000);
+        print_string(d, 905, 751, 0xFFFF);
+    }
+    else if (day < 10) {
+        print_string("0", 906, 752, 0x0000);
+        print_string("0", 905, 751, 0xFFFF);
+        print_string(d, 916, 752, 0x0000);
+        print_string(d, 915, 751, 0xFFFF);
+    }
+    if (month >= 10) {
+        print_string(mo, 936, 752, 0x0000);
+        print_string(mo, 935, 751, 0xFFFF);
+    }
+    else if (month < 10) {
+        print_string("0", 936, 752, 0x0000);
+        print_string("0", 935, 751, 0xFFFF);
+        print_string(mo, 946, 752, 0x0000);
+        print_string(mo, 945, 751, 0xFFFF);
+    }
     print_string(":", 986, 752, 0x0000);
-    print_string(m, 996, 752, 0x0000);
-    print_string(h, 965, 751, 0xFFFF);
     print_string(":", 985, 751, 0xFFFF);
-    print_string(m, 995, 751, 0xFFFF);
-    print_string(d, 906, 752, 0x0000);
-    print_string(d, 905, 751, 0xFFFF);
-    print_string(mo, 936, 752, 0x0000);
-    print_string(mo, 935, 751, 0xFFFF);
     print_string("/", 926, 752, 0x0000);
     print_string("/", 925, 751, 0xFFFF);
 }
