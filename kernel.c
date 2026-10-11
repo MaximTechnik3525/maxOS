@@ -2549,6 +2549,19 @@ void draw_menu() {
                 if (theme == 3) { gfx_memory[y * 1024 + x] = 0xD460; }
                 if (theme == 2) { gfx_memory[y * 1024 + x] = 0xB269; }
             }
+            else if (y == 375) {
+                if (theme == 1) { gfx_memory[y * 1024 + x] = 0xC618; }
+                if (theme == 10) { gfx_memory[y * 1024 + x] = 0x5AEB; }
+                if (theme == 11) { gfx_memory[y * 1024 + x] = 0x9A40; }
+                if (theme == 9) { gfx_memory[y * 1024 + x] = 0xFC00; }
+                if (theme == 8) { gfx_memory[y * 1024 + x] = 0x5A21; }
+                if (theme == 7) { gfx_memory[y * 1024 + x] = 0x50C3; }
+                if (theme == 6) { gfx_memory[y * 1024 + x] = 0x0200; }
+                if (theme == 5) { gfx_memory[y * 1024 + x] = 0x0124; }
+                if (theme == 4) { gfx_memory[y * 1024 + x] = 0x9CF3; }
+                if (theme == 3) { gfx_memory[y * 1024 + x] = 0x7224; }
+                if (theme == 2) { gfx_memory[y * 1024 + x] = 0xFFFA; }
+            }
             else {
                 if (theme == 1) { gfx_memory[y * 1024 + x] = 0x0A53; }
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x2124; }
