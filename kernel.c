@@ -398,6 +398,7 @@ int power_opened = 0;
 int disk_exists = 1;
 int timer = 0;
 int menuOpened = 0;
+int show_box = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
     ready_min = bcd_to_binary(raw_min2);
@@ -507,6 +508,22 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (pos_y < 0) {pos_y = 0;}
                         draw_cursor(pos_x, pos_y);
                     }
+                    if (click == 0 && menuOpened == 0 && show_box == 0 && pos_x <= 25 && pos_y >= 743) {
+                        show_box = 1;
+                        for (int y = 713; y < 733; y++) {
+                            for (int x = 20; x < 65; x++) {
+                                gfx_memory[y * 1024 + x] = 0x31A6;
+                            }
+                        }
+                        print_string("Menu", 26, 719, 0x0000);
+                        print_string("Menu", 25, 718, 0xFFFF);
+                    }
+                    else if (pos_x > 25 || pos_y < 743) {
+                        if (show_box == 1) {
+                            show_box = 0;
+                            draw_window();
+                        }
+                    }
                     if (click == 1 && menuOpened == 0) { // MOUSE CLICKS
                         if (pos_x <= 25 && pos_y >= 743 && drag == 0)  {
                             draw_menu();
@@ -565,6 +582,22 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 if (scan_code < 0x80 && w_mode == 0 && drag != 2) { // KEYBOARD CLICKS
                     timer = 0;
                     char ascii_char = scan_code_to_ascii(scan_code);
+                    if (menuOpened == 0 && show_box == 0 && pos_x <= 25 && pos_y >= 743) {
+                        show_box = 1;
+                        for (int y = 713; y < 733; y++) {
+                            for (int x = 20; x < 65; x++) {
+                                gfx_memory[y * 1024 + x] = 0x31A6;
+                            }
+                        }
+                        print_string("Menu", 26, 719, 0x0000);
+                        print_string("Menu", 25, 718, 0xFFFF);
+                    }
+                    else if (pos_x > 25 || pos_y < 743) {
+                        if (show_box == 1) {
+                            show_box = 0;
+                            draw_window();
+                        }
+                    }
                     if (ascii_char == '1' && power_opened == 1) {
                         shutdown();
                         power_opened = 0;
