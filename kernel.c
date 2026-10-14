@@ -2150,6 +2150,7 @@ int str_in(char* main_string, char* substring) {
     return 0;
 }
 void play_sound(unsigned int nfreq) {
+    if (theme != 11) {
     unsigned int div;
     unsigned char tmp;
     div = 1193180 / nfreq;
@@ -2160,6 +2161,7 @@ void play_sound(unsigned int nfreq) {
     if (tmp != (tmp | 3)) {
         outb(0x61, tmp | 3);
     }
+}
 }
 void no_sound() {
     unsigned char tmp = inb(0x61) & 0xFC;
@@ -2631,6 +2633,7 @@ void draw_menu() {
         print_string("maxOS 3.9", 80, 360, 0xFFFF);
     }
 }
+
 void draw_window() {
     int win_x = 0;
     int win_y = 743;
@@ -2638,15 +2641,16 @@ void draw_window() {
         int row_offset = y << 10;
         for (int x = 0; x < 1024; x++) {
             if (theme == 11) {
-                unsigned short bg_col = 0xF3E0;
-                int wave1 = 200 + ((x - 512) * (x - 512)) / 1500;
-                int wave2 = 450 - ((x - 400) * (x - 400)) / 2200;
-                int wave3 = 600 - (x * 3) / 4;
-                if (y >= wave1 && y < wave1 + 6) { bg_col = 0xE420; }
-                else if (y >= wave1 - 4 && y < wave1 + 10) { bg_col = 0xD300; }
-                else if (y >= wave2 && y < wave2 + 8) { bg_col = 0xFE4B; }
-                else if (y >= wave3 && y < wave3 + 4) { bg_col = 0x9A00; }
-                gfx_memory[y * 1024 + x] = bg_col;
+                gfx_memory[y * 1024 + x] = 0x0000;
+                // unsigned short bg_col = 0xF3E0;
+                // int wave1 = 200 + ((x - 512) * (x - 512)) / 1500;
+                // int wave2 = 450 - ((x - 400) * (x - 400)) / 2200;
+                // int wave3 = 600 - (x * 3) / 4;
+                // if (y >= wave1 && y < wave1 + 6) { bg_col = 0xE420; }
+                // else if (y >= wave1 - 4 && y < wave1 + 10) { bg_col = 0xD300; }
+                // else if (y >= wave2 && y < wave2 + 8) { bg_col = 0xFE4B; }
+                // else if (y >= wave3 && y < wave3 + 4) { bg_col = 0x9A00; }
+                // gfx_memory[y * 1024 + x] = bg_col;
             }
             if (theme == 1) {
                 if (((x ^ y) & 16) == 0) {
