@@ -3248,6 +3248,16 @@ void pass() {
     }
 
 void login_visual() {
+    for (int y = 0; y < 768; y++) {
+        for (int x = 0; x < 1024; x++) {
+                            int row_offset = y << 10;
+
+                            if (((x ^ y) & 16) == 0) {
+                    gfx_memory[row_offset + x] = 0x10A2;
+                }
+                else { gfx_memory[row_offset + x] = 0x2124; }
+        }
+    }
             for (int y = 0; y < 768; y++) {
             for (int x = 0; x < 1024; x++) {
                 if (y <= 390 && y >= 388) {
@@ -3258,12 +3268,6 @@ void login_visual() {
                 }
                 else if (y <= 402 && y >= 397) {
                     gfx_memory[y * 1024 + x] = 0x01A4;
-                }
-                else if (y > 402) {
-                    gfx_memory[y * 1024 + x] = 0x0080;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0x0120;
                 }
             }
         }
