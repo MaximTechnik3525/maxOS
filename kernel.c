@@ -488,7 +488,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     unsigned char packet[3];
     while(1) {
         if (drag == 0) { timer++; }
-        if (timer >= 6000 && scr == 1) { screensaver(); }
+        if (timer >= 6000 && scr == 1) {
+            screensaver();
+        }
+        else if (timer >= 6000 && scr == 0){
+            timer = 0;
+        }
         outb(0x70, 0x0A);
         if ((inb(0x71) & 0x80) == 0) {
         unsigned char raw_min = read_rtc_register(0x02);
