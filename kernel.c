@@ -901,25 +901,7 @@ void pong() {
         ball_dx = 3;
         ball_dy = 3;
         score = 0;
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+        render_win();
         int swin_x = 160;
         int swin_y = 172;
         print_string("Pong game - score: 0", 168, 183, 0x0000);
@@ -1022,25 +1004,8 @@ void pong() {
                     score++;
                     char str_score[10];
                     int_str(score, str_score);
-         for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+                    draw_window();
+                    render_win();
                     print_string("Pong game - score:", 168, 183, 0x0000);
                     print_string("Pong game - score:", 167, 182, 0xFFFF);
                     print_string(str_score, 140 + 198, 183, 0x0000);
@@ -1343,27 +1308,9 @@ void execute_commands(char* str) {
         }
         else if (str[i] == 'w' && str[i+1] == 'i' && str[i+2] == 'n') {
             i += 3;
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
-                    print_string("Application", 168, 183, 0x0000);
-                    print_string("Application", 167, 182, 0xFFFF);
+            render_win();
+            print_string("Application", 168, 183, 0x0000);
+            print_string("Application", 167, 182, 0xFFFF);
         }
         else if (str[i] == 'f' && str[i+1] == 's' && str[i+2] == 'c' && str[i+3] == 'r' && str[i+4] == '#') {
             char* arg_ptr = &str[i+5];
@@ -1391,6 +1338,43 @@ void execute_commands(char* str) {
 }
 }
 
+void render_win() {
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
+                    gfx_memory[y * 1024 + x] = 0x0320;
+                }
+                else if (y < 181) {
+                    if (((x + y) & 1) == 0) {
+                        gfx_memory[y * 1024 + x] = 0x3DEF;
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                else if (y < 186) {
+                    if (((x + y) & 1) == 0) {
+                        gfx_memory[y * 1024 + x] = 0x24EE;
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                else if (y < 192) {
+                    if (((x + y) & 1) == 0) {
+                        gfx_memory[y * 1024 + x] = 0x11EB;
+                    }
+                    else {
+                        continue;
+                    }
+                }
+                else if (y < 220 && explorer_opened == 1) { gfx_memory[y * 1024 + x] = 0x7BEF; }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xF77D;
+                }
+            }
+        }
+}
 void open_file(int sector) 
 {
     drag = 1;
@@ -1404,25 +1388,7 @@ void open_file(int sector)
     }
     else
     {
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+        render_win();
         print_string("Text file", 168, 183, 0x0000);
         print_string("Text file", 167, 182, 0xFFFF);
         print_string(file_output, 170, 200, text_col);
@@ -1430,25 +1396,7 @@ void open_file(int sector)
     }
 }
 else {
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+        render_win();
         print_string("No file", 168, 183, 0x0000);
         print_string("No file", 167, 182, 0xFFFF);
         print_string("File not found or empty!", 170, 200, text_col);
@@ -1501,25 +1449,7 @@ void filew() {
         read((sectors - 1), str);
     }
     w_mode = 1;
-    for (int y = 177; y < 687; y++) {
-        for (int x = 160; x < 850; x++) {
-            if (y == 177 || y == 686 || x == 160 || x == 849) {
-                gfx_memory[y * 1024 + x] = 0x0320;
-            }
-            else if (y < 181) {
-                gfx_memory[y * 1024 + x] = 0x3DEF;
-            }
-            else if (y < 186) {
-                gfx_memory[y * 1024 + x] = 0x24EE;
-            }
-            else if (y < 192) {
-                gfx_memory[y * 1024 + x] = 0x11EB;
-            }
-            else {
-                gfx_memory[y * 1024 + x] = 0xF77D;
-            }
-        }
-    }
+    render_win();
     if (str_cmp(ftext, str)) {
         if (str_in(ftext, "#app#")) {
             print_string("Notepad: scripting", 168, 183, 0x0000);
@@ -1564,25 +1494,8 @@ void filew() {
                         textid++;
                         ftext[textid] = '\0';
                         symbols_counter++;
-                        for (int y = 177; y < 687; y++) {
-                            for (int x = 160; x < 850; x++) {
-                                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                                    gfx_memory[y * 1024 + x] = 0x0320;
-                                }
-                                else if (y < 181) {
-                                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                                }
-                                else if (y < 186) {
-                                    gfx_memory[y * 1024 + x] = 0x24EE;
-                                }
-                                else if (y < 192) {
-                                    gfx_memory[y * 1024 + x] = 0x11EB;
-                                }
-                                else {
-                                    gfx_memory[y * 1024 + x] = 0xF77D;
-                                }
-                            }
-                        }
+                        draw_window();
+                        render_win();
                         if (str_cmp(ftext, str)) {
                             if (str_in(ftext, "#app#")) {
                                 print_string("Notepad: scripting", 168, 183, 0x0000);
@@ -1626,25 +1539,8 @@ void filew() {
                             symbols_counter--;
                         }
                         ftext[textid] = '\0';
-                        for (int y = 177; y < 687; y++) {
-                            for (int x = 160; x < 850; x++) {
-                                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                                    gfx_memory[y * 1024 + x] = 0x0320;
-                                }
-                                else if (y < 181) {
-                                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                                }
-                                else if (y < 186) {
-                                    gfx_memory[y * 1024 + x] = 0x24EE;
-                                }
-                                else if (y < 192) {
-                                    gfx_memory[y * 1024 + x] = 0x11EB;
-                                }
-                                else {
-                                    gfx_memory[y * 1024 + x] = 0xF77D;
-                                }
-                            }
-                        }
+                        draw_window();
+                        render_win();
                         if (str_cmp(ftext, str)) {
                             if (str_in(ftext, "#app#")) {
                                 print_string("Notepad: scripting", 168, 183, 0x0000);
@@ -1717,25 +1613,8 @@ void filew() {
                         if (ascii_char == 'b') { ftext[textid] = 'B'; textid++; ftext[textid] = '\0'; }
                         if (ascii_char == 'n') { ftext[textid] = 'N'; textid++; ftext[textid] = '\0'; }
                         if (ascii_char == 'm') { ftext[textid] = 'M'; textid++; ftext[textid] = '\0'; }
-                        for (int y = 177; y < 687; y++) {
-                            for (int x = 160; x < 850; x++) {
-                                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                                    gfx_memory[y * 1024 + x] = 0x0320;
-                                }
-                                else if (y < 181) {
-                                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                                }
-                                else if (y < 186) {
-                                    gfx_memory[y * 1024 + x] = 0x24EE;
-                                }
-                                else if (y < 192) {
-                                    gfx_memory[y * 1024 + x] = 0x11EB;
-                                }
-                                else {
-                                    gfx_memory[y * 1024 + x] = 0xF77D;
-                                }
-                            }
-                        }
+                        draw_window();
+                        render_win();
                         if (str_cmp(ftext, str)) {
                             if (str_in(ftext, "#app#")) {
                                 print_string("Notepad: scripting", 168, 183, 0x0000);
@@ -1769,25 +1648,8 @@ void filew() {
                     ftext[textid] = '\0';
                     enter_counter++;
                     symbols_counter = 0;
-                    for (int y = 177; y < 687; y++) {
-                            for (int x = 160; x < 850; x++) {
-                                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                                    gfx_memory[y * 1024 + x] = 0x0320;
-                                }
-                                else if (y < 181) {
-                                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                                }
-                                else if (y < 186) {
-                                    gfx_memory[y * 1024 + x] = 0x24EE;
-                                }
-                                else if (y < 192) {
-                                    gfx_memory[y * 1024 + x] = 0x11EB;
-                                }
-                                else {
-                                    gfx_memory[y * 1024 + x] = 0xF77D;
-                                }
-                            }
-                        }
+                    draw_window();
+                    render_win();
                         if (str_cmp(ftext, str)) {
                             if (str_in(ftext, "#app#")) {
                                 print_string("Notepad: scripting", 168, 183, 0x0000);
@@ -1864,25 +1726,7 @@ void filew() {
 
 void help() {
         drag = 1;
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+        render_win();
         print_string("Help", 168, 183, 0x0000);
         print_string("Help", 167, 182, 0xFFFF);
         print_string("Mouse or arrows to move cursor.", 170, 200, 0x0000);
@@ -1895,25 +1739,7 @@ void help() {
 void control_panel() {
         drag = 1;
         panel_opened = 1;
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+        render_win();
         char theme_id[10];
         int_str(theme, theme_id);
         char cursor_speed_str[10];
@@ -1935,25 +1761,7 @@ void control_panel() {
 void power() {
         drag = 1;
         power_opened = 1;
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+        render_win();
         print_string("Power control", 168, 183, 0x0000);
         print_string("Power control", 167, 182, 0xFFFF);
         print_string("Press 1 to off pc.", 170, 200, 0x0000);
@@ -1982,25 +1790,7 @@ void progressbar(char* file_des, int xend) {
 
 void cpu_win() {
         drag = 1;
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+        render_win();
         char cpu_name[49];
         get_cpu(cpu_name);
         char ram[32];
@@ -2040,26 +1830,7 @@ void open_explorer() {
         int line = 230;
         drag = 1;
         explorer_opened = 1;
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else if (y < 220) { gfx_memory[y * 1024 + x] = 0x7BEF; }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+        render_win();
         print_string("Explorer: F to format, Esc to close, 1-0 to open the file.", 168, 183, 0x0000);
         print_string("Explorer: F to format, Esc to close, 1-0 to open the file.", 167, 182, 0xFFFF);
         print_string("File:", 175, 206, 0x0000);
@@ -3010,25 +2781,7 @@ unsigned int inl(unsigned short port) {
 void pass() {
         w_mode = 1;
         drag = 1;
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+        render_win();
         print_string("Password setup", 168, 183, 0x0000);
         print_string("Password setup", 167, 182, 0xFFFF);
         print_string("Press Enter to set password. Press Esc to exit.", 170, 215, 0x0000);
@@ -3053,25 +2806,7 @@ void pass() {
                             ftext2[textid2] = ascii_char;
                             textid2++;
                             ftext2[textid2] = '\0';
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+        render_win();
         print_string("Password setup", 168, 183, 0x0000);
         print_string("Password setup", 167, 182, 0xFFFF);
         print_string("Press Enter to set password. Press Esc to exit.", 170, 215, 0x0000);
@@ -3084,25 +2819,7 @@ void pass() {
                         if (textid2 > 0) {
                             textid2--;
                             ftext2[textid2] = '\0';
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+        render_win();
         print_string("Password setup", 168, 183, 0x0000);
         print_string("Password setup", 167, 182, 0xFFFF);
         print_string("Press Enter to set password. Press Esc to exit.", 170, 215, 0x0000);
@@ -3318,25 +3035,7 @@ void pass() {
                                 textid2++;
                                 ftext2[textid2] = '\0';
                             }
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 850; x++) {
-                if (y == 177 || y == 686 || x == 160 || x == 849) {
-                    gfx_memory[y * 1024 + x] = 0x0320;
-                }
-                else if (y < 181) {
-                    gfx_memory[y * 1024 + x] = 0x3DEF;
-                }
-                else if (y < 186) {
-                    gfx_memory[y * 1024 + x] = 0x24EE;
-                }
-                else if (y < 192) {
-                    gfx_memory[y * 1024 + x] = 0x11EB;
-                }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
-                }
-            }
-        }
+        render_win();
         print_string("Password setup", 168, 183, 0x0000);
         print_string("Password setup", 167, 182, 0xFFFF);
         print_string("Press Enter to set password. Press Esc to exit.", 170, 215, 0x0000);
