@@ -64,6 +64,7 @@ void cpu_win();
 void reboot();
 void filew();
 void open_explorer();
+void control_panel();
 void error(char* err);
 void ata_read_sector(unsigned int lba, unsigned short* buffer);
 void ata_write_sector(unsigned int lba, unsigned short* buffer);
@@ -225,6 +226,20 @@ unsigned char sad_smile_icon[24][24] = {
 //     {0,0,0,0,0,0,0,0,0,0,0,0},
 //     {0,0,0,0,0,0,0,0,0,0,0,0},
 // };
+unsigned char panel_icon[12][12] = {
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,1,1,1,1,1,1,1,1,1,1,0},
+    {0,1,2,2,2,2,2,2,2,2,1,0},
+    {0,1,2,1,1,2,1,2,1,2,1,0},
+    {0,1,2,1,1,2,2,2,2,2,1,0},
+    {0,1,3,3,3,3,3,3,3,3,1,0},
+    {0,1,3,1,1,1,1,1,1,3,1,0},
+    {0,1,3,3,3,3,3,3,3,3,1,0},
+    {0,1,1,1,1,1,1,1,1,1,1,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+};
 unsigned char pass_icon[12][12] = {
     {0,0,0,0,0,0,0,0,3,3,0,0},
     {0,0,0,0,0,0,0,3,2,2,3,0},
@@ -399,6 +414,11 @@ int disk_exists = 1;
 int timer = 0;
 int menuOpened = 0;
 int show_box = 0;
+int mouse_speed = 2;
+int panel_opened = 0;
+int cursor_speed_counter = 2;
+int scr = 1;
+int shift = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
     ready_min = bcd_to_binary(raw_min2);
@@ -468,7 +488,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     unsigned char packet[3];
     while(1) {
         if (drag == 0) { timer++; }
-        if (timer >= 6000) { screensaver(); }
+        if (timer >= 6000 && scr == 1) { screensaver(); }
         outb(0x70, 0x0A);
         if ((inb(0x71) & 0x80) == 0) {
         unsigned char raw_min = read_rtc_register(0x02);
@@ -500,15 +520,17 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (delta_x != 0 || delta_y != 0) {
                         if (tail == 0) { prev_cursor(); }
                         timer = 0;
-                        pos_x += delta_x / 1.5;
-                        pos_y -= delta_y / 1.5;
+                        if (mouse_speed != 0) { pos_x += delta_x / mouse_speed; }
+                        else { pos_x += delta_x; }
+                        if (mouse_speed != 0) { pos_y -= delta_y / mouse_speed; }
+                        else { pos_y -= delta_y; }
                         if (pos_x > 1022) {pos_x = 1022;}
                         if (pos_x < 0) {pos_x = 0;}
                         if (pos_y > 767) {pos_y = 767;}
                         if (pos_y < 0) {pos_y = 0;}
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (click == 0 && menuOpened == 0 && show_box == 0 && pos_x <= 25 && pos_y >= 743) {
+                    if (click == 0 && menuOpened == 0 && show_box == 0 && pos_x <= 25 && pos_y >= 743 && drag == 0) {
                         show_box = 1;
                         for (int y = 713; y < 733; y++) {
                             for (int x = 20; x < 65; x++) {
@@ -518,7 +540,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         print_string("Menu", 26, 719, 0x0000);
                         print_string("Menu", 25, 718, 0xFFFF);
                     }
-                    else if (pos_x > 25 || pos_y < 743) {
+                    else if (pos_x > 25 || pos_y < 743 && drag == 0) {
                         if (show_box == 1) {
                             show_box = 0;
                             draw_window();
@@ -569,6 +591,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             draw_window();
                             pass();
                         }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 520 && pos_y <= 540 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            control_panel();
+                        }
                     }
                 }   
             }
@@ -579,10 +606,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     continue;
                 }
                 unsigned char scan_code = inb(0x60);
+                if (scan_code == 0x2A || scan_code == 0x36) { shift = 1; }
+                else if (scan_code == 0xAA || scan_code == 0xB6) { shift = 0; }
                 if (scan_code < 0x80 && w_mode == 0 && drag != 2) { // KEYBOARD CLICKS
                     timer = 0;
                     char ascii_char = scan_code_to_ascii(scan_code);
-                    if (menuOpened == 0 && show_box == 0 && pos_x <= 25 && pos_y >= 743) {
+                    if (menuOpened == 0 && show_box == 0 && pos_x <= 25 && pos_y >= 743 && drag == 0) {
                         show_box = 1;
                         for (int y = 713; y < 733; y++) {
                             for (int x = 20; x < 65; x++) {
@@ -592,7 +621,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         print_string("Menu", 26, 719, 0x0000);
                         print_string("Menu", 25, 718, 0xFFFF);
                     }
-                    else if (pos_x > 25 || pos_y < 743) {
+                    else if (pos_x > 25 || pos_y < 743 && drag == 0) {
                         if (show_box == 1) {
                             show_box = 0;
                             draw_window();
@@ -656,82 +685,96 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();                    
                     }
-                    if (ascii_char == 'T' && drag == 0 && tail == 0) {
+                    if (ascii_char == '5' && panel_opened == 1 && shift == 1) {
                         tail = 1;
                         play_sound(1200); sleep(70); no_sound();
                         sleep(70);
                         play_sound(1200); sleep(70); no_sound();
+                        control_panel();
                     }
-                    if (ascii_char == 'G' && drag == 0 && tail == 1) {
+                    if (ascii_char == '6' && shift == 1 && panel_opened == 1) {
                         tail = 0;
                         draw_window();
                         play_sound(200); sleep(70); no_sound();
                         sleep(70);
                         play_sound(200); sleep(70); no_sound();
+                        control_panel();
                     }
                     if (ascii_char == 'E') {
                         drag = 0;
                         explorer_opened = 0;
                         power_opened = 0;
                         menuOpened = 0;
+                        panel_opened = 0;
                         draw_window();
                         play_sound(100); sleep(70); no_sound();
                         play_sound(40); sleep(140); no_sound();
                     }
-                    if (ascii_char == '1' && drag == 0) {
+                    if (ascii_char == '1' && panel_opened == 1 && shift == 0) {
                         theme = 1;
                         draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
+                        control_panel();
                     }
-                    if (ascii_char == '2' && drag == 0) {
+                    if (ascii_char == '2' && panel_opened == 1 && shift == 0) {
                         theme = 2;
                         draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
+                        control_panel();
                     }                        
-                    if (ascii_char == '3' && drag == 0) {
+                    if (ascii_char == '3' && panel_opened == 1 && shift == 0) {
                         theme = 3;
                         draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
+                        control_panel();
                     }
-                    if (ascii_char == '4' && drag == 0) {
+                    if (ascii_char == '4' && panel_opened == 1 && shift == 0) {
                         theme = 4;
                         draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
+                        control_panel();
                     }
-                    if (ascii_char == '5' && drag == 0) {
+                    if (ascii_char == '5' && panel_opened == 1 && shift == 0) {
                         theme = 5;
                         draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
+                        control_panel();
                     }
-                    if (ascii_char == '6' && drag == 0) {
+                    if (ascii_char == '6' && panel_opened == 1 && shift == 0) {
                         theme = 6;
                         draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
+                        control_panel();
                     }
-                    if (ascii_char == '7' && drag == 0) {
+                    if (ascii_char == '7' && panel_opened == 1 && shift == 0) {
                         theme = 7;
                         draw_window();
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
+                        control_panel();
                     }
-                    if (ascii_char == '8' && drag == 0) {
+                    if (ascii_char == '8' && panel_opened == 1 && shift == 0) {
                         theme = 8;
                         draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
+                        control_panel();
                     }
-                    if (ascii_char == '9' && drag == 0) {
+                    if (ascii_char == '9' && panel_opened == 1 && shift == 0) {
                         theme = 9;
                         draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
+                        control_panel();
                     }
-                    if (ascii_char == '0' && drag == 0) {
+                    if (ascii_char == '0' && panel_opened == 1 && shift == 0) {
                         theme = 10;
                         draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
+                        control_panel();
                     }
-                    if (ascii_char == '-' && drag == 0) {
+                    if (ascii_char == '-' && panel_opened == 1 && shift == 0) {
                         theme = 11;
                         draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
+                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
+                        control_panel();
                     }
                     if (ascii_char == 'U' && pos_y > 12) {
                         if (tail == 0) { prev_cursor(); }
@@ -798,6 +841,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             draw_window();
                             pass();
                         }
+                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 520 && pos_y <= 540 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            control_panel();
+                        }
                     }
                     if (ascii_char == 'f' && explorer_opened == 1) {
                         createdFiles = 0;
@@ -811,6 +859,24 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         sleep(50);
                         play_sound(300); sleep(50); no_sound(); 
                         open_explorer();
+                    }
+                    if (ascii_char == '1' && shift == 1 && cursor_speed_counter > 1 && panel_opened == 1) {
+                        mouse_speed++;
+                        cursor_speed_counter--;
+                        control_panel();
+                    }
+                    if (ascii_char == '2' && shift == 1 && cursor_speed_counter < 4 && panel_opened == 1) {
+                        mouse_speed--;
+                        cursor_speed_counter++;
+                        control_panel();
+                    }
+                    if (ascii_char == '3' && shift == 1 && panel_opened == 1) {
+                        scr = 0;
+                        control_panel();
+                    }
+                    if (ascii_char == '4' && shift == 1 && panel_opened == 1) {
+                        scr = 1;
+                        control_panel();
                     }
                 }
             }
@@ -1815,11 +1881,50 @@ void help() {
         print_string("Help", 168, 183, 0x0000);
         print_string("Help", 167, 182, 0xFFFF);
         print_string("Mouse or arrows to move cursor.", 170, 200, 0x0000);
-        print_string("Esc to redraw desktop and close windows.", 170, 215, 0x0000);
-        print_string("1-0 and - to change system theme.", 170, 230, 0x0000);
+        print_string("Esc to redraw desktop and close windows.", 170, 230, 0x0000);
+        print_string("E or LMB to click.", 170, 215, 0x0000);
         print_string("F1 to save and run, F2 to save and exit in notepad.", 170, 245, 0x0000);
         print_string("F to format disk to maxFS2 in explorer.", 170, 260, 0x0000);
-        print_string("F3/F4 to enable and disable cursor trail.", 170, 275, 0x0000);
+}
+
+void control_panel() {
+        drag = 1;
+        panel_opened = 1;
+        for (int y = 177; y < 687; y++) {
+            for (int x = 160; x < 850; x++) {
+                if (y == 177 || y == 686 || x == 160 || x == 849) {
+                    gfx_memory[y * 1024 + x] = 0x0320;
+                }
+                else if (y < 181) {
+                    gfx_memory[y * 1024 + x] = 0x3DEF;
+                }
+                else if (y < 186) {
+                    gfx_memory[y * 1024 + x] = 0x24EE;
+                }
+                else if (y < 192) {
+                    gfx_memory[y * 1024 + x] = 0x11EB;
+                }
+                else {
+                    gfx_memory[y * 1024 + x] = 0xF77D;
+                }
+            }
+        }
+        char theme_id[10];
+        int_str(theme, theme_id);
+        char cursor_speed_str[10];
+        int_str(cursor_speed_counter, cursor_speed_str);
+        print_string("Control panel", 168, 183, 0x0000);
+        print_string("Control panel", 167, 182, 0xFFFF);
+        print_string("Theme (1, 2, 3, 4, 5, 6, 7, 8, 9, 0, -):", 170, 200, 0x0000); //40
+        print_string(theme_id, 539, 200, 0x0000);
+        print_string("Cursor speed (shift  +  1/2):", 170, 215, 0x0000); //29
+        print_string(cursor_speed_str, 440, 215, 0x0000);
+        print_string("Screensaver (shift + 3/4):", 170, 230, 0x0000); //26
+        if (scr == 1) { print_string("On", 413, 230, 0x0320); }
+        if (scr == 0) { print_string("Off", 413, 230, 0x9000); }
+        print_string("Cursor trail (shift + 5/6):", 170, 245, 0x0000); //27
+        if (tail == 1) { print_string("On", 422, 245, 0x0320); }
+        if (tail == 0) { print_string("Off", 422, 245, 0x9000); }
 }
 
 void power() {
@@ -2355,6 +2460,22 @@ void draw_passbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
     if (theme != 11) print_string("Password setup", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
     else if (theme == 11) print_string("Password setup", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
 }
+void draw_panelbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = 4 + x;
+            int screen_y = 524 + y;
+            if (screen_x < 1024 && screen_y < 768 && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = panel_icon[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * 1024 + screen_x] = 0x3A27; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * 1024 + screen_x] = 0xEF7D; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * 1024 + screen_x] = 0xAD55; }
+            }
+        }
+    }
+    if (theme != 11) print_string("Control panel", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
+    else if (theme == 11) print_string("Control panel", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+}
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
@@ -2616,6 +2737,7 @@ void draw_menu() {
     draw_pongbtn(15, 450, 42, 12, 15, 450, 40, 10, 25, 452);
     draw_offbtn(15, 470, 42, 12, 15, 470, 40, 10, 25, 472);
     draw_passbtn(15, 490, 42, 12, 15, 490, 40, 10, 25, 492);
+    draw_panelbtn(15, 510, 42, 12, 15, 510, 40, 10, 25, 512);
     if (theme == 8) { print_string("maxOS 3.9", 80, 360, 0x0000);}
     if (theme == 11) { print_string("maxOS 1.6 kernel", 50, 360, 0xFFFF);}
     else if (theme == 3) {
