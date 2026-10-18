@@ -967,7 +967,7 @@ void pong() {
             }
             for (int x = 0; x < ball_size; x++) {
                 for (int y = 0; y < ball_size; y++) {
-                    gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0xF77D;
+                    gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0x0113;
                 }
             }
             ball_x += ball_dx;
@@ -1369,9 +1369,10 @@ void render_win() {
                     }
                 }
                 else if (y < 220 && explorer_opened == 1) { gfx_memory[y * 1024 + x] = 0x7BEF; }
-                else {
-                    gfx_memory[y * 1024 + x] = 0xF77D;
+                else if (y > 192 && y < 450) {
+                    gfx_memory[y * 1024 + x] = 0xFFDE;
                 }
+                else { gfx_memory[y * 1024 + x] = 0xF77D; }
             }
         }
 }
@@ -2380,6 +2381,7 @@ char scan_code_to_ascii(unsigned char scan_code) {
     }
 }
 
+int a = 0;
 void draw_char(char c, int start_x, int start_y, unsigned short color) {
     if (c < 32 || c > 126) return;
     int font_idx = c - 32;
@@ -2465,7 +2467,7 @@ void draw_menu() {
     menuOpened = 1;
     for (int y = 350; y < 743; y++) {
         for (int x = 0; x < 250; x++) {
-            if (y < 375) {
+            if (y < 375 && ((x + y) & 1) == 1) {
                 if (theme == 1) { gfx_memory[y * 1024 + x] = 0x3D7F; }
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x31A6; }
                 if (theme == 11) { gfx_memory[y * 1024 + x] = 0x0410; }
@@ -2478,7 +2480,8 @@ void draw_menu() {
                 if (theme == 3) { gfx_memory[y * 1024 + x] = 0xD460; }
                 if (theme == 2) { gfx_memory[y * 1024 + x] = 0xB269; }
             }
-            else if (y == 375) {
+            else { a = 1; }
+            if (y == 375) {
                 if (theme == 1) { gfx_memory[y * 1024 + x] = 0xC618; }
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x5AEB; }
                 if (theme == 11) { gfx_memory[y * 1024 + x] = 0xC618; }
@@ -2491,7 +2494,8 @@ void draw_menu() {
                 if (theme == 3) { gfx_memory[y * 1024 + x] = 0x7224; }
                 if (theme == 2) { gfx_memory[y * 1024 + x] = 0xFFFA; }
             }
-            else {
+
+            if (((x + y) & 1) == 0) {
                 if (theme == 1) { gfx_memory[y * 1024 + x] = 0x0A53; }
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x2124; }
                 if (theme == 11) { gfx_memory[y * 1024 + x] = 0xFFFF; }
@@ -2504,6 +2508,7 @@ void draw_menu() {
                 if (theme == 3) { gfx_memory[y * 1024 + x] = 0x92E0; }
                 if (theme == 2) { gfx_memory[y * 1024 + x] = 0x81C6; }
             }
+            else { continue; }
         }
     }
     draw_btn(15, 370, 42, 12, 15, 370, 40, 10, 25, 372);
@@ -2628,6 +2633,7 @@ void draw_window() {
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x5AEB; }
             }
             else if (y < win_y + 6) {
+                if (((x + y) & 1) == 0) {
                 if (theme == 1) {
                     gfx_memory[y * 1024 + x] = 0x3D7F;}
                 if (theme == 2) {
@@ -2643,7 +2649,10 @@ void draw_window() {
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x31A6; }
                 if (theme == 11) { gfx_memory[y * 1024 + x] = 0x0410; }
             }
+            else { continue; }
+            }
             else if (y < win_y + 14) {
+                if (((x + y) & 1) == 0) {
                 if (theme == 1) {
                     gfx_memory[y * 1024 + x] = 0x2417;}
                 if (theme == 2) {
@@ -2659,7 +2668,10 @@ void draw_window() {
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x2124; }
                 if (theme == 11) { gfx_memory[y * 1024 + x] = 0x0410; }
             }
+            else { continue; }
+            }
             else if (y < win_y + 30) {
+                if (((x + y) & 1) == 0) {
                 if (theme == 1) {
                     gfx_memory[y * 1024 + x] = 0x110F;}
                 if (theme == 2) {
@@ -2674,6 +2686,8 @@ void draw_window() {
                 if (theme == 9) { gfx_memory[y * 1024 + x] = 0x5000; }
                 if (theme == 10) { gfx_memory[y * 1024 + x] = 0x10A2; }
                 if (theme == 11) { gfx_memory[y * 1024 + x] = 0x0410; }
+            }
+            else { continue; }
             }
             else {
                 gfx_memory[y * 1024 + x] = 0xF77D;
