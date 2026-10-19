@@ -553,50 +553,52 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (click == 1 && menuOpened == 0) { // MOUSE CLICKS
                         if (pos_x <= 25 && pos_y >= 743 && drag == 0)  {
+                            sleep(100);
                             draw_menu();
                         }
                     }
                     else if (click == 1 && menuOpened == 1) {
-                        if (pos_x <= 20 && pos_y >= 750)  {
+                        if (pos_x <= 25 && pos_y >= 743)  {
                             menuOpened = 0;
+                            sleep(100);
                             draw_window();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y >= 370 && pos_y < 400 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y >= 370 && pos_y < 400 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             help();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 400 && pos_y <= 420 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 400 && pos_y <= 420 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             cpu_win();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 420 && pos_y <= 440 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 420 && pos_y <= 440 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             filew();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 440 && pos_y <= 460 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 440 && pos_y <= 460 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             open_explorer();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 460 && pos_y <= 480 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 460 && pos_y <= 480 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             pong();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 480 && pos_y <= 500 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 480 && pos_y <= 500 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             power();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 500 && pos_y <= 520 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 500 && pos_y <= 520 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             pass();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 520 && pos_y <= 540 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 520 && pos_y <= 540 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             control_panel();
@@ -806,47 +808,47 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             if (menuOpened == 0 && drag == 0) {
                                 draw_menu();
                             }
-                            else if (drag == 0){
+                            else if (drag == 0 && menuOpened == 1) {
                                 menuOpened = 0;
                                 draw_window();
                             }
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y >= 370 && pos_y < 400 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y >= 370 && pos_y < 400 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             help();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 400 && pos_y <= 420 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 400 && pos_y <= 420 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             cpu_win();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 420 && pos_y <= 440 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 420 && pos_y <= 440 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             filew();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 440 && pos_y <= 460 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 440 && pos_y <= 460 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             open_explorer();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 460 && pos_y <= 480 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 460 && pos_y <= 480 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             pong();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 480 && pos_y <= 500 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 480 && pos_y <= 500 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             power();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 500 && pos_y <= 520 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 500 && pos_y <= 520 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             pass();
                         }
-                        if (pos_x >= 10 && pos_x <= 65 && pos_y > 520 && pos_y <= 540 && menuOpened == 1)  {
+                        if (pos_x >= 0 && pos_x <= 120 && pos_y > 520 && pos_y <= 540 && menuOpened == 1)  {
                             menuOpened = 0;
                             draw_window();
                             control_panel();
@@ -967,7 +969,8 @@ void pong() {
             }
             for (int x = 0; x < ball_size; x++) {
                 for (int y = 0; y < ball_size; y++) {
-                    gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0x0113;
+                    if (ball_y < 443) { gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0xFFDE; }
+                    else { gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0xF77D; }
                 }
             }
             ball_x += ball_dx;
@@ -1043,7 +1046,7 @@ void pong() {
                     gfx_memory[(ball_y + y) * 1024 + (ball_x + x)] = 0x03FF;
                 }
             }
-            sleep(16);
+            sleep(12);
             update_screen();
         }
 }
