@@ -3099,8 +3099,8 @@ void pass() {
                         }
                     }
                     else if (ascii_char == 'E') {
-                        play_sound(110); sleep(80); no_sound();
-                        play_sound(150); sleep(120); no_sound();
+                        play_sound(150); sleep(80); no_sound();
+                        play_sound(110); sleep(120); no_sound();
                         w_mode = 0;
                         drag = 0;
                         draw_window();
