@@ -478,8 +478,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     print_string("maxOS is starting up...", 425, 420, 0x05E5);
     print_string("By MaximTechnik3525", 10, 750, 0x05E5);
     update_screen();
-    play_sound(100); sleep(250); play_sound(350); sleep(150); play_sound(500); sleep(150); play_sound(600); sleep(150); play_sound(100); sleep(300); no_sound();
-    sleep(1700);
+    play_sound(525); sleep(90); play_sound(660); sleep(90); play_sound(785); sleep(90); play_sound(1050); sleep(200); no_sound();
+    sleep(1500);
     char rp[11];
     read(5012, rp);
     if (rp[0] != '\0') {
@@ -552,13 +552,15 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             draw_window();
                         }
                     }
-                    if (click == 1 && menuOpened == 0) { // MOUSE CLICKS
+                    if (click == 1 && menuOpened == 0 && delta_x == 0 && delta_y == 0) { // MOUSE CLICKS
+                        play_sound(1600); sleep(5); no_sound();
                         if (pos_x <= 25 && pos_y >= 743 && drag == 0)  {
                             sleep(100);
                             draw_menu();
                         }
                     }
-                    else if (click == 1 && menuOpened == 1) {
+                    else if (click == 1 && menuOpened == 1 && delta_x == 0 && delta_y == 0) {
+                        play_sound(1600); sleep(5); no_sound();
                         if (pos_x <= 25 && pos_y >= 743)  {
                             menuOpened = 0;
                             sleep(100);
@@ -716,8 +718,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         panel_opened = 0;
                         pong_opened = 0;
                         draw_window();
-                        play_sound(100); sleep(70); no_sound();
-                        play_sound(40); sleep(140); no_sound();
+                        play_sound(150); sleep(80); no_sound();
+                        play_sound(110); sleep(120); no_sound();
                     }
                     if (ascii_char == '1' && panel_opened == 1 && shift == 0) {
                         theme = 1;
@@ -806,6 +808,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'e') {
+                        play_sound(1600); sleep(5); no_sound();
                         if (pos_x <= 25 && pos_y >= 743)  {
                             if (menuOpened == 0 && drag == 0) {
                                 draw_menu();
@@ -926,8 +929,8 @@ void pong() {
                 if (ascii_char == 'E') {
                     drag = 0;
                     draw_window();
-                    play_sound(100); sleep(70); no_sound();
-                    play_sound(40); sleep(140); no_sound();
+                    play_sound(150); sleep(80); no_sound();
+                    play_sound(110); sleep(120); no_sound();
                     break;
                 }
                 if (ascii_char == 'd' && pad_x <= 770) {
@@ -1719,8 +1722,8 @@ void filew() {
                     }
                 }
                 else if (ascii_char == 'E') {
-                    play_sound(100); sleep(70); no_sound();
-                    play_sound(40); sleep(140); no_sound();
+                    play_sound(150); sleep(80); no_sound();
+                    play_sound(110); sleep(120); no_sound();
                     w_mode = 0;
                     drag = 0;
                     draw_window();
@@ -1950,11 +1953,11 @@ void shutdown() {
     }
     print_string("maxOS is shutting down...", 420, 420, 0xF800);
     update_screen();
-    play_sound(300); sleep(250); no_sound();
-    play_sound(200); sleep(250); no_sound();
-    play_sound(100); sleep(250); no_sound();
-    play_sound(40); sleep(350); no_sound();
-    sleep(3000);
+    play_sound(880); sleep(100); no_sound();
+    play_sound(700); sleep(100); no_sound();
+    play_sound(555); sleep(100); no_sound();
+    play_sound(440); sleep(250); no_sound();
+    sleep(1700);
     outw(0xB004, 0x2000);
     outw(0x604, 0x2000);
     outw(0x4004, 0x3400);
@@ -1981,11 +1984,11 @@ void reboot() {
     }
     print_string("maxOS is rebooting...", 423, 420, 0xF800);
     update_screen();
-    play_sound(300); sleep(250); no_sound();
-    play_sound(200); sleep(250); no_sound();
-    play_sound(100); sleep(250); no_sound();
-    play_sound(40); sleep(350); no_sound();
-    sleep(3000);
+    play_sound(880); sleep(100); no_sound();
+    play_sound(700); sleep(100); no_sound();
+    play_sound(555); sleep(100); no_sound();
+    play_sound(440); sleep(250); no_sound();
+    sleep(1700);
     outb(0x64, 0xFE);
     volatile unsigned long long idt_pointer = 0;
     __asm__ __volatile__("lidt %0" : : "m" (idt_pointer));
@@ -3096,8 +3099,8 @@ void pass() {
                         }
                     }
                     else if (ascii_char == 'E') {
-                        play_sound(100); sleep(70); no_sound();
-                        play_sound(40); sleep(140); no_sound();
+                        play_sound(110); sleep(80); no_sound();
+                        play_sound(150); sleep(120); no_sound();
                         w_mode = 0;
                         drag = 0;
                         draw_window();
