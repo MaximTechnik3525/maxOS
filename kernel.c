@@ -422,6 +422,7 @@ int cursor_speed_counter = 2;
 int scr = 1;
 int shift = 0;
 int pong_opened = 0;
+int busy = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
     ready_min = bcd_to_binary(raw_min2);
@@ -1010,8 +1011,8 @@ void pong() {
                 sleep(100);
                 no_sound();
             }
-            if (ball_x > 1070) {
-                ball_x = 1070;
+            if (ball_x > 1090) {
+                ball_x = 1090;
                 ball_dx = -ball_dx;
                 play_sound(500);
                 sleep(100);
@@ -1448,6 +1449,26 @@ int str_cmp(char* str1, char* str2) {
     return 1;
 }
 int shift_p = 0;
+void disk_marker() {
+    if (busy == 0) {
+        for (int y = 0; y < y_render; y++) {
+            for (int x = 0; x < x_render; x++) {
+                if ((x > 1100 && x < 1108) && y > 695 && y != 719) {
+                    gfx_memory[y * x_render + x] = 0x18C3;
+                }
+            }
+        }
+    }
+    else if (busy == 1) {
+        for (int y = 0; y < y_render; y++) {
+            for (int x = 0; x < x_render; x++) {
+                if ((x > 1100 && x < 1108) && y > 695 && y != 719) {
+                    gfx_memory[y * x_render + x] = 0x9000;
+                }
+            }
+        }
+    }
+}
 void write(char* msg, int sector) {
     if (disk_exists == 1) {
         unsigned short write_buffer[256] = {0};
@@ -1459,6 +1480,13 @@ void write(char* msg, int sector) {
         }
         msg_ptr[msg_id] = '\0';
         ata_write_sector(sector, write_buffer);
+        busy = 1;
+        disk_marker();
+        update_screen();
+        sleep(300);
+        busy = 0;
+        disk_marker();
+        update_screen();
     }
 }
 void read(int sector, char* output) {
@@ -1472,6 +1500,13 @@ void read(int sector, char* output) {
             i++;
         }
         output[i] = '\0';
+        busy = 1;
+        if (drag != 2) disk_marker();
+        update_screen();
+        sleep(300);
+        busy = 0;
+        if (drag != 2) disk_marker();
+        update_screen();
     }
 }
 int enter_counter = 0;
@@ -2677,7 +2712,7 @@ void draw_window() {
     }
     for (int y = win_y; y < win_y + win_h; y++) {
         for (int x = win_x; x < win_x + win_w; x++) {
-            if (y == win_y || y == win_y + win_h - 1 || x == win_x || x == win_x + win_w - 1 || x == 1108 || x == 25) {
+            if (y == win_y || y == win_y + win_h - 1 || x == win_x || x == win_x + win_w - 1 || x == 1108 || x == 25 || x == 1100) {
                 if (theme == 11) { gfx_memory[y * x_render + x] = 0xC618; }
                 if (theme == 1) {
                     gfx_memory[y * x_render + x] = 0xC618;}
@@ -2773,6 +2808,7 @@ void draw_window() {
         }
     }
     clock();
+    disk_marker();
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
             int screen_x = 7 + x;
