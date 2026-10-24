@@ -29,7 +29,7 @@ if loadfont /boot/grub/fonts/unicode.pf2 ; then
     insmod vga
     insmod gfxterm
     insmod video_all
-    set gfxmode=1024x768
+    set gfxmode=1280x720
     local_video
     terminal_output gfxterm
 fi
@@ -42,7 +42,7 @@ insmod part_msdos
 insmod fat
 insmod ext2
 
-set gfxmode=1024x768x16
+set gfxmode=1280x720x16
 set gfxpayload=keep
 
 menuentry "maxOS 3.9" {
@@ -59,4 +59,4 @@ echo " Сборка завершена успешно!"
 echo " maxOS запускается в QEMU!"
 echo "============================================="
 
-qemu-system-i386 -hda maxos.img -m 256M -vga qxl -machine pc,pcspk-audiodev=snd0 -device sb16,audiodev=snd0 -audiodev alsa,id=snd0
+qemu-system-i386 -hda maxos.img -m 256M -vga std -machine pc,pcspk-audiodev=snd0 -device sb16,audiodev=snd0 -audiodev alsa,id=snd0

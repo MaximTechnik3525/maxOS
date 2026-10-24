@@ -1,8 +1,5 @@
-MODULEALIGN equ 1 << 0
-MEMINFO equ 1 << 1
-VIDEO_MODE equ 1 << 2
-FLAGS equ MODULEALIGN | MEMINFO | VIDEO_MODE
 MAGIC equ 0x1BADB002
+FLAGS equ 0x00000007
 CHECKSUM equ -(MAGIC + FLAGS)
 section .multiboot_header
 align 4
@@ -15,8 +12,8 @@ align 4
     dd 0
     dd 0
     dd 0
-    dd 1024
-    dd 768
+    dd 1280
+    dd 720
     dd 16
 section .text
 global _start
