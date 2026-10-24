@@ -1957,7 +1957,7 @@ void open_explorer() {
         if (createdFiles == 7) { progressbar("You can save 3 files", 550); }
         if (createdFiles == 8) { progressbar("You can save 2 files", 565); }
         if (createdFiles == 9) { progressbar("You can save 1 files", 580); }
-        if (createdFiles == 10) { progressbar("You can save 0 files", 590); }
+        if (createdFiles == 10) { progressbar("You can save 0 files", 588); }
 }
 
 void int_str(int num, char* str) {
