@@ -382,8 +382,8 @@ const unsigned char max_font[] = {
 };
 int win_w = 1280;
 int win_h = 25;
-int pos_x = 512;
-int pos_y = 384;
+int pos_x = 640;
+int pos_y = 360;
 int theme = 1;
 int x_render = 1280;
 int y_render = 720;
@@ -1483,7 +1483,7 @@ void write(char* msg, int sector) {
         busy = 1;
         disk_marker();
         update_screen();
-        sleep(300);
+        sleep(100);
         busy = 0;
         disk_marker();
         update_screen();
@@ -1503,7 +1503,7 @@ void read(int sector, char* output) {
         busy = 1;
         if (drag != 2) disk_marker();
         update_screen();
-        sleep(300);
+        sleep(100);
         busy = 0;
         if (drag != 2) disk_marker();
         update_screen();
