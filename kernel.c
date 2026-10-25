@@ -2000,17 +2000,14 @@ void shutdown() {
     drag = 2;
     for (int y = 0; y < y_render; y++) {
         for (int x = 0; x < x_render; x++) {
-            if (y <= 390 && y >= 388) {
-                gfx_memory[y * x_render + x] = 0xFBEF;
-            }
-            else if (y <= 396 && y >= 391) {
+            if (y >= 386 && y < 392) {
                 gfx_memory[y * x_render + x] = 0xF800;
             }
-            else if (y <= 402 && y >= 397) {
+            else if (y >= 392 && y <= 404) {
                 gfx_memory[y * x_render + x] = 0x5000;
             }
+            else if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
             else { gfx_memory[y * x_render + x] = 0x1000; }
-
         }
     }
     print_string("maxOS is shutting down...", 550, 420, 0xF800);
@@ -2031,17 +2028,14 @@ void reboot() {
     drag = 2;
     for (int y = 0; y < y_render; y++) {
         for (int x = 0; x < x_render; x++) {
-            if (y <= 390 && y >= 388) {
-                gfx_memory[y * x_render + x] = 0xFBEF;
-            }
-            else if (y <= 396 && y >= 391) {
+            if (y >= 386 && y < 392) {
                 gfx_memory[y * x_render + x] = 0xF800;
             }
-            else if (y <= 402 && y >= 397) {
+            else if (y >= 392 && y <= 404) {
                 gfx_memory[y * x_render + x] = 0x5000;
             }
+            else if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
             else { gfx_memory[y * x_render + x] = 0x1000; }
-
         }
     }
     print_string("maxOS is rebooting...", 550, 420, 0xF800);
@@ -2065,8 +2059,8 @@ void error(char* err) {
             gfx_memory[y * x_render + x] = 0x9800;
         }
     }
-    print_string("maxOS critical error!", 436, 11, 0x0000);
-    print_string("maxOS critical error!", 435, 10, 0xFFFF);
+    print_string("maxOS critical error!", 561, 11, 0x0000);
+    print_string("maxOS critical error!", 560, 10, 0xFFFF);
     print_string(err, 11, 31, 0x0000);
     print_string(err, 10, 30, 0xFFFF);
     print_string("Your PC will be restarted in a few seconds...", 11, 51, 0x0000);
