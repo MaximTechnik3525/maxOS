@@ -1385,11 +1385,8 @@ void render_win() {
                         continue;
                     }
                 }
-                else if (y == 185) {
-                    gfx_memory[y * x_render + x] = 0x2124;
-                }
                 else if (y < 192) {
-                    if (((x + y) & 1) == 0) { gfx_memory[y * x_render + x] = 0x11EB; }
+                    if (((x + y) & 1) == 0) { gfx_memory[y * x_render + x] = 0x10A2; }
                     else { continue; }
                 }
                 else if (y >= 192 && y < 220 && explorer_opened == 1) {
@@ -2676,9 +2673,6 @@ void draw_window() {
             else if (y < win_y + 8) {
                 if (((x + y) & 1) == 0) { gfx_memory[y * x_render + x] = 0x5AEB; }
                 else { continue; }
-            }
-            else if (y == win_y + 8) {
-                gfx_memory[y * x_render + x] = 0x2124;
             }
             else if (y < win_y + 24) {
                 if (((x + y) & 1) == 0) gfx_memory[y * x_render + x] = 0x10A2;
