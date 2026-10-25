@@ -1453,8 +1453,8 @@ void disk_marker() {
     if (busy == 0) {
         for (int y = 0; y < y_render; y++) {
             for (int x = 0; x < x_render; x++) {
-                if ((x > 1100 && x < 1108) && y > 695 && y != 719) {
-                    gfx_memory[y * x_render + x] = 0x18C3;
+                if ((x > 1100 && x < 1108) && y > 695 && y != 719 && ((x + y) & 1) == 0) {
+                    gfx_memory[y * x_render + x] = 0x03EA;
                 }
             }
         }
@@ -1462,7 +1462,7 @@ void disk_marker() {
     else if (busy == 1) {
         for (int y = 0; y < y_render; y++) {
             for (int x = 0; x < x_render; x++) {
-                if ((x > 1100 && x < 1108) && y > 695 && y != 719) {
+                if ((x > 1100 && x < 1108) && y > 695 && y != 719 && ((x + y) & 1) == 0) {
                     gfx_memory[y * x_render + x] = 0x9000;
                 }
             }
@@ -1483,7 +1483,7 @@ void write(char* msg, int sector) {
         busy = 1;
         disk_marker();
         update_screen();
-        sleep(100);
+        sleep(50);
         busy = 0;
         disk_marker();
         update_screen();
@@ -1503,7 +1503,7 @@ void read(int sector, char* output) {
         busy = 1;
         if (drag != 2) disk_marker();
         update_screen();
-        sleep(100);
+        sleep(50);
         busy = 0;
         if (drag != 2) disk_marker();
         update_screen();
