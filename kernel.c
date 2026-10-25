@@ -500,9 +500,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             }
         }
     }
-    print_string("maxOS is starting up...", 549, 419, 0x0000);
+    print_string("maxOS is starting up...", 551, 421, 0x0000);
     print_string("maxOS is starting up...", 550, 420, 0xFF9E);
-    print_string("By MaximTechnik3525", 9, 14, 0x0000);
+    print_string("By MaximTechnik3525", 11, 16, 0x0000);
     print_string("By MaximTechnik3525", 10, 15, 0xFFFF);
     update_screen();
     play_sound(525); sleep(90); play_sound(660); sleep(90); play_sound(785); sleep(90); play_sound(1050); sleep(200); no_sound();
