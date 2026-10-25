@@ -2733,7 +2733,7 @@ void screensaver() {
     drag = 2;
     for (int y = 0; y < y_render; y++) {
         for (int x = 0; x < x_render; x++) {
-            gfx_memory[y * x_render + x] = 0x0100;
+            gfx_memory[y * x_render + x] = 0x10A2;
         }
     }
     int txt_x = 75;
@@ -2751,10 +2751,11 @@ void screensaver() {
         }
         for (int py = txt_y - 20; py < txt_y + 20; py++) {
             for (int px = txt_x - 70; px < txt_x + 70; px++) {
-                gfx_memory[py * x_render + px] = 0x0100;
+                gfx_memory[py * x_render + px] = 0x10A2;
             }
         }
-        print_string("maxOS", txt_x, txt_y, 0x05E5);
+        print_string("maxOS", txt_x + 1, txt_y + 1, 0x0000);
+        print_string("maxOS", txt_x, txt_y, 0xFF9E);
         if (txt_x < 1220 && was_x == 0) {
             txt_x += 5;
         }
@@ -3102,15 +3103,15 @@ void login_visual() {
     }
             for (int y = 0; y < y_render; y++) {
             for (int x = 0; x < x_render; x++) {
-                if (y <= 390 && y >= 388) {
-                    gfx_memory[y * x_render + x] = 0x0DE5;
+                if (((x + y) & 1) == 0) {
+                if (y >= 386 && y < 392) {
+                    gfx_memory[y * x_render + x] = 0x5AEB;
                 }
-                else if (y <= 396 && y >= 391) {
-                    gfx_memory[y * x_render + x] = 0x03EA;
+                else if (y >= 392 && y <= 404) {
+                    gfx_memory[y * x_render + x] = 0x10A2;
                 }
-                else if (y <= 402 && y >= 397) {
-                    gfx_memory[y * x_render + x] = 0x01A4;
-                }
+            }
+                if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
             }
         }
         for (int y = 0; y < 12; y++) {
@@ -3125,9 +3126,12 @@ void login_visual() {
             }
         }
         }
-        print_string("Enter password to login:", 30, 376, 0x05E5);
-        print_string("If you don't know password, you need to write new maxOS image. This will delete all your save data!", 10, 420, 0x05E5);
-        print_string(ftext2, 265, 376, 0x05E5);
+        print_string("Enter password to login:", 31, 377, 0x0000);
+        print_string("Enter password to login:", 30, 376, 0xFF9E);
+        print_string("If you don't know password, you need to write new maxOS image. This will delete all your save data!", 11, 421, 0x0000);
+        print_string("If you don't know password, you need to write new maxOS image. This will delete all your save data!", 10, 420, 0xFF9E);
+        print_string(ftext2, 256, 377, 0x0000);
+        print_string(ftext2, 255, 376, 0xFF9E);
 }
 
 void login_screen() {
@@ -3155,7 +3159,6 @@ void login_screen() {
                             textid2++;
                             ftext2[textid2] = '\0';
                             login_visual();
-                            play_sound(700); sleep(100); no_sound();
                         }
                     }
                     else if (ascii_char == 'B') {
@@ -3164,7 +3167,6 @@ void login_screen() {
                             ftext2[textid2] = '\0';
                         }
                         login_visual();
-                        play_sound(700); sleep(100); no_sound();
                     }
                     if (shift_p == 1 && ascii_char != '00') {
                         if (textid2 < 10) {
@@ -3374,7 +3376,6 @@ void login_screen() {
                                 ftext2[textid2] = '\0';
                             }
                             login_visual();
-                            play_sound(700); sleep(100); no_sound();
                         }
                     }
                     else if (ascii_char == '\E') {
