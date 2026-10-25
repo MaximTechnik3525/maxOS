@@ -1371,6 +1371,35 @@ void execute_commands(char* str) {
 void render_win() {
         for (int y = 177; y < 687; y++) {
             for (int x = 160; x < 1130; x++) {
+                if (y == 177 && (x == 160 || x == 161 || x == 162)) { continue; }
+                if (y == 178 && (x == 160 || x == 161)) { continue; }
+                if (y == 179 && (x == 160)) { continue; }
+                if (y == 177 && (x == 1129 || x == 1128 || x == 1127)) { continue; }
+                if (y == 178 && (x == 1129 || x == 1128)) { continue; }
+                if (y == 179 && (x == 1129)) { continue; }
+                if (y == 686 && (x == 160 || x == 161 || x == 162)) { continue; }
+                if (y == 685 && (x == 160 || x == 161)) { continue; }
+                if (y == 684 && (x == 160)) { continue; }
+                if (y == 686 && (x == 1129 || x == 1128 || x == 1127)) { continue; }
+                if (y == 685 && (x == 1129 || x == 1128)) { continue; }
+                if (y == 684 && (x == 1129)) { continue; }
+                int isBorder = 0;
+                if (x == 177 && x == 163) { isBorder = 1; }
+                else if (y == 178 && x == 162) { isBorder = 1; }
+                else if (y == 179 && x == 161) { isBorder = 1; }
+                else if (y == 177 && x == 1126) { isBorder = 1; }
+                else if (y == 178 && x == 1127) { isBorder = 1; }
+                else if (y == 179 && x == 1128) { isBorder = 1; }    
+                else if (y == 686 && x == 163) { isBorder = 1; }
+                else if (y == 685 && x == 1127) { isBorder = 1; }
+                else if (y == 684 && x == 1128) { isBorder = 1;}
+                else if (y == 686 && x == 1126) { isBorder = 1; }
+                else if (y == 685 && x == 1127) { isBorder = 1; }
+                else if (y == 684 && x == 1128) { isBorder = 1; }
+                if (isBorder == 1) {
+                    gfx_memory[y * x_render + x] = 0xC618;
+                    continue;
+                }
                 if (x == 160 || x == 1129) {
                     gfx_memory[y * x_render + x] = 0xC618;
                 }
@@ -2566,6 +2595,15 @@ void draw_menu() {
             }
             else if (y == 375) {
                 gfx_memory[y * x_render + x] = 0xFFFF;
+            }
+        }
+    }
+    for (int y = 0; y < y_render - 25; y++) {
+        for (int x = 0; x < x_render; x++) {
+            if ((x > 250 && y < y_render) || (y < 350 && x < 251)) {
+                if (((x + y) & 1) == 0) {
+                    gfx_memory[y * x_render + x] = 0x10A2;
+                }
             }
         }
     }
