@@ -463,7 +463,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     break;
                 }
                 if (ascii_char == '2') {
-                    print_string("Disk scan skiped", 10, 60, 0xFFFF);
+                    print_string("Disk scan skiped.", 10, 60, 0xFFFF);
                     choice = 0;
                     break;
                 }
@@ -500,7 +500,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         disk_exists = 0;
         sectors = 5000;
         sleep(100);
-        print_string("Disk drive doesn't found!", 10, 90, 0xFFFF);
+        print_string("Disk scan skiped by user. maxFS2 disabled.", 10, 90, 0xFFFF);
         update_screen();
     }
     init_mouse();
