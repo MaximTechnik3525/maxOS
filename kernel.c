@@ -445,12 +445,36 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             gfx_memory[y * x_render + x] = 0x0000;
         }
     }
-    print_string("maxOS v3.9 startup...", 10, 15, 0xFFFF);
+    print_string("===maxOS v3.9 Boot Menu===", 10, 15, 0xFFFF);
+    print_string("Graphics initialized!", 10, 75, 0xFFFF);
+    print_string("Press [1] to scan disk (can be errors)", 10, 30, 0xFFFF);
+    print_string("Press [2] to skip disk scan", 10, 45, 0xFFFF);
     update_screen();
+    int choice = 0;
+    while (1) {
+        unsigned char status = inb(0x64);
+        if (status & 0x01) {
+            unsigned char scan_code = inb(0x60);
+            if (scan_code < 0x80) {
+                char ascii_char = scan_code_to_ascii(scan_code);
+                if (ascii_char == '1') {
+                    print_string("Disk scan is starting...", 10, 60, 0xFFFF);
+                    choice = 1;
+                    break;
+                }
+                if (ascii_char == '2') {
+                    print_string("Disk scan skiped", 10, 60, 0xFFFF);
+                    choice = 0;
+                    break;
+                }
+            }
+        }
+    }
     sleep(100);
-    print_string("Graphics initialized!", 10, 30, 0xFFFF);
     update_screen();
-    if ((inb(0x1F7)) != 0xFF) {
+    unsigned char ide_status = inb(0x1F7);
+    if (choice == 1) {
+    if (ide_status != 0xFF && ide_status != 0x00 && ide_status != 0x7F) {
         for (int i = 0; i < 11; i++) {
             int checkSector = 4999 + i;
             char fileText[77];
@@ -461,19 +485,27 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             }
         }
         sleep(100);
-        print_string("Disk drive has been scanned and found!", 10, 45, 0xFFFF);
+        print_string("Disk drive has been scanned and found!", 10, 90, 0xFFFF);
         update_screen();
     }
     else {
         disk_exists = 0;
         sectors = 5000;
         sleep(100);
-        print_string("Disk drive doesn't found!", 10, 45, 0xFFFF);
+        print_string("Disk drive doesn't found!", 10, 90, 0xFFFF);
+        update_screen();
+    }
+    }
+    else {
+        disk_exists = 0;
+        sectors = 5000;
+        sleep(100);
+        print_string("Disk drive doesn't found!", 10, 90, 0xFFFF);
         update_screen();
     }
     init_mouse();
     sleep(100);
-    print_string("Mouse initializing complete!", 10, 60, 0xFFFF);
+    print_string("Mouse initializing complete!", 10, 105, 0xFFFF);
     update_screen();
     for (int y = 0; y < y_render; y++) {
         int row_offset = (y << 10) + (y << 8);
@@ -2602,7 +2634,7 @@ void draw_menu() {
         for (int x = 0; x < x_render; x++) {
             if ((x > 250 && y < y_render) || (y < 350 && x < 251)) {
                 if (((x + y) & 1) == 0) {
-                    gfx_memory[y * x_render + x] = 0x10A2;
+                    gfx_memory[y * x_render + x] = 0x1000;
                 }
             }
         }
