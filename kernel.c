@@ -2247,18 +2247,8 @@ void draw_btn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn
             }
         }
     }
-    // for (int y = btn2_y; y < btn2_y + btn2_h; y++) {
-    //     for (int x = btn2_x; x < btn2_x + btn2_w; x++) {
-    //         gfx_memory[y * x_render + x] = 0x7BEF;
-    //     }
-    // }
-    // for (int y = btn_y; y < btn_y + btn_h; y++) {
-    //     for (int x = btn_x; x < btn_x + btn_w; x++) {
-    //         gfx_memory[y * x_render + x] = 0xC618;
-    //     }
-    // }
-    if (theme != 11) print_string("Help", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
-    else if (theme == 11) print_string("Help", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Help", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("Help", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 
 void draw_cpubtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
@@ -2275,8 +2265,8 @@ void draw_cpubtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
             }
         }
     }
-    if (theme != 11) print_string("Hardware info", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
-    else if (theme == 11) print_string("Hardware info", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Hardware information", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("Hardware information", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_filebtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
@@ -2292,8 +2282,8 @@ void draw_filebtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
             }
         }
     }
-    if (theme != 11) print_string("Notepad", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
-    else if (theme == 11) print_string("Notepad", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Notepad", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("Notepad", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
@@ -2309,8 +2299,8 @@ void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
             }
         }
     }
-    if (theme != 11) print_string("File explorer", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
-    else if (theme == 11) print_string("File explorer", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("File explorer", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("File explorer", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
@@ -2325,8 +2315,8 @@ void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
             }
         }
     }
-    if (theme != 11) print_string("Pong game", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
-    else if (theme == 11) print_string("Pong game", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Pong game", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("Pong game", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
@@ -2341,8 +2331,8 @@ void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
             }
         }
     }
-    if (theme != 11) print_string("Power control", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
-    else if (theme == 11) print_string("Power control", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Power control", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("Power control", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_passbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
@@ -2357,8 +2347,8 @@ void draw_passbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
             }
         }
     }
-    if (theme != 11) print_string("Password setup", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
-    else if (theme == 11) print_string("Password setup", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Password control", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("Password control", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_panelbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
@@ -2373,8 +2363,8 @@ void draw_panelbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, in
             }
         }
     }
-    if (theme != 11) print_string("Control panel", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
-    else if (theme == 11) print_string("Control panel", txt_pos_x - 5, txt_pos_y + 15, 0x0000);
+    print_string("Control panel", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("Control panel", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
