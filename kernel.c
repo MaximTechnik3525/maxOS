@@ -446,7 +446,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         }
     }
     print_string("===maxOS v3.9 Boot Menu===", 10, 15, 0xFFFF);
-    print_string("Graphics initialized!", 10, 75, 0xFFFF);
+    print_string("Graphics initialized! 1280x720x16 mode working!", 10, 75, 0xFFFF);
     print_string("Press [1] to scan disk (can be errors)", 10, 30, 0xFFFF);
     print_string("Press [2] to skip disk scan", 10, 45, 0xFFFF);
     update_screen();
