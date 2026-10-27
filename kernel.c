@@ -841,6 +841,13 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
                         control_panel();
                     }
+                    if (shift == 1 && ascii_char == 'l' && drag == 0 && disk_exists == 1) {
+                        textid2 = 0;
+                        for (int i = 0; i < 15; i++) {
+                            ftext2[i] = '\0';
+                        }
+                        login_screen();
+                    }
                     if (ascii_char == 'U' && pos_y > 12) {
                         if (tail == 0) { prev_cursor(); }
                         pos_y -= 10;
@@ -3149,6 +3156,16 @@ void login_visual() {
                 else { gfx_memory[row_offset + x] = 0x2124; }
         }
     }
+    for (int y = 0; y < y_render; y++) {
+        for (int x = 0; x < x_render; x++) {
+            if (((x + y) & 1) == 0) {
+                gfx_memory[y * x_render + x] = 0x1000;
+            }
+            else {
+                continue;
+            }
+        }
+    }
             for (int y = 0; y < y_render; y++) {
             for (int x = 0; x < x_render; x++) {
                 if (((x + y) & 1) == 0) {
@@ -3165,7 +3182,7 @@ void login_visual() {
         for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
             int screen_x = 10 + x;
-            int screen_y = 373 + y;
+            int screen_y = 370 + y;
             if (screen_x < x_render && screen_y < y_render && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = pass_icon[y][x];
                 if (pixel_type2 == 2) { gfx_memory[screen_y * x_render + screen_x] = 0xFFE0; }
@@ -3174,21 +3191,24 @@ void login_visual() {
             }
         }
         }
-        print_string("Enter password to login:", 31, 377, 0x0000);
-        print_string("Enter password to login:", 30, 376, 0xFF9E);
-        print_string("If you don't know password, you need to write new maxOS image. This will delete all your save data!", 11, 421, 0x0000);
-        print_string("If you don't know password, you need to write new maxOS image. This will delete all your save data!", 10, 420, 0xFF9E);
-        print_string(ftext2, 256, 377, 0x0000);
-        print_string(ftext2, 255, 376, 0xFF9E);
+        print_string("Welcome back, user!", 6, 6, 0x0000);
+        print_string("Welcome back, user!", 5, 5, 0xFF9E);
+        print_string("Enter password:", 31, 374, 0x0000);
+        print_string("Enter password:", 30, 373, 0xFF9E);
+        print_string(ftext2, 171, 374, 0x0000);
+        print_string(ftext2, 170, 373, 0xFF9E);
+        clock();
 }
 
 void login_screen() {
         w_mode = 1;
         drag = 3;
-        char read_pass[10];
+        char read_pass[15];
         read(5012, read_pass);
+
     login_visual();
         while (1) {
+            login_visual();
             update_screen();
             unsigned char status = inb(0x64);
             if (status & 0x01) {
