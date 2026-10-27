@@ -1862,15 +1862,16 @@ void filew() {
 }
 
 void help() {
-        drag = 1;
-        render_win();
-        print_string("Help", 168, 183, 0x0000);
-        print_string("Help", 167, 182, 0xFFFF);
-        print_string("Mouse or arrows to move cursor.", 170, 200, 0x0000);
-        print_string("Esc to redraw desktop and close windows.", 170, 230, 0x0000);
-        print_string("E or LMB to click.", 170, 215, 0x0000);
-        print_string("F1 to save and run, F2 to save and exit in notepad.", 170, 245, 0x0000);
-        print_string("F to format disk to maxFS2 in explorer.", 170, 260, 0x0000);
+    drag = 1;
+    render_win();
+    print_string("Help", 168, 183, 0x0000);
+    print_string("Help", 167, 182, 0xFFFF);
+    print_string("Mouse or arrows to move cursor.", 170, 200, 0x0000);
+    print_string("Esc to redraw desktop and close windows.", 170, 230, 0x0000);
+    print_string("E or LMB to click.", 170, 215, 0x0000);
+    print_string("F1 to save and run, F2 to save and exit in notepad.", 170, 245, 0x0000);
+    print_string("F to format disk to maxFS2 in explorer.", 170, 260, 0x0000);
+    print_string("Shift + L to open lock screen.", 170, 275, 0x0000);
 }
 
 void control_panel() {
