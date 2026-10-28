@@ -519,6 +519,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     sleep (1500);
     for (int y = 0; y < y_render; y++) {
         for (int x = 0; x < x_render; x++) {
+            if (((x + y) & 1) == 0) { gfx_memory[y * x_render + x] = 0x1000; }
+            else { continue; }
+        }
+    }
+    for (int y = 0; y < y_render; y++) {
+        for (int x = 0; x < x_render; x++) {
             if (y == 385 || y == 405) {
                 gfx_memory[y * x_render + x] = 0xFF9E;
             }
@@ -537,7 +543,14 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     print_string("By MaximTechnik3525", 11, 16, 0x0000);
     print_string("By MaximTechnik3525", 10, 15, 0xFFFF);
     update_screen();
-    play_sound(525); sleep(90); play_sound(660); sleep(90); play_sound(785); sleep(90); play_sound(1050); sleep(200); no_sound();
+    play_sound(293); sleep(150);
+    play_sound(440); sleep(150);
+    no_sound(); sleep(30);
+    play_sound(392); sleep(300);
+    play_sound(293); sleep(150);
+    play_sound(440); sleep(200);
+    play_sound(587); sleep(650);
+    no_sound();
     sleep(1500);
     char rp[11];
     read(5012, rp);
@@ -2078,10 +2091,11 @@ void shutdown() {
     }
     print_string("maxOS is shutting down...", 550, 420, 0xF800);
     update_screen();
-    play_sound(880); sleep(100); no_sound();
-    play_sound(700); sleep(100); no_sound();
-    play_sound(555); sleep(100); no_sound();
-    play_sound(440); sleep(250); no_sound();
+    play_sound(587); sleep(150);
+    play_sound(440); sleep(150);
+    play_sound(392); sleep(250);
+    play_sound(293); sleep(500);
+    no_sound();
     sleep(1700);
     outw(0xB004, 0x2000);
     outw(0x604, 0x2000);
@@ -2106,10 +2120,11 @@ void reboot() {
     }
     print_string("maxOS is rebooting...", 550, 420, 0xF800);
     update_screen();
-    play_sound(880); sleep(100); no_sound();
-    play_sound(700); sleep(100); no_sound();
-    play_sound(555); sleep(100); no_sound();
-    play_sound(440); sleep(250); no_sound();
+    play_sound(587); sleep(150);
+    play_sound(440); sleep(150);
+    play_sound(392); sleep(250);
+    play_sound(293); sleep(500);
+    no_sound();
     sleep(1700);
     outb(0x64, 0xFE);
     volatile unsigned long long idt_pointer = 0;
