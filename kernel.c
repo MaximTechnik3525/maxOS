@@ -1,4 +1,30 @@
 #pragma pack(push, 1)
+typedef struct {
+    unsigned char e_ident[16]; // Магические байты (0x7F, 'E', 'L', 'F')
+    unsigned short e_type;      // Тип файла (2 = Executable)
+    unsigned short e_machine;   // Архитектура (3 = x86 i386)
+    unsigned int   e_version;   // Версия (1)
+    unsigned int   e_entry;     // ТОЧКА ВХОДА (Адрес самой первой инструкции!)
+    unsigned int   e_phoff;     // Смещение до таблицы Program Header
+    unsigned int   e_shoff;     // Смещение до Section Header
+    unsigned int   e_flags;
+    unsigned short e_ehsize;
+    unsigned short e_phentsize;
+    unsigned short e_phnum;     // Количество программных заголовков
+    unsigned short e_shentsize;
+    unsigned short e_shnum;
+    unsigned short e_shstrndx;
+} Elf32_Ehdr;
+typedef struct {
+    unsigned int p_type;   // Тип сегмента (1 = PT_LOAD, загружаемый)
+    unsigned int p_offset; // Смещение сегмента в файле
+    unsigned int p_vaddr;  // Виртуальный адрес сегмента в ОЗУ
+    unsigned int p_paddr;  // Физический адрес
+    unsigned int p_filesz; // Размер сегмента в файле
+    unsigned int p_memsz;  // Размер сегмента в памяти
+    unsigned int p_flags;  // Права (Read/Write/Execute)
+    unsigned int p_align;
+} Elf32_Phdr;
 struct multiboot_info {
     unsigned int flags;
     unsigned int mem_lower;
@@ -21,7 +47,6 @@ struct multiboot_info {
     unsigned short vbe_interface_seg;
     unsigned short vbe_interface_off;
     unsigned short vbe_interface_len;
-    // Графический фреймбуфер (начиная с 88-го байта структуры)
     unsigned long long framebuffer_addr; 
     unsigned int framebuffer_pitch;     // Длина строки в БАЙТАХ
     unsigned int framebuffer_width;     // Ширина экрана в пикселях
@@ -423,6 +448,7 @@ int scr = 1;
 int shift = 0;
 int pong_opened = 0;
 int busy = 0;
+int notepad_opened = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
     ready_min = bcd_to_binary(raw_min2);
@@ -625,7 +651,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         }
                     }
                     if (click == 1 && menuOpened == 0 && delta_x == 0 && delta_y == 0) { // MOUSE CLICKS
-                        play_sound(1600); sleep(5); no_sound();
                         if (pos_x <= 25 && pos_y >= 695 && drag == 0)  {
                             menuOpened = 1;
                             sleep(100);
@@ -633,7 +658,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         }
                     }
                     else if (click == 1 && menuOpened == 1 && delta_x == 0 && delta_y == 0) {
-                        play_sound(1600); sleep(5); no_sound();
                         if (pos_x <= 25 && pos_y >= 695)  {
                             menuOpened = 0;
                             sleep(100);
@@ -790,6 +814,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         menuOpened = 0;
                         panel_opened = 0;
                         pong_opened = 0;
+                        notepad_opened = 0;
                         draw_window();
                         play_sound(150); sleep(80); no_sound();
                         play_sound(110); sleep(120); no_sound();
@@ -882,7 +907,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_cursor(pos_x, pos_y);
                     }
                     if (ascii_char == 'e') {
-                        play_sound(1600); sleep(5); no_sound();
                         if (pos_x <= 25 && pos_y >= 695)  {
                             if (menuOpened == 0 && drag == 0) {
                                 draw_menu();
@@ -1144,6 +1168,28 @@ int parse_number(char** stream) {
 int user_x = 0;
 int user_y = 0;
 int was_screen = 0;
+int load_elf(char* file_buffer) {
+    Elf32_Ehdr* ehdr = (Elf32_Ehdr*)file_buffer;
+    if (ehdr->e_ident[0] != 0x7F || ehdr->e_ident[1] != 'E' ||
+    ehdr->e_ident[2] != 'L' || ehdr->e_ident[3] != 'F') { return 0; }
+    if (ehdr->e_type != 2 || ehdr->e_machine != 3) { return -1; }
+    Elf32_Phdr* phdr = (Elf32_Phdr*)((unsigned int)file_buffer + ehdr->e_phoff);
+    for (int i = 0; i < ehdr->e_phnum; i++) {
+        if (phdr[i].p_type == 1) {
+            unsigned char* src = (unsigned char*)(file_buffer + phdr[i].p_offset);
+            unsigned char* dest = (unsigned char*)phdr[i].p_vaddr;
+            for (unsigned int j = 0; j < phdr[i].p_filesz; j++) {
+                dest[j] = src[j];
+            }
+            for (unsigned int j = phdr[i].p_filesz; j < phdr[i].p_memsz; j++) {
+                dest[j] = 0;
+            }
+        }
+    }
+    void (*entry_point)() = (void (*)())(ehdr->e_entry);
+    entry_point();
+    return 1;
+}
 void execute_commands(char* str) {
     user_x = 0; user_y = 0; was_screen = 0;
     int i = 0;
@@ -1490,14 +1536,19 @@ void render_win() {
                 }
             }
         }
+        if (notepad_opened == 1) {
+            print_string("F1 to save and run, F2 to save and exit, F3 to test file, Esc to exit without saving.", 170, 640, 0x0000);
+            print_string("Press shift + F1/F2/F3/F4/F5 to change text color.", 170, 655, 0x0000);
+            print_string("To make app write '#app#', then other commands.", 170, 670, 0x0000);
+        }
 }
 void open_file(int sector) 
 {
     drag = 1;
     explorer_opened = 0;
     char file_output[1000];
-    if (disk_exists == 1) { read(sector, file_output); }
-    if (file_output[0] != '\0') {
+    if (disk_exists == 1 && sector != 1) { read(sector, file_output); }
+    if (file_output[0] != '\0' && sector != 1) {
     if (str_in(file_output, "#app#")) 
     {
         execute_commands(file_output);
@@ -1510,14 +1561,26 @@ void open_file(int sector)
         print_string(file_output, 170, 200, text_col);
         print_string("Press Esc to close this window.", 170, 150 + 510, 0x0000);
     }
-}
-else {
+    }
+    else if (sector == 1) {
+        if (str_in(ftext, "#app#")) {
+            execute_commands(ftext);
+        }
+        else {
+            render_win();
+            print_string("Text file preview", 168, 183, 0x0000);
+            print_string("Text file preview", 167, 182, 0xFFFF);
+            print_string(ftext, 170, 200, text_col);
+            print_string("Press Esc to close this window.", 170, 150 + 510, 0x0000);
+        }
+    }
+    else {
         render_win();
         print_string("No file", 168, 183, 0x0000);
         print_string("No file", 167, 182, 0xFFFF);
-        print_string("File not found or empty!", 170, 200, text_col);
+        print_string("File not found or empty!", 170, 200, 0x0000);
         print_string("Press Esc to close this window.", 170, 660, 0x0000);
-}
+    }
 }
 int str_cmp(char* str1, char* str2) {
     int i = 0;
@@ -1599,6 +1662,7 @@ void filew() {
         read((sectors - 1), str);
     }
     w_mode = 1;
+    notepad_opened = 1;
     render_win();
     if (str_cmp(ftext, str)) {
         if (str_in(ftext, "#app#")) {
@@ -1620,9 +1684,6 @@ void filew() {
             print_string("*Notepad: text file", 167, 182, 0xFFFF);
         }
     }
-    print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", 170, 640, 0x0000);
-    print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", 170, 655, 0x0000);
-    print_string("To make app write '#app#'.", 170, 670, 0x0000);
     update_screen();
     print_string(ftext, 170, 200, text_col);
     while (1) {
@@ -1666,9 +1727,6 @@ void filew() {
                                 print_string("*Notepad: text file", 167, 182, 0xFFFF);
                             }
                         }
-                        print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", 170, 640, 0x0000);
-                        print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", 170, 655, 0x0000);
-                        print_string("To make app write '#app#'.", 170, 670, 0x0000);
                         update_screen();
                         print_string(ftext, 170, 200, text_col);
                     }
@@ -1711,9 +1769,6 @@ void filew() {
                                 print_string("*Notepad: text file", 167, 182, 0xFFFF);
                             }
                         }
-                        print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", 170, 640, 0x0000);
-                        print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", 170, 655, 0x0000);
-                        print_string("To make app write '#app#'.", 170, 670, 0x0000);
                         update_screen();
                         print_string(ftext, 170, 200, text_col);
                     }
@@ -1785,9 +1840,6 @@ void filew() {
                                 print_string("*Notepad: text file", 167, 182, 0xFFFF);
                             }
                         }
-                        print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", 170, 640, 0x0000);
-                        print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", 170, 655, 0x0000);
-                        print_string("To make app write '#app#'.", 170, 670, 0x0000);
                         update_screen();
                         print_string(ftext, 170, 200, text_col);
                     }
@@ -1820,9 +1872,6 @@ void filew() {
                                 print_string("*Notepad: text file", 167, 182, 0xFFFF);
                             }
                         }
-                        print_string("Press F1 to save and run, F2 to save and exit, Esc to exit without saving.", 170, 640, 0x0000);
-                        print_string("Press shift + F1-F5 to change text color. Color don't saves to disk!", 170, 655, 0x0000);
-                        print_string("To make app write '#app#'.", 170, 670, 0x0000);
                         update_screen();
                         print_string(ftext, 170, 200, text_col);
                 }
@@ -1832,6 +1881,7 @@ void filew() {
                         play_sound(800); sleep(100); no_sound();
                         play_sound(1200); sleep(120); no_sound();
                         w_mode = 0;
+                        notepad_opened = 0;
                         draw_window();
                         open_file(sectors);
                         sectors++;
@@ -1850,6 +1900,7 @@ void filew() {
                         play_sound(800); sleep(100); no_sound();
                         play_sound(1200); sleep(120); no_sound();
                         w_mode = 0;
+                        notepad_opened = 0;
                         draw_window();
                         sectors++;
                         createdFiles++;
@@ -1865,8 +1916,17 @@ void filew() {
                     play_sound(150); sleep(80); no_sound();
                     play_sound(110); sleep(120); no_sound();
                     w_mode = 0;
+                    notepad_opened = 0;
                     drag = 0;
                     draw_window();
+                    break;
+                }
+                else if (ascii_char == 'T') {
+                    play_sound(800); sleep(100); play_sound(1200); sleep(120); no_sound();
+                    w_mode = 0;
+                    notepad_opened = 0;
+                    draw_window();
+                    open_file(1);
                     break;
                 }
             }
