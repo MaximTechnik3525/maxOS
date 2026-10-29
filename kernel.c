@@ -1537,7 +1537,7 @@ void render_win() {
             }
         }
         if (notepad_opened == 1) {
-            print_string("F1 to save and run, F2 to save and exit, F3 to test file, Esc to exit without saving.", 170, 640, 0x0000);
+            print_string("F1 to save and run, F2 to save and exit, F3 to preview file, Esc to exit without saving.", 170, 640, 0x0000);
             print_string("Press shift + F1/F2/F3/F4/F5 to change text color.", 170, 655, 0x0000);
             print_string("To make app write '#app#', then other commands.", 170, 670, 0x0000);
         }
@@ -1942,7 +1942,7 @@ void help() {
     print_string("Mouse or arrows to move cursor.", 170, 200, 0x0000);
     print_string("Esc to redraw desktop and close windows.", 170, 230, 0x0000);
     print_string("E or LMB to click.", 170, 215, 0x0000);
-    print_string("F1 to save and run, F2 to save and exit in notepad.", 170, 245, 0x0000);
+    print_string("F1 to save and run, F2 to save and exit, F3 to preview file in notepad.", 170, 245, 0x0000);
     print_string("F to format disk to maxFS2 in explorer.", 170, 260, 0x0000);
     print_string("Shift + L to open lock screen.", 170, 275, 0x0000);
 }
@@ -2238,7 +2238,6 @@ int str_in(char* main_string, char* substring) {
     return 0;
 }
 void play_sound(unsigned int nfreq) {
-    if (theme != 11) {
     unsigned int div;
     unsigned char tmp;
     div = 1193180 / nfreq;
@@ -2250,7 +2249,7 @@ void play_sound(unsigned int nfreq) {
         outb(0x61, tmp | 3);
     }
 }
-}
+
 void no_sound() {
     unsigned char tmp = inb(0x61) & 0xFC;
     outb(0x61, tmp);
