@@ -3283,8 +3283,14 @@ void login_screen() {
 
     login_visual();
         while (1) {
-            login_visual();
+            unsigned char raw_min = read_rtc_register(0x02);
+            int m = bcd_to_binary(raw_min);
+            if (currentMin != m) {
+                currentMin = m;
+                login_visual();
+            }
             update_screen();
+            sleep(10);
             unsigned char status = inb(0x64);
             if (status & 0x01) {
                 if (status & 0x20) {
