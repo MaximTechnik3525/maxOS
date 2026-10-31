@@ -2884,8 +2884,8 @@ void screensaver() {
                 gfx_memory[py * x_render + px] = 0x10A2;
             }
         }
-        print_string("maxOS", txt_x + 1, txt_y + 1, 0x0000);
-        print_string("maxOS", txt_x, txt_y, 0xFF9E);
+        print_string("MAXOS", txt_x + 1, txt_y + 1, 0x0000);
+        print_string("MAXOS", txt_x, txt_y, 0xFF9E);
         if (txt_x < 1220 && was_x == 0) {
             txt_x += 5;
         }
@@ -2901,7 +2901,7 @@ void screensaver() {
         if (txt_y < 30) { was_y = 0; }
         if (txt_x < 30) { was_x = 0; }
         update_screen();
-        sleep(30);
+        sleep(10);
     }
 }
 void print_string(char* str, int x, int y, unsigned short color) {
