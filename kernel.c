@@ -449,6 +449,11 @@ int shift = 0;
 int pong_opened = 0;
 int busy = 0;
 int notepad_opened = 0;
+int win2_x = 160;
+int win2_y = 177;
+int win2_w = 970;
+int win2_h = 509;
+int is_drag = 0;
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
     ready_min = bcd_to_binary(raw_min2);
@@ -1467,81 +1472,58 @@ void execute_commands(char* str) {
 }
 
 void render_win() {
-        for (int y = 177; y < 687; y++) {
-            for (int x = 160; x < 1130; x++) {
-                if (y == 177 && (x == 160 || x == 161 || x == 162)) { continue; }
-                if (y == 178 && (x == 160 || x == 161)) { continue; }
-                if (y == 179 && (x == 160)) { continue; }
-                if (y == 177 && (x == 1129 || x == 1128 || x == 1127)) { continue; }
-                if (y == 178 && (x == 1129 || x == 1128)) { continue; }
-                if (y == 179 && (x == 1129)) { continue; }
-                if (y == 686 && (x == 160 || x == 161 || x == 162)) { continue; }
-                if (y == 685 && (x == 160 || x == 161)) { continue; }
-                if (y == 684 && (x == 160)) { continue; }
-                if (y == 686 && (x == 1129 || x == 1128 || x == 1127)) { continue; }
-                if (y == 685 && (x == 1129 || x == 1128)) { continue; }
-                if (y == 684 && (x == 1129)) { continue; }
-                int isBorder = 0;
-                if (x == 177 && x == 163) { isBorder = 1; }
-                else if (y == 178 && x == 162) { isBorder = 1; }
-                else if (y == 179 && x == 161) { isBorder = 1; }
-                else if (y == 177 && x == 1126) { isBorder = 1; }
-                else if (y == 178 && x == 1127) { isBorder = 1; }
-                else if (y == 179 && x == 1128) { isBorder = 1; }    
-                else if (y == 686 && x == 163) { isBorder = 1; }
-                else if (y == 685 && x == 1127) { isBorder = 1; }
-                else if (y == 684 && x == 1128) { isBorder = 1;}
-                else if (y == 686 && x == 1126) { isBorder = 1; }
-                else if (y == 685 && x == 1127) { isBorder = 1; }
-                else if (y == 684 && x == 1128) { isBorder = 1; }
-                if (isBorder == 1) {
-                    gfx_memory[y * x_render + x] = 0xC618;
-                    continue;
-                }
-                if (x == 160 || x == 1129) {
-                    gfx_memory[y * x_render + x] = 0xC618;
-                }
-                else if (y == 177) {
-                    gfx_memory[y * x_render + x] = 0xFF9E;
-                }
-                else if (y < 185) {
-                    if (((x + y) & 1) == 0) {
-                        gfx_memory[y * x_render + x] = 0x5AEB;
-                    }
-                    else {
-                        continue;
-                    }
-                }
-                else if (y < 192) {
-                    if (((x + y) & 1) == 0) { gfx_memory[y * x_render + x] = 0x10A2; }
-                    else { continue; }
-                }
-                else if (y >= 192 && y < 220 && explorer_opened == 1) {
-                    gfx_memory[y * x_render + x] = 0x7BEF;
-                }
-                else if (pong_opened != 1) {
-                    if (y < 380) {
-                        gfx_memory[y * x_render + x] = 0xFF9E;
-                    }
-                    else if (y < 696) {
-                        gfx_memory[y * x_render + x] = 0xF77D;
-                    }
-                    else { gfx_memory[y * x_render + x] = 0x0000; }
-                }
-                else {
-                    if (y < 696) {
-                        gfx_memory[y * x_render + x] = 0xF77D;
-                    }
-                    else { gfx_memory[y * x_render + x] = 0x0000; }
-                }
+    int end_y = win2_y + win2_h;
+    int end_x = win2_x + win2_w;
+    for (int y = win2_y; y < end_y; y++) {
+        for (int x = win2_x; x < end_x; x++) {
+            if (y == win2_y && (x == win2_x || x == win2_x + 1 || x == win2_x + 2)) { continue; }
+            if (y == win2_y + 1 && (x == win2_x || x == win2_x + 1)) { continue; }
+            if (y == win2_y + 2 && (x == win2_x)) { continue; }
+            if (y == win2_y && (x == end_x - 1 || x == end_x - 2 || x == end_x - 3)) { continue; }
+            if (y == win2_y + 1 && (x == end_x - 1 || x == end_x - 2)) { continue; }
+            if (y == win2_y + 2 && (x == end_x - 1)) { continue; }
+            if (y == end_y - 1 && (x == win2_x || x == win2_x + 1 || x == win2_x + 2)) { continue; }
+            if (y == end_y - 2 && (x == win2_x || x == win2_x + 1)) { continue; }
+            if (y == win2_y + 3 && (x == win2_x)) { continue; }
+            if (y == end_y - 1 && (x == end_x - 1 || x == end_x - 2 || x == end_x - 3)) { continue; }
+            if (y == end_y - 2 && (x == end_x - 1 || x == end_x - 2)) { continue; }
+            if (y == end_y - 3 && (x == end_x - 1)) { continue; }
+            int isBorder = 0;
+            if (x == win2_x || x == end_x - 1) { isBorder = 1; }
+            else if (y == win2_y || y == end_y - 1) { isBorder = 1; }
+            if (isBorder == 1) {
+                gfx_memory[y * x_render + x] = 0xC618;
+                continue;
+            }
+            if (y < win2_y + 8) { 
+                if (((x + y) & 1) == 0) { gfx_memory[y * x_render + x] = 0x5AEB; }
+                else { continue; } 
+            }
+            else if (y < win2_y + 15) { 
+                if (((x + y) & 1) == 0) { gfx_memory[y * x_render + x] = 0x10A2; }
+                else { continue; }
+            }
+            else if (y < win2_y + 43 && explorer_opened == 1) { 
+                gfx_memory[y * x_render + x] = 0x7BEF; 
+            }
+            else if (pong_opened != 1) {
+                if (y < win2_y + 203) { gfx_memory[y * x_render + x] = 0xFF9E; }
+                else if (y < end_y - 1) { gfx_memory[y * x_render + x] = 0xF77D; }
+                else { gfx_memory[y * x_render + x] = 0x0000; }
+            }
+            else {
+                if (y < end_y - 1) { gfx_memory[y * x_render + x] = 0xF77D; }
+                else { gfx_memory[y * x_render + x] = 0x0000; }
             }
         }
-        if (notepad_opened == 1) {
-            print_string("F1 to save and run, F2 to save and exit, F3 to preview file, Esc to exit without saving.", 170, 640, 0x0000);
-            print_string("Press shift + F1/F2/F3/F4/F5 to change text color.", 170, 655, 0x0000);
-            print_string("To make app write '#app#', then other commands.", 170, 670, 0x0000);
-        }
+    }
+    if (notepad_opened == 1) {
+        print_string("F1 to save and run, F2 to save and exit, F3 to preview file, Esc to exit without saving.", win2_x + 10, win2_y + 463, 0x0000);
+        print_string("Press shift + F1/F2/F3/F4/F5 to change text color.", win2_x + 10, win2_y + 478, 0x0000);
+        print_string("To make app write '#app#', then other commands.", win2_x + 10, win2_y + 493, 0x0000);
+    }
 }
+
 void open_file(int sector) 
 {
     drag = 1;
