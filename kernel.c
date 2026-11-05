@@ -430,30 +430,42 @@ char ftext[1000] = {0};
 int fid = 0;
 int tail = 0;
 int repeats = 1;
-int explorer_opened = 0;
 int sectors = 5000;
 int createdFiles = 0;
 unsigned char raw_min2;
 int ready_min = 0;
 int currentMin = 0;
-int power_opened = 0;
 int disk_exists = 1;
 int timer = 0;
 int menuOpened = 0;
 int show_box = 0;
 int mouse_speed = 2;
-int panel_opened = 0;
 int cursor_speed_counter = 2;
 int scr = 1;
 int shift = 0;
-int pong_opened = 0;
 int busy = 0;
-int notepad_opened = 0;
 int win2_x = 160;
 int win2_y = 177;
 int win2_w = 970;
 int win2_h = 509;
 int is_drag = 0;
+int help_opened = 0;
+int info_opened = 0;
+int notepad_opened = 0;
+int explorer_opened = 0;
+int pong_opened = 0;
+int power_opened = 0;
+int pass_opened = 0;
+int panel_opened = 0;
+int open1 = 0;
+int open2 = 0;
+int open3 = 0;
+int app_opened = 0;
+char cpu_name[49];
+char ram[32];
+char fs_msg[32];
+char file_output[1000];
+void get_cpu(char* buffer);
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
     ready_min = bcd_to_binary(raw_min2);
@@ -588,6 +600,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     if (rp[0] != '\0') {
         login_screen();
     }
+    get_cpu(cpu_name);
+    int_str(ram_mb, ram);
+    if (disk_exists == 1) {
+        write("ATA driver and maxFS2 OK!", 5011);
+        read(5011, fs_msg);
+    }
     draw_window(); drag = 0;
     unsigned char packet[3];
     while(1) {
@@ -595,7 +613,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         if (timer >= 6000 && scr == 1) {
             screensaver();
         }
-        else if (timer >= 6000 && scr == 0){
+        else if (timer >= 120000 && scr == 0){
             timer = 0;
         }
         outb(0x70, 0x0A);
@@ -658,14 +676,55 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (click == 1 && menuOpened == 0 && delta_x == 0 && delta_y == 0) { // MOUSE CLICKS
                         if (pos_x <= 25 && pos_y >= 695 && drag == 0)  {
                             menuOpened = 1;
-                            sleep(100);
                             draw_menu();
                         }
+                    }
+                    else if (click == 1 && drag == 1) {
+                        if (click == 1 && is_drag != 1 && pos_x >= win2_x && pos_x <= (win2_x + win2_w) && pos_y >= win2_y && pos_y <= (win2_y + 15)) {
+                            is_drag = 1;
+                            prev_cursor();
+                            draw_window();
+                            update_screen();
+                        }
+                        if (is_drag == 1) {
+                            prev_cursor();
+                            for (int x = win2_x; x < win2_x + win2_w; x++) {
+                                gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0x10A2 : 0x2124;
+                                gfx_memory[(win2_y + win2_h - 1) * x_render + x] = ((x ^ (win2_y + win2_h - 1)) & 16) == 0 ? 0x10A2 : 0x2124;
+                            }
+                            for (int y = win2_y; y < win2_y + win2_h; y++) {
+                                gfx_memory[y * x_render + win2_x] = ((win2_x ^ y) & 16) == 0 ? 0x10A2 : 0x2124;
+                                gfx_memory[y * x_render + (win2_x + win2_w - 1)] = (((win2_x + win2_w - 1) ^ y) & 16) == 0 ? 0x10A2 : 0x2124;
+                            }
+                            win2_x = pos_x - (win2_w / 2);
+                            win2_y = pos_y - 7;
+                            if (win2_x < 0) { win2_x = 0; }
+                            if (win2_y < 0) { win2_y = 0; }
+                            if (win2_x + win2_w > 1280) { win2_x = 1280 - win2_w; }
+                            if (win2_y + win2_h > 695) { win2_y = 695 - win2_h; }
+                            for (int x = win2_x; x < win2_x + win2_w; x++) {
+                                gfx_memory[win2_y * x_render + x] = 0xC618;
+                                gfx_memory[(win2_y + win2_h - 1) * x_render + x] = 0xC618;
+                            }
+                            for (int y = win2_y; y < win2_y + win2_h; y++) {
+                                gfx_memory[y * x_render + win2_x] = 0xC618;
+                                gfx_memory[y * x_render + (win2_x + win2_w - 1)] = 0xC618;
+                            }
+                            draw_cursor(pos_x, pos_y);
+                        }
+                    }
+                    else if (click == 0 && is_drag == 1) {
+                        is_drag = 0;
+                        pos_y += 17;
+                        draw_window();
+                        render_win();
+                        if (explorer_opened == 1) { open_explorer(); }
+                        draw_cursor(pos_x, pos_y);
+                        update_screen();
                     }
                     else if (click == 1 && menuOpened == 1 && delta_x == 0 && delta_y == 0) {
                         if (pos_x <= 25 && pos_y >= 695)  {
                             menuOpened = 0;
-                            sleep(100);
                             draw_window();
                         }
                         if (pos_x >= 0 && pos_x <= 250 && pos_y >= 370 && pos_y < 400 && menuOpened == 1)  {
@@ -748,51 +807,61 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         power_opened = 0;
                     }
                     if (explorer_opened == 1 && ascii_char == '1') {
+                        draw_window();
                         open_file(5000);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '2') {
+                        draw_window();
                         open_file(5001);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();(200); sleep(100); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '3') {
+                        draw_window();
                         open_file(5002);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '4') {
+                        draw_window();
                         open_file(5003);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '5') {
+                        draw_window();
                         open_file(5004);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '6') {
+                        draw_window();
                         open_file(5005);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '7') {
+                        draw_window();
                         open_file(5006);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '8') {
+                        draw_window();
                         open_file(5007);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '9') {
+                        draw_window();
                         open_file(5008);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '0') {
+                        draw_window();
                         open_file(5009);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();                    
@@ -813,16 +882,23 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         control_panel();
                     }
                     if (ascii_char == 'E') {
+                        win2_x = 160; win2_y = 177;
                         drag = 0;
+                        help_opened = 0;
                         explorer_opened = 0;
                         power_opened = 0;
                         menuOpened = 0;
                         panel_opened = 0;
                         pong_opened = 0;
                         notepad_opened = 0;
+                        info_opened = 0;
+                        pass_opened = 0;
+                        open1 = 0;
+                        open2 = 0;
+                        open3 = 0;
+                        app_opened = 0;
                         draw_window();
-                        play_sound(150); sleep(80); no_sound();
-                        play_sound(110); sleep(120); no_sound();
+                        play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep (70); no_sound();
                     }
                     if (ascii_char == '1' && panel_opened == 1 && shift == 0) {
                         theme = 1;
@@ -996,7 +1072,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 }
             }
         }
-        sleep(10);
+        sleep(5);
         update_screen();
     }
 }
@@ -1031,9 +1107,9 @@ void pong() {
                 char ascii_char = scan_code_to_ascii(scan_code);
                 if (ascii_char == 'E') {
                     drag = 0;
+                    pong_opened = 0;
                     draw_window();
-                    play_sound(150); sleep(80); no_sound();
-                    play_sound(110); sleep(120); no_sound();
+                    play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep (70); no_sound();
                     break;
                 }
                 if (ascii_char == 'd' && pad_x <= 1020) {
@@ -1137,6 +1213,7 @@ void pong() {
                 ball_y = 360;
                 drag = 0;
                 collisions = 0;
+                pong_opened = 0;
                 score = 0;
                 ball_dx = 3;
                 ball_dy = 3;
@@ -1441,9 +1518,8 @@ void execute_commands(char* str) {
         }
         else if (str[i] == 'w' && str[i+1] == 'i' && str[i+2] == 'n') {
             i += 3;
+            app_opened = 1;
             render_win();
-            print_string("Application", 168, 183, 0x0000);
-            print_string("Application", 167, 182, 0xFFFF);
         }
         else if (str[i] == 'f' && str[i+1] == 's' && str[i+2] == 'c' && str[i+3] == 'r' && str[i+4] == '#') {
             char* arg_ptr = &str[i+5];
@@ -1476,22 +1552,7 @@ void render_win() {
     int end_x = win2_x + win2_w;
     for (int y = win2_y; y < end_y; y++) {
         for (int x = win2_x; x < end_x; x++) {
-            if (y == win2_y && (x == win2_x || x == win2_x + 1 || x == win2_x + 2)) { continue; }
-            if (y == win2_y + 1 && (x == win2_x || x == win2_x + 1)) { continue; }
-            if (y == win2_y + 2 && (x == win2_x)) { continue; }
-            if (y == win2_y && (x == end_x - 1 || x == end_x - 2 || x == end_x - 3)) { continue; }
-            if (y == win2_y + 1 && (x == end_x - 1 || x == end_x - 2)) { continue; }
-            if (y == win2_y + 2 && (x == end_x - 1)) { continue; }
-            if (y == end_y - 1 && (x == win2_x || x == win2_x + 1 || x == win2_x + 2)) { continue; }
-            if (y == end_y - 2 && (x == win2_x || x == win2_x + 1)) { continue; }
-            if (y == win2_y + 3 && (x == win2_x)) { continue; }
-            if (y == end_y - 1 && (x == end_x - 1 || x == end_x - 2 || x == end_x - 3)) { continue; }
-            if (y == end_y - 2 && (x == end_x - 1 || x == end_x - 2)) { continue; }
-            if (y == end_y - 3 && (x == end_x - 1)) { continue; }
-            int isBorder = 0;
-            if (x == win2_x || x == end_x - 1) { isBorder = 1; }
-            else if (y == win2_y || y == end_y - 1) { isBorder = 1; }
-            if (isBorder == 1) {
+            if (y == win2_y || x == win2_x || x == end_x - 1 || y == end_y - 1) {
                 gfx_memory[y * x_render + x] = 0xC618;
                 continue;
             }
@@ -1517,10 +1578,105 @@ void render_win() {
             }
         }
     }
-    if (notepad_opened == 1) {
+    if (help_opened == 1) {
+        print_string("Help", win2_x + 8, win2_y + 6, 0x0000);
+        print_string("Help", win2_x + 7, win2_y + 5, 0xFFFF);
+        print_string("Mouse or arrows to move cursor.", win2_x + 10, win2_y + 23, 0x0000);
+        print_string("Esc to redraw desktop and close windows.", win2_x + 10, win2_y + 38, 0x0000);
+        print_string("E or LMB to click.", win2_x + 10, win2_y + 53, 0x0000);
+        print_string("F1 to save and run, F2 to save and exit, F3 to preview file in notepad.", win2_x + 10, win2_y + 68, 0x0000);
+        print_string("F to format disk to maxFS2 in explorer.", win2_x + 10, win2_y + 83, 0x0000);
+        print_string("Shift + L to open lock screen.", win2_x + 10, win2_y + 98, 0x0000);
+        print_string("You can move windows with cursor on window's title.", win2_x + 10, win2_y + 113, 0x0000);
+    }
+    else if (info_opened == 1) {
+        print_string("Configuration information. Press Esc to close.", win2_x + 8, win2_y + 6, 0x0000);
+        print_string("Configuration information. Press Esc to close.", win2_x + 7, win2_y + 5, 0xFFFF);
+        print_string("Your CPU:", win2_x + 10, win2_y + 23, 0x0000);
+        print_string(cpu_name, win2_x + 100, win2_y + 23, 0x0000);
+        print_string("Total RAM:", win2_x + 10, win2_y + 38, 0x0000);
+        print_string(ram, win2_x + 110, win2_y + 38, 0x0000);
+        print_string("Bootloader:", win2_x + 10, win2_y + 53, 0x0000);
+        print_string(bootloader, win2_x + 115, win2_y + 53, 0x0000);
+        print_string("APM support:", win2_x + 10, win2_y + 68, 0x0000);
+        if (apm_supp == 1) {
+            print_string("OK", win2_x + 125, win2_y + 68, 0x0320);
+        }
+        else {
+            print_string("No", win2_x + 125, win2_y + 68, 0x9000);
+        }
+        print_string("Disk:", win2_x + 10, win2_y + 83, 0x0000);
+        if (fs_msg[0] != '\0' && disk_exists == 1) {
+            print_string(fs_msg, win2_x + 66, win2_y + 83, 0x0320);
+        }
+        else {
+            print_string("Disk for read and write not found!", win2_x + 66, win2_y + 83, 0x9000);
+        }
+        print_string("OS: maxOS v3.9 build 12117 (unstable)", win2_x + 10, win2_y + 98, 0x0000);
+        pci_scan(win2_x + 10, win2_y + 113);
+    }
+    else if (notepad_opened == 1) {
         print_string("F1 to save and run, F2 to save and exit, F3 to preview file, Esc to exit without saving.", win2_x + 10, win2_y + 463, 0x0000);
         print_string("Press shift + F1/F2/F3/F4/F5 to change text color.", win2_x + 10, win2_y + 478, 0x0000);
         print_string("To make app write '#app#', then other commands.", win2_x + 10, win2_y + 493, 0x0000);
+    }
+    else if (explorer_opened == 1) {
+        print_string("Explorer: F to format, Esc to close, 1-0 to open the file.", win2_x + 8, win2_y + 6, 0x0000);
+        print_string("Explorer: F to format, Esc to close, 1-0 to open the file.", win2_x + 7, win2_y + 5, 0xFFFF);
+        print_string("File:", win2_x + 20, win2_y + 29, 0x0000);
+        print_string("Id & sector:", win2_x + 280, win2_y + 29, 0x0000);
+        print_string("Size:", win2_x + 566, win2_y + 29, 0x0000);
+        print_string("File:", win2_x + 19, win2_y + 28, 0xFFFF);
+        print_string("Id & sector:", win2_x + 279, win2_y + 28, 0xFFFF);
+        print_string("Size:", win2_x + 565, win2_y + 28, 0xFFFF);
+    }
+    else if (power_opened == 1) {
+        print_string("Power control", win2_x + 8, win2_y + 6, 0x0000);
+        print_string("Power control", win2_x + 7, win2_y + 5, 0xFFFF);
+        print_string("Press 1 to off pc.", win2_x + 10, win2_y + 23, 0x0000);
+        print_string("Press 2 to reboot pc.", win2_x + 10, win2_y + 38, 0x0000);
+        print_string("This will delete all unsaved data!", win2_x + 10, win2_y + 53, 0x9000);
+        print_string("Press Esc to close this window.", win2_x + 10, win2_y + 68, 0x0000);
+    }
+    else if (panel_opened == 1) {
+        char theme_id[10];
+        int_str(theme, theme_id);
+        char cursor_speed_str[10];
+        int_str(cursor_speed_counter, cursor_speed_str);
+        print_string("Control panel", win2_x + 8, win2_y + 6, 0x0000);
+        print_string("Control panel", win2_x +7, win2_y + 5, 0xFFFF);
+        print_string("Theme (1, 2, 3, 4, 5, 6, 7, 8, 9, 0):", win2_x + 10, win2_y + 23, 0x0000);
+        print_string(theme_id, win2_x + 361, win2_y + 23, 0x0000);
+        print_string("Cursor speed (shift  +  1/2):", win2_x + 10, win2_y + 38, 0x0000);
+        print_string(cursor_speed_str, win2_x + 280, win2_y + 38, 0x0000);
+        print_string("Screensaver (shift + 3/4):", win2_x + 10, win2_y + 53, 0x0000);
+        if (scr == 1) { print_string("On", win2_x + 253, win2_y + 53, 0x0320); }
+        if (scr == 0) { print_string("Off", win2_x + 253, win2_y + 53, 0x9000); }
+        print_string("Cursor trail (shift + 5/6):", win2_x + 10, win2_y + 68, 0x0000);
+        if (tail == 1) { print_string("On", win2_x + 262, win2_y + 68, 0x0320); }
+        if (tail == 0) { print_string("Off", win2_x + 262, win2_y + 68, 0x9000); }
+    }
+    else if (open1 == 1) {
+        print_string("Text file", win2_x + 8, win2_y + 6, 0x0000);
+        print_string("Text file", win2_x + 7, win2_y + 5, 0xFFFF);
+        print_string(file_output, win2_x + 10, win2_y + 23, text_col);
+        print_string("Press Esc to close this window.", win2_x + 10, win2_y + 487, 0x0000);
+    }
+    else if (open2 == 1) {
+        print_string("Text file preview", win2_x + 8, win2_y + 6, 0x0000);
+        print_string("Text file preview", win2_x + 7, win2_y + 5, 0xFFFF);
+        print_string(ftext, win2_x + 10, win2_y + 23, text_col);
+        print_string("Press Esc to close this window.", win2_x + 10, win2_y + 487, 0x0000);
+    }
+    else if (open3 == 1) {
+        print_string("No file", win2_x + 8, win2_y + 6, 0x0000);
+        print_string("No file", win2_x + 7, win2_y + 5, 0xFFFF);
+        print_string("File not found or empty!", win2_x + 10, win2_y + 23, 0x0000);
+        print_string("Press Esc to close this window.", win2_x + 10, win2_y + 487, 0x0000);
+    }
+    else if (app_opened == 1) {
+        print_string("Application", win2_x + 8, win2_y + 6, 0x0000);
+        print_string("Application", win2_x + 7, win2_y + 5, 0xFFFF);
     }
 }
 
@@ -1528,7 +1684,6 @@ void open_file(int sector)
 {
     drag = 1;
     explorer_opened = 0;
-    char file_output[1000];
     if (disk_exists == 1 && sector != 1) { read(sector, file_output); }
     if (file_output[0] != '\0' && sector != 1) {
     if (str_in(file_output, "#app#")) 
@@ -1537,11 +1692,8 @@ void open_file(int sector)
     }
     else
     {
+        open1 = 1;
         render_win();
-        print_string("Text file", 168, 183, 0x0000);
-        print_string("Text file", 167, 182, 0xFFFF);
-        print_string(file_output, 170, 200, text_col);
-        print_string("Press Esc to close this window.", 170, 150 + 510, 0x0000);
     }
     }
     else if (sector == 1) {
@@ -1549,19 +1701,13 @@ void open_file(int sector)
             execute_commands(ftext);
         }
         else {
+            open2 = 1;
             render_win();
-            print_string("Text file preview", 168, 183, 0x0000);
-            print_string("Text file preview", 167, 182, 0xFFFF);
-            print_string(ftext, 170, 200, text_col);
-            print_string("Press Esc to close this window.", 170, 150 + 510, 0x0000);
         }
     }
     else {
+        open3 = 1;
         render_win();
-        print_string("No file", 168, 183, 0x0000);
-        print_string("No file", 167, 182, 0xFFFF);
-        print_string("File not found or empty!", 170, 200, 0x0000);
-        print_string("Press Esc to close this window.", 170, 660, 0x0000);
     }
 }
 int str_cmp(char* str1, char* str2) {
@@ -1895,8 +2041,7 @@ void filew() {
                     }
                 }
                 else if (ascii_char == 'E') {
-                    play_sound(150); sleep(80); no_sound();
-                    play_sound(110); sleep(120); no_sound();
+                    play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep (70); no_sound();
                     w_mode = 0;
                     notepad_opened = 0;
                     drag = 0;
@@ -1917,121 +2062,52 @@ void filew() {
 }
 
 void help() {
+    help_opened = 1;
     drag = 1;
     render_win();
-    print_string("Help", 168, 183, 0x0000);
-    print_string("Help", 167, 182, 0xFFFF);
-    print_string("Mouse or arrows to move cursor.", 170, 200, 0x0000);
-    print_string("Esc to redraw desktop and close windows.", 170, 230, 0x0000);
-    print_string("E or LMB to click.", 170, 215, 0x0000);
-    print_string("F1 to save and run, F2 to save and exit, F3 to preview file in notepad.", 170, 245, 0x0000);
-    print_string("F to format disk to maxFS2 in explorer.", 170, 260, 0x0000);
-    print_string("Shift + L to open lock screen.", 170, 275, 0x0000);
 }
 
 void control_panel() {
-        drag = 1;
-        panel_opened = 1;
-        render_win();
-        char theme_id[10];
-        int_str(theme, theme_id);
-        char cursor_speed_str[10];
-        int_str(cursor_speed_counter, cursor_speed_str);
-        print_string("Control panel", 168, 183, 0x0000);
-        print_string("Control panel", 167, 182, 0xFFFF);
-        print_string("Theme (1, 2, 3, 4, 5, 6, 7, 8, 9, 0):", 170, 200, 0x0000); //40
-        print_string(theme_id, 521, 200, 0x0000);
-        print_string("Cursor speed (shift  +  1/2):", 170, 215, 0x0000); //29
-        print_string(cursor_speed_str, 440, 215, 0x0000);
-        print_string("Screensaver (shift + 3/4):", 170, 230, 0x0000); //26
-        if (scr == 1) { print_string("On", 413, 230, 0x0320); }
-        if (scr == 0) { print_string("Off", 413, 230, 0x9000); }
-        print_string("Cursor trail (shift + 5/6):", 170, 245, 0x0000); //27
-        if (tail == 1) { print_string("On", 422, 245, 0x0320); }
-        if (tail == 0) { print_string("Off", 422, 245, 0x9000); }
+    drag = 1;
+    panel_opened = 1;
+    render_win();
 }
 
 void power() {
-        drag = 1;
-        power_opened = 1;
-        render_win();
-        print_string("Power control", 168, 183, 0x0000);
-        print_string("Power control", 167, 182, 0xFFFF);
-        print_string("Press 1 to off pc.", 170, 200, 0x0000);
-        print_string("Press 2 to reboot pc.", 170, 215, 0x0000);
-        print_string("This will delete all unsaved data!", 170, 240, 0x9000);
-        print_string("Press Esc to close this window.", 170, 255, 0x0000);
-    }
+    drag = 1;
+    power_opened = 1;
+    render_win();
+}
 
 void progressbar(char* file_des, int xend) {
-        for (int y = 560; y < 575; y++) {
-            for (int x = 440; x < 590; x++) {
+        for (int y = win2_y + 410; y < win2_y + 425; y++) {
+            for (int x = win2_x + 280; x < win2_x + 430; x++) {
                 gfx_memory[y * x_render + x] = 0x0120;
             }
         }
-        for (int y = 562; y < 150 + 577; y++) {
-            for (int x = 442; x < xend; x++) {
-                if (y < 566) {
+        for (int y = win2_y + 412; y < win2_y + 423; y++) {
+            for (int x = win2_x + 282; x < xend; x++) {
+                if (y < win2_y + 416) {
                     gfx_memory[y * x_render + x] = 0x0DE5;
                 }
-                else if (y < 570) { gfx_memory[y * x_render + x] = 0x03EA; }
-                else if (y < 573){ gfx_memory[y * x_render + x] = 0x01A4; }
+                else if (y < win2_y + 420) { gfx_memory[y * x_render + x] = 0x03EA; }
+                else if (y < win2_y + 423){ gfx_memory[y * x_render + x] = 0x01A4; }
             }
         }
-        print_string(file_des, 420, 585, 0x0000);
+        print_string(file_des, win2_x + 260, win2_y + 435, 0x0000);
 }
 
 void cpu_win() {
-        drag = 1;
-        render_win();
-        char cpu_name[49];
-        get_cpu(cpu_name);
-        char ram[32];
-        int_str(ram_mb, ram);
-        char fs_msg[30];
-        if (disk_exists == 1) {
-            write("ATA driver and maxFS2 OK!", 5011);
-            read(5011, fs_msg);
-        }
-        print_string("Configuration information. Press Esc to close.", 168, 183, 0x0000);
-        print_string("Configuration information. Press Esc to close.", 167, 182, 0xFFFF);
-        print_string("Your CPU:", 170, 200, 0x0000);
-        print_string(cpu_name, 260, 200, 0x0000);
-        print_string("Total RAM:", 170, 215, 0x0000);
-        print_string(ram, 270, 215, 0x0000);
-        print_string("Bootloader:", 170, 230, 0x0000);
-        print_string(bootloader, 275, 230, 0x0000);
-        print_string("APM support:", 170, 245, 0x0000);
-        if (apm_supp == 1) {
-            print_string("OK", 285, 245, 0x0320);
-        }
-        else {
-            print_string("No", 285, 245, 0x9000);
-        }
-        print_string("Disk:", 170, 260, 0x0000);
-        if (fs_msg[0] != '\0' && disk_exists == 1) {
-            print_string(fs_msg, 226, 260, 0x0320);
-        }
-        else {
-            print_string("Disk for read and write not found!", 226, 260, 0x9000);
-        }
-        print_string("OS: maxOS v3.9 official build", 170, 275, 0x0000);
-        pci_scan(170, 290);
-    }
+    info_opened = 1;
+    drag = 1;
+    render_win();
+}
 
 void open_explorer() {
-        int line = 230;
         drag = 1;
         explorer_opened = 1;
         render_win();
-        print_string("Explorer: F to format, Esc to close, 1-0 to open the file.", 168, 183, 0x0000);
-        print_string("Explorer: F to format, Esc to close, 1-0 to open the file.", 167, 182, 0xFFFF);
-        print_string("File:", 175, 206, 0x0000);
-        print_string("Id & sector:", 440, 206, 0x0000);
-        print_string("Size:", 726, 206, 0x0000);
-        print_string("File:", 174, 205, 0xFFFF);
-        print_string("Id & sector:", 439, 205, 0xFFFF);
-        print_string("Size:", 725, 205, 0xFFFF);
+        int line = win2_y + 53;
         int file_id = 1;
         for (int i = 0; i < (sectors - 5000); i++) {
             char str[77];
@@ -2049,7 +2125,7 @@ void open_explorer() {
                     fileName[char_id] = str[char_id];
                     fileName[20] = '\0';
                 }
-                print_string(fileName, 170, line, 0x0000);
+                print_string(fileName, win2_x + 10, line, 0x0000);
             }
             int real_size = 0;
             char real_size_str[16];
@@ -2060,29 +2136,29 @@ void open_explorer() {
                 real_size++;
             }
             int_str(real_size, real_size_str);
-            print_string(real_size_str, 732, line, 0x0000);
-            print_string("b", 762, line, 0x0000);
+            print_string(real_size_str, win2_x + 572, line, 0x0000);
+            print_string("b", win2_x + 602, line, 0x0000);
             char file_id_str[509];
             char sector_str[10];
             int_str(file_id, file_id_str);
             int_str(currentFile, sector_str);
-            print_string(file_id_str, 430, line, 0x0000);
-            print_string("/", 450, line, 0x0000);
-            print_string(sector_str, 460, line, 0x0000);
+            print_string(file_id_str, win2_x + 270, line, 0x0000);
+            print_string("/", win2_x + 290, line, 0x0000);
+            print_string(sector_str, win2_x + 300, line, 0x0000);
             line += 15;
             file_id++;
         }
-        if (createdFiles == 0) { progressbar("You can save 10 files", 445); }
-        if (createdFiles == 1) { progressbar("You can save 9 files", 460); }
-        if (createdFiles == 2) { progressbar("You can save 8 files", 475); }
-        if (createdFiles == 3) { progressbar("You can save 7 files", 490); }
-        if (createdFiles == 4) { progressbar("You can save 6 files", 505); }
-        if (createdFiles == 5) { progressbar("You can save 5 files", 520); }
-        if (createdFiles == 6) { progressbar("You can save 4 files", 535); }
-        if (createdFiles == 7) { progressbar("You can save 3 files", 550); }
-        if (createdFiles == 8) { progressbar("You can save 2 files", 565); }
-        if (createdFiles == 9) { progressbar("You can save 1 files", 580); }
-        if (createdFiles == 10) { progressbar("You can save 0 files", 588); }
+        if (createdFiles == 0) { progressbar("0/10 files storage used", win2_x + 285); }
+        if (createdFiles == 1) { progressbar("1/10 files storage used", win2_x + 300); }
+        if (createdFiles == 2) { progressbar("2/10 files storage used", win2_x + 315); }
+        if (createdFiles == 3) { progressbar("3/10 files storage used", win2_x + 330); }
+        if (createdFiles == 4) { progressbar("4/10 files storage used", win2_x + 345); }
+        if (createdFiles == 5) { progressbar("5/10 files storage used", win2_x + 360); }
+        if (createdFiles == 6) { progressbar("6/10 files storage used", win2_x + 375); }
+        if (createdFiles == 7) { progressbar("7/10 files storage used", win2_x + 390); }
+        if (createdFiles == 8) { progressbar("8/10 files storage used", win2_x + 405); }
+        if (createdFiles == 9) { progressbar("9/10 files storage used", win2_x + 420); }
+        if (createdFiles == 10) { progressbar("10/10 files storage used", win2_x + 428); }
 }
 
 void int_str(int num, char* str) {
@@ -3190,8 +3266,7 @@ void pass() {
                         }
                     }
                     else if (ascii_char == 'E') {
-                        play_sound(150); sleep(80); no_sound();
-                        play_sound(110); sleep(120); no_sound();
+                        play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep (70); no_sound();
                         w_mode = 0;
                         drag = 0;
                         draw_window();
