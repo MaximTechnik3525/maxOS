@@ -586,15 +586,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     print_string("By MaximTechnik3525", 11, 16, 0x0000);
     print_string("By MaximTechnik3525", 10, 15, 0xFFFF);
     update_screen();
-    play_sound(293); sleep(150);
-    play_sound(440); sleep(150);
-    no_sound(); sleep(30);
-    play_sound(392); sleep(300);
-    play_sound(293); sleep(150);
-    play_sound(440); sleep(200);
-    play_sound(587); sleep(650);
-    no_sound();
-    sleep(1500);
+    sleep(1000);
     char rp[11];
     read(5012, rp);
     if (rp[0] != '\0') {
@@ -2209,12 +2201,7 @@ void shutdown() {
     }
     print_string("maxOS is shutting down...", 550, 420, 0xF800);
     update_screen();
-    play_sound(587); sleep(150);
-    play_sound(440); sleep(150);
-    play_sound(392); sleep(250);
-    play_sound(293); sleep(500);
-    no_sound();
-    sleep(1700);
+    sleep(1500);
     outw(0xB004, 0x2000);
     outw(0x604, 0x2000);
     outw(0x4004, 0x3400);
@@ -2238,12 +2225,7 @@ void reboot() {
     }
     print_string("maxOS is rebooting...", 550, 420, 0xF800);
     update_screen();
-    play_sound(587); sleep(150);
-    play_sound(440); sleep(150);
-    play_sound(392); sleep(250);
-    play_sound(293); sleep(500);
-    no_sound();
-    sleep(1700);
+    sleep(1500);
     outb(0x64, 0xFE);
     volatile unsigned long long idt_pointer = 0;
     __asm__ __volatile__("lidt %0" : : "m" (idt_pointer));
