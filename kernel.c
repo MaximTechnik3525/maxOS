@@ -1072,7 +1072,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 }
             }
         }
-        sleep(5);
+        sleep(3);
         update_screen();
     }
 }
@@ -2921,7 +2921,7 @@ void screensaver() {
     drag = 2;
     for (int y = 0; y < y_render; y++) {
         for (int x = 0; x < x_render; x++) {
-            gfx_memory[y * x_render + x] = 0x10A2;
+            gfx_memory[y * x_render + x] = 0x2124;
         }
     }
     int txt_x = 75;
@@ -2939,21 +2939,21 @@ void screensaver() {
         }
         for (int py = txt_y - 20; py < txt_y + 20; py++) {
             for (int px = txt_x - 70; px < txt_x + 70; px++) {
-                gfx_memory[py * x_render + px] = 0x10A2;
+                gfx_memory[py * x_render + px] = 0x2124;
             }
         }
-        print_string("MAXOS", txt_x + 1, txt_y + 1, 0x0000);
-        print_string("MAXOS", txt_x, txt_y, 0xFF9E);
+        print_string("maxOS", txt_x + 1, txt_y + 1, 0x0000);
+        print_string("maxOS", txt_x, txt_y, 0xFF9E);
         if (txt_x < 1220 && was_x == 0) {
-            txt_x += 5;
+            txt_x += 3;
         }
         else {
-            txt_x -= 5;
+            txt_x -= 3;
             was_x = 1;
         }
-        if (txt_y < 700 && was_y == 0) { txt_y += 5; }
+        if (txt_y < 700 && was_y == 0) { txt_y += 3; }
         else {
-            txt_y -= 5;
+            txt_y -= 3;
             was_y = 1;
         }
         if (txt_y < 30) { was_y = 0; }
