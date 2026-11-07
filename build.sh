@@ -52,11 +52,11 @@ menuentry "maxOS 3.9" {
 }
 EOF
 
-grub-mkrescue -o maxos.img iso
+grub-mkrescue -o maxos.iso iso
 
 echo "============================================="
 echo " Сборка завершена успешно!"
 echo " maxOS запускается в QEMU!"
 echo "============================================="
 
-qemu-system-i386 -hda maxos.img -m 256M -vga std -machine pc,pcspk-audiodev=snd0 -device sb16,audiodev=snd0 -audiodev alsa,id=snd0
+qemu-system-i386 -hda maxos.iso -m 256M -vga std -machine pc,pcspk-audiodev=snd0 -device sb16,audiodev=snd0 -audiodev alsa,id=snd0
