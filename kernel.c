@@ -2926,14 +2926,14 @@ void screensaver() {
         }
         print_string("maxOS", txt_x + 1, txt_y + 1, 0x0000);
         print_string("maxOS", txt_x, txt_y, 0xFF9E);
-        if (txt_x < 1220 && was_x == 0) {
+        if (txt_x < 1210 && was_x == 0) {
             txt_x += 3;
         }
         else {
             txt_x -= 3;
             was_x = 1;
         }
-        if (txt_y < 700 && was_y == 0) { txt_y += 3; }
+        if (txt_y < 690 && was_y == 0) { txt_y += 3; }
         else {
             txt_y -= 3;
             was_y = 1;
@@ -3305,8 +3305,8 @@ void login_visual() {
             }
         }
         }
-        print_string("Welcome back, user!", 6, 6, 0x0000);
-        print_string("Welcome back, user!", 5, 5, 0xFF9E);
+        print_string("Welcome", 10, 10, 0x0000);
+        print_string("Welcome", 9, 9, 0xFF9E);
         print_string("Enter password:", 31, 374, 0x0000);
         print_string("Enter password:", 30, 373, 0xFF9E);
         print_string(ftext2, 171, 374, 0x0000);
