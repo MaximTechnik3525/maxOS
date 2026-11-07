@@ -681,12 +681,88 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         if (is_drag == 1) {
                             prev_cursor();
                             for (int x = win2_x; x < win2_x + win2_w; x++) {
-                                gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0x10A2 : 0x2124;
-                                gfx_memory[(win2_y + win2_h - 1) * x_render + x] = ((x ^ (win2_y + win2_h - 1)) & 16) == 0 ? 0x10A2 : 0x2124;
+                                if (theme == 1) {
+                                    gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0x10A2 : 0x2124;
+                                    gfx_memory[(win2_y + win2_h - 1) * x_render + x] = ((x ^ (win2_y + win2_h - 1)) & 16) == 0 ? 0x10A2 : 0x2124;
+                                }
+                                if (theme == 2) {
+                                    gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0x4002 : 0x8085;
+                                    gfx_memory[(win2_y + win2_h - 1) * x_render + x] = ((x ^ (win2_y + win2_h - 1)) & 16) == 0 ? 0x4002 : 0x8085;
+                                }
+                                if (theme == 3) {
+                                    gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0x2080 : 0x4100;
+                                    gfx_memory[(win2_y + win2_h - 1) * x_render + x] = ((x ^ (win2_y + win2_h - 1)) & 16) == 0 ? 0x2080 : 0x4100;
+                                }
+                                if (theme == 4) {
+                                    gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0xC4D8 : 0x9332;
+                                    gfx_memory[(win2_y + win2_h - 1) * x_render + x] = ((x ^ (win2_y + win2_h - 1)) & 16) == 0 ? 0xC4D8 : 0x9332;
+                                }
+                                if (theme == 5) {
+                                    gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0x010A : 0x03EF;
+                                    gfx_memory[(win2_y + win2_h - 1) * x_render + x] = ((x ^ (win2_y + win2_h - 1)) & 16) == 0 ? 0x010A : 0x03EF;
+                                }
+                                if (theme == 6) {
+                                    gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0x0102 : 0x05E0;
+                                    gfx_memory[(win2_y + win2_h - 1) * x_render + x] = ((x ^ (win2_y + win2_h - 1)) & 16) == 0 ? 0x0102 : 0x05E0;
+                                }
+                                if (theme == 7) {
+                                    gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0x4004 : 0xFBEF;
+                                    gfx_memory[(win2_y + win2_h - 1) * x_render + x] = ((x ^ (win2_y + win2_h - 1)) & 16) == 0 ? 0x4004 : 0xFBEF;
+                                }
+                                if (theme == 8) {
+                                    gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0xE62F : 0x8B04;
+                                    gfx_memory[(win2_y + win2_h - 1) * x_render + x] = ((x ^ (win2_y + win2_h - 1)) & 16) == 0 ? 0xE62F : 0x8B04;
+                                }
+                                if (theme == 9) {
+                                    gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0x3800 : 0x1000;
+                                    gfx_memory[(win2_y + win2_h - 1) * x_render + x] = ((x ^ (win2_y + win2_h - 1)) & 16) == 0 ? 0x3800 : 0x1000;
+                                }
+                                if (theme == 10) {
+                                    gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0x0926 : 0x00A1;
+                                    gfx_memory[(win2_y + win2_h - 1) * x_render + x] = ((x ^ (win2_y + win2_h - 1)) & 16) == 0 ? 0x0926 : 0x00A1;
+                                }
                             }
                             for (int y = win2_y; y < win2_y + win2_h; y++) {
-                                gfx_memory[y * x_render + win2_x] = ((win2_x ^ y) & 16) == 0 ? 0x10A2 : 0x2124;
-                                gfx_memory[y * x_render + (win2_x + win2_w - 1)] = (((win2_x + win2_w - 1) ^ y) & 16) == 0 ? 0x10A2 : 0x2124;
+                                if (theme == 1) {
+                                    gfx_memory[y * x_render + win2_x] = ((win2_x ^ y) & 16) == 0 ? 0x10A2 : 0x2124;
+                                    gfx_memory[y * x_render + (win2_x + win2_w - 1)] = (((win2_x + win2_w - 1) ^ y) & 16) == 0 ? 0x10A2 : 0x2124;
+                                }
+                                if (theme == 2) {
+                                    gfx_memory[y * x_render + win2_x] = ((win2_x ^ y) & 16) == 0 ? 0x4002 : 0x8085;
+                                    gfx_memory[y * x_render + (win2_x + win2_w - 1)] = (((win2_x + win2_w - 1) ^ y) & 16) == 0 ? 0x4002 : 0x8085;
+                                }
+                                if (theme == 3) {
+                                    gfx_memory[y * x_render + win2_x] = ((win2_x ^ y) & 16) == 0 ? 0x2080 : 0x4100;
+                                    gfx_memory[y * x_render + (win2_x + win2_w - 1)] = (((win2_x + win2_w - 1) ^ y) & 16) == 0 ? 0x2080 : 0x4100;
+                                }
+                                if (theme == 4) {
+                                    gfx_memory[y * x_render + win2_x] = ((win2_x ^ y) & 16) == 0 ? 0xC4D8 : 0x9332;
+                                    gfx_memory[y * x_render + (win2_x + win2_w - 1)] = (((win2_x + win2_w - 1) ^ y) & 16) == 0 ? 0xC4D8 : 0x9332;
+                                }
+                                if (theme == 5) {
+                                    gfx_memory[y * x_render + win2_x] = ((win2_x ^ y) & 16) == 0 ? 0x010A : 0x03EF;
+                                    gfx_memory[y * x_render + (win2_x + win2_w - 1)] = (((win2_x + win2_w - 1) ^ y) & 16) == 0 ? 0x010A : 0x03EF;
+                                }
+                                if (theme == 6) {
+                                    gfx_memory[y * x_render + win2_x] = ((win2_x ^ y) & 16) == 0 ? 0x0102 : 0x05E0;
+                                    gfx_memory[y * x_render + (win2_x + win2_w - 1)] = (((win2_x + win2_w - 1) ^ y) & 16) == 0 ? 0x0102 : 0x05E0;
+                                }
+                                if (theme == 7) {
+                                    gfx_memory[y * x_render + win2_x] = ((win2_x ^ y) & 16) == 0 ? 0x4004 : 0xFBEF;
+                                    gfx_memory[y * x_render + (win2_x + win2_w - 1)] = (((win2_x + win2_w - 1) ^ y) & 16) == 0 ? 0x4004 : 0xFBEF;
+                                }
+                                if (theme == 8) {
+                                    gfx_memory[y * x_render + win2_x] = ((win2_x ^ y) & 16) == 0 ? 0xE62F : 0x8B04;
+                                    gfx_memory[y * x_render + (win2_x + win2_w - 1)] = (((win2_x + win2_w - 1) ^ y) & 16) == 0 ? 0xE62F : 0x8B04;
+                                }
+                                if (theme == 9) {
+                                    gfx_memory[y * x_render + win2_x] = ((win2_x ^ y) & 16) == 0 ? 0x3800 : 0x1000;
+                                    gfx_memory[y * x_render + (win2_x + win2_w - 1)] = (((win2_x + win2_w - 1) ^ y) & 16) == 0 ? 0x3800 : 0x1000;
+                                }
+                                if (theme == 10) {
+                                    gfx_memory[y * x_render + win2_x] = ((win2_x ^ y) & 16) == 0 ? 0x0926 : 0x00A1;
+                                    gfx_memory[y * x_render + (win2_x + win2_w - 1)] = (((win2_x + win2_w - 1) ^ y) & 16) == 0 ? 0x0926 : 0x00A1;
+                                }
                             }
                             win2_x = pos_x - (win2_w / 2);
                             win2_y = pos_y - 7;
