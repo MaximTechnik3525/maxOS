@@ -2188,49 +2188,85 @@ void outw(unsigned short port, unsigned short val) { __asm__ volatile("outw %0, 
 void shutdown() {
     drag = 2;
     for (int y = 0; y < y_render; y++) {
+        int row_offset = (y << 10) + (y << 8);
         for (int x = 0; x < x_render; x++) {
-            if (y >= 386 && y < 392) {
+            if (((x ^ y) & 16) == 0) {
+                gfx_memory[row_offset + x] = 0x1000;
+            }
+            else { gfx_memory[row_offset + x] = 0x9000; }
+        }
+    }
+    for (int y = 0; y < 720; y++) {
+        for (int x = 0; x < 1280; x++) {
+            if (((x + y) & 1) == 0) {
+                gfx_memory[y * x_render + x] = 0x10A2;
+            }
+            else { continue; }
+        }
+    }
+    for (int y = 0; y < 720; y++) {
+        for (int x = 0; x < 1280; x++) {
+            if (((x + y) & 1) == 0) {
+                            if (y >= 386 && y < 392) {
                 gfx_memory[y * x_render + x] = 0xF800;
             }
             else if (y >= 392 && y <= 404) {
                 gfx_memory[y * x_render + x] = 0x5000;
             }
             else if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
-            else { gfx_memory[y * x_render + x] = 0x1000; }
+            }
         }
     }
     print_string("maxOS is shutting down...", 550, 420, 0xF800);
     update_screen();
-    sleep(1500);
+    sleep(2000);
     outw(0xB004, 0x2000);
     outw(0x604, 0x2000);
     outw(0x4004, 0x3400);
     outw(0x0B004, 0x2000);
-    error("Cannot use power off ports! Code: 0x01");
+    error("Power off ports are unavaivable! Code: 0x01");
     update_screen();
 }
 void reboot() {
     drag = 2;
     for (int y = 0; y < y_render; y++) {
+        int row_offset = (y << 10) + (y << 8);
         for (int x = 0; x < x_render; x++) {
-            if (y >= 386 && y < 392) {
+            if (((x ^ y) & 16) == 0) {
+                gfx_memory[row_offset + x] = 0x1000;
+            }
+            else { gfx_memory[row_offset + x] = 0x9000; }
+        }
+    }
+    for (int y = 0; y < 720; y++) {
+        for (int x = 0; x < 1280; x++) {
+            if (((x + y) & 1) == 0) {
+                gfx_memory[y * x_render + x] = 0x10A2;
+            }
+            else { continue; }
+        }
+    }
+    for (int y = 0; y < 720; y++) {
+        for (int x = 0; x < 1280; x++) {
+            if (((x + y) & 1) == 0) {
+                            if (y >= 386 && y < 392) {
                 gfx_memory[y * x_render + x] = 0xF800;
             }
             else if (y >= 392 && y <= 404) {
                 gfx_memory[y * x_render + x] = 0x5000;
             }
             else if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
-            else { gfx_memory[y * x_render + x] = 0x1000; }
+            }
         }
     }
     print_string("maxOS is rebooting...", 550, 420, 0xF800);
     update_screen();
-    sleep(1500);
+    sleep(2000);
     outb(0x64, 0xFE);
     volatile unsigned long long idt_pointer = 0;
     __asm__ __volatile__("lidt %0" : : "m" (idt_pointer));
     __asm__ __volatile__("int $0");
-    error("Cannot reboot system! Code: 0x02");
+    error("Reboot command is unavaivable! Code: 0x02");
     update_screen();
 }
 void error(char* err) {
