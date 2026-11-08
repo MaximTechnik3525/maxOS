@@ -658,7 +658,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 int delta_y = packet[2];
                 if (sign_x) delta_x |= 0xFFFFFF00;
                 if (sign_y) delta_y |= 0xFFFFFF00;
-                if ((delta_x > -100 && delta_x < 100) && (delta_y > -100 && delta_y < 100)) {
+                if (1) {
                     if (delta_x != 0 || delta_y != 0) {
                         if (tail == 0) { prev_cursor(); }
                         timer = 0;
@@ -2961,7 +2961,7 @@ void glitchvoid() {
     for (int i = 0; i < 400; i++) {
         glitch_speed = glitch_speed * 1103515245 + 12345;
         unsigned int u_speed = (unsigned int)glitch_speed;
-        int rand_pixel = u_speed % 921500;
+        int rand_pixel = u_speed % 921600;
         glitch_speed = glitch_speed * 1103515245 + 12345;
         unsigned short rand_color = (unsigned short)(glitch_speed & 0xFFFF);
         back_buffer[rand_pixel] = rand_color;
@@ -3785,17 +3785,13 @@ void login_screen() {
     }
 
 void update_screen() {
-    __asm__ __volatile__ (
-        "pushl %%esi\n\t"
-        "pushl %%edi\n\t"
-        "cld\n\t"
-        "rep movsl\n\t"
-        "popl %%edi\n\t"
-        "popl %%esi"
-        :
-        : "D"(real_framebuffer), "S"(back_buffer), "c"(460800)
-        : "memory"
-    );
+    for (int y = 0; y < 720; y++) {
+        unsigned short* src = &back_buffer[y * 1280];
+        unsigned short* dest = &real_framebuffer[y * REAL_PITCH];
+        for (int x = 0; x < 1280; x++) {
+            dest[x] = src[x];
+        }
+    }
 }
 
 void outl(unsigned short port, unsigned int data) {
