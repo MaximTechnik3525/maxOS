@@ -483,7 +483,7 @@ char fs_msg[32];
 char file_output[1000];
 int glitch = 0;
 int glitch_timer = 0;
-int glitch_speed = 12345;
+int glitch_speed = 12345; 
 void get_cpu(char* buffer);
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
@@ -2650,8 +2650,8 @@ void draw_effectbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, i
             }
         }
     }
-    print_string("Fake virus-epilepsy warn", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
-    print_string("Fake virus-epilepsy warn", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
+    print_string("Fake virus (epilepsy warning)", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("Fake virus (epilepsy warning)", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
@@ -2882,8 +2882,8 @@ void clock() {
 void draw_menu() {
     menuOpened = 1;
     for (int y = 350; y < 695; y++) {
-        for (int x = 0; x < 250; x++) {
-            if (y == 350 || x == 0 || x == 249) {
+        for (int x = 0; x < 350; x++) {
+            if (y == 350 || x == 0 || x == 349) {
                 if (((x + y) & 1) == 0) gfx_memory[y * x_render + x] = 0xFF9E;
                 else continue;
             }
@@ -2909,7 +2909,7 @@ void draw_menu() {
     }
     for (int y = 0; y < y_render - 25; y++) {
         for (int x = 0; x < x_render; x++) {
-            if ((x > 250 && y < y_render) || (y < 350 && x < 251)) {
+            if ((x > 350 && y < y_render) || (y < 350 && x < 351)) {
                 if (((x + y) & 1) == 0) {
                     gfx_memory[y * x_render + x] = 0x1000;
                 }
@@ -2926,16 +2926,16 @@ void draw_menu() {
     draw_panelbtn(15, 510, 42, 12, 15, 510, 40, 10, 25, 512);
     draw_effectbtn(15, 530, 42, 12, 15, 530, 40, 10, 25, 532);
     if (theme == 3) {
-        print_string("maxOS 3.9 Abrikos", 41, 361, 0x0000);
-        print_string("maxOS 3.9 Abrikos", 40, 360, 0xFFFF);
+        print_string("maxOS 3.9 Abrikos", 95, 361, 0x0000);
+        print_string("maxOS 3.9 Abrikos", 94, 360, 0xFFFF);
     }
     else if (theme == 4) {
-        print_string("maxOS 3.9 Tora", 61, 361, 0x0000);
-        print_string("maxOS 3.9 Tora", 60, 360, 0xFFFF);
+        print_string("maxOS 3.9 Tora", 105, 361, 0x0000);
+        print_string("maxOS 3.9 Tora", 104, 360, 0xFFFF);
     }
     else {
-        print_string("maxOS 3.9", 81, 361, 0x0000);
-        print_string("maxOS 3.9", 80, 360, 0xFFFF);
+        print_string("maxOS 3.9", 127, 361, 0x0000);
+        print_string("maxOS 3.9", 126, 360, 0xFFFF);
     }
 }
 
