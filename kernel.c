@@ -76,6 +76,7 @@ void draw_filebtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
 void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
+void draw_effectbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void get_cpu(char* buffer);
 void draw_window();
 void wait_mouse(unsigned char type);
@@ -111,6 +112,7 @@ void screensaver();
 void update_screen();
 void pass();
 void login_screen();
+void glitch_void();
 unsigned short* real_framebuffer;
 unsigned short cursor_back[12][12] = {0};
 unsigned char mouse_arrow[12][12] = {
@@ -210,6 +212,20 @@ unsigned char off_icon[12][12] = {
     {0,2,3,2,2,2,2,2,2,3,2,0},
     {0,0,2,3,3,3,3,3,3,2,0,0},
     {0,0,0,2,2,2,2,2,2,0,0,0},
+};
+unsigned char effect_icon[12][12] = {
+    {0,0,0,2,2,2,2,2,2,0,0,0},
+    {0,0,0,2,1,1,1,1,2,0,0,0},
+    {0,0,0,2,1,1,1,1,2,0,0,0},
+    {0,0,0,0,2,1,1,2,0,0,0,0},
+    {0,0,0,0,2,1,1,2,0,0,0,0},
+    {0,0,0,0,2,1,1,2,0,0,0,0},
+    {0,0,0,0,2,3,3,2,0,0,0,0},
+    {0,0,0,0,2,2,2,2,0,0,0,0},
+    {0,0,0,0,2,2,2,2,0,0,0,0},
+    {0,0,0,0,2,3,3,2,0,0,0,0},
+    {0,0,0,0,2,3,3,2,0,0,0,0},
+    {0,0,0,0,2,2,2,2,0,0,0,0},
 };
 unsigned char sad_smile_icon[24][24] = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -465,6 +481,9 @@ char cpu_name[49];
 char ram[32];
 char fs_msg[32];
 char file_output[1000];
+int glitch = 0;
+int glitch_timer = 0;
+int glitch_speed = 12345;
 void get_cpu(char* buffer);
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
@@ -601,6 +620,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     draw_window(); drag = 0;
     unsigned char packet[3];
     while(1) {
+        if (glitch == 1) {
+            glitchvoid();
+            update_screen();
+        }
         if (drag == 0) { timer++; }
         if (timer >= 6000 && scr == 1) {
             screensaver();
@@ -834,6 +857,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             menuOpened = 0;
                             draw_window();
                             control_panel();
+                        }
+                        if (pos_x >= 0 && pos_x <= 250 && pos_y > 540 && pos_y <= 560 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            glitch = 1;
+                            draw_window();
+                            glitchvoid();
                         }
                     }
                 }   
@@ -1104,6 +1133,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             menuOpened = 0;
                             draw_window();
                             control_panel();
+                        }
+                        if (pos_x >= 0 && pos_x <= 250 && pos_y > 540 && pos_y <= 560 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            glitch = 1;
+                            draw_window();
+                            glitchvoid();
                         }
                     }
                     if (ascii_char == 'f' && explorer_opened == 1) {
@@ -2600,6 +2635,22 @@ void draw_panelbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, in
     print_string("Control panel", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
     print_string("Control panel", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
+void draw_effectbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = 4 + x;
+            int screen_y = 544 + y;
+            if (screen_x < x_render && screen_y < y_render && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = effect_icon[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * x_render + screen_x] = 0xF81F; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * x_render + screen_x] = 0x0000; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * x_render + screen_x] = 0x780F; }
+            }
+        }
+    }
+    print_string("Fake virus-epilepsy warn", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("Fake virus-epilepsy warn", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
+}
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
@@ -2871,6 +2922,7 @@ void draw_menu() {
     draw_offbtn(15, 470, 42, 12, 15, 470, 40, 10, 25, 472);
     draw_passbtn(15, 490, 42, 12, 15, 490, 40, 10, 25, 492);
     draw_panelbtn(15, 510, 42, 12, 15, 510, 40, 10, 25, 512);
+    draw_effectbtn(15, 530, 42, 12, 15, 530, 40, 10, 25, 532);
     if (theme == 3) {
         print_string("maxOS 3.9 Abrikos", 41, 361, 0x0000);
         print_string("maxOS 3.9 Abrikos", 40, 360, 0xFFFF);
@@ -2883,6 +2935,36 @@ void draw_menu() {
         print_string("maxOS 3.9", 81, 361, 0x0000);
         print_string("maxOS 3.9", 80, 360, 0xFFFF);
     }
+}
+
+void glitchvoid() {
+    drag = 1;
+    unsigned char status = inb(0x64);
+    if (status & 0x01) {
+        if (status & 0x20) {
+            inb(0x60);
+            return;
+        }
+        unsigned char scan_code = inb(0x60);
+        if (scan_code == 0x01) {
+            glitch_timer = 0;
+            glitch = 0;
+            drag = 0;
+            draw_window();
+            win2_x = 160; win2_y = 177;
+            play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep (70); no_sound();
+            return;
+        }
+    }
+    for (int i = 0; i < 400; i++) {
+        glitch_speed = glitch_speed * 1103515245 + 12345;
+        unsigned int u_speed = (unsigned int)glitch_speed;
+        int rand_pixel = u_speed % 921500;
+        glitch_speed = glitch_speed * 1103515245 + 12345;
+        unsigned short rand_color = (unsigned short)(glitch_speed & 0xFFFF);
+        back_buffer[rand_pixel] = rand_color;
+    }
+    glitch_timer++;
 }
 
 void draw_window() {
