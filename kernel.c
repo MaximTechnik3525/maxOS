@@ -642,7 +642,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         }
         unsigned char status = inb(0x64);
         if (status & 0x01) {
-            if (status & 0x20 && w_mode == 0) {
+            if (status & 0x20 && w_mode == 0 && glitch == 0) {
                 packet[0] = inb(0x60);
                 if ((packet[0] & 0x08) == 0) {continue;}
                 int timeout = 100000;
@@ -1651,6 +1651,7 @@ void execute_commands(char* str) {
 }
 
 void render_win() {
+    if (glitch == 0) {
     int end_y = win2_y + win2_h;
     int end_x = win2_x + win2_w;
     for (int y = win2_y; y < end_y; y++) {
@@ -1781,6 +1782,7 @@ void render_win() {
         print_string("Application", win2_x + 8, win2_y + 6, 0x0000);
         print_string("Application", win2_x + 7, win2_y + 5, 0xFFFF);
     }
+}
 }
 
 void open_file(int sector) 
