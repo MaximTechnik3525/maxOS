@@ -1729,7 +1729,7 @@ void render_win() {
         else {
             print_string("Disk for read and write not found!", win2_x + 66, win2_y + 83, 0x9000);
         }
-        print_string("OS: maxOS v3.9 build 21851 (unstable)", win2_x + 10, win2_y + 98, 0x0000);
+        print_string("OS: maxOS v3.9 build 31911 (unstable)", win2_x + 10, win2_y + 98, 0x0000);
         pci_scan(win2_x + 10, win2_y + 113);
     }
     else if (notepad_opened == 1) {
