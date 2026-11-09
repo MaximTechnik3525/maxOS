@@ -484,6 +484,7 @@ char file_output[1000];
 int glitch = 0;
 int glitch_timer = 0;
 int glitch_speed = 12345; 
+int is_moving = 0;
 void get_cpu(char* buffer);
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     raw_min2 = read_rtc_register(0x02);
@@ -507,10 +508,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             gfx_memory[y * x_render + x] = 0x0000;
         }
     }
-    print_string("===maxOS v3.9 Boot Menu===", 10, 15, 0xFFFF);
-    print_string("Graphics initialized! 1280x720x16 mode working!", 10, 75, 0xFFFF);
-    print_string("Press [1] to scan disk (can be errors)", 10, 30, 0xFFFF);
-    print_string("Press [2] to skip disk scan", 10, 45, 0xFFFF);
+    print_string("=====maxOS v3.9 Boot Menu=====", 10, 15, 0xFFFF);
+    print_string("Graphics initialized! 1280x720x16 mode working!", 10, 30, 0xFFFF);
+    print_string("Press [1] to scan disk (can be problems)", 10, 45, 0xFFFF);
+    print_string("Press [2] to skip disk scan", 10, 60, 0xFFFF);
     update_screen();
     int choice = 0;
     while (1) {
@@ -520,12 +521,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             if (scan_code < 0x80) {
                 char ascii_char = scan_code_to_ascii(scan_code);
                 if (ascii_char == '1') {
-                    print_string("Disk scan is starting...", 10, 60, 0xFFFF);
+                    print_string("Disk scan is starting...", 10, 75, 0xFFFF);
                     choice = 1;
                     break;
                 }
                 if (ascii_char == '2') {
-                    print_string("Disk scan skiped.", 10, 60, 0xFFFF);
+                    print_string("Disk scan skiped!", 10, 75, 0xFFFF);
                     choice = 0;
                     break;
                 }
@@ -658,7 +659,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 int delta_y = packet[2];
                 if (sign_x) delta_x |= 0xFFFFFF00;
                 if (sign_y) delta_y |= 0xFFFFFF00;
-                if (1) {
+                if ((delta_x > -100 && delta_x < 100) && (delta_y > -100 && delta_y < 100)) {
                     if (delta_x != 0 || delta_y != 0) {
                         if (tail == 0) { prev_cursor(); }
                         timer = 0;
@@ -703,6 +704,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         }
                         if (is_drag == 1) {
                             prev_cursor();
+                            is_moving = 1;
                             for (int x = win2_x; x < win2_x + win2_w; x++) {
                                 if (theme == 1) {
                                     gfx_memory[win2_y * x_render + x] = ((x ^ win2_y) & 16) == 0 ? 0x10A2 : 0x2124;
@@ -805,6 +807,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         }
                     }
                     else if (click == 0 && is_drag == 1) {
+                        is_moving = 0;
                         is_drag = 0;
                         pos_y += 17;
                         draw_window();
@@ -813,7 +816,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_cursor(pos_x, pos_y);
                         update_screen();
                     }
-                    else if (click == 1 && menuOpened == 1 && delta_x == 0 && delta_y == 0) {
+                    else if (click == 1 && menuOpened == 1 && delta_x == 0 && delta_y == 0 && is_moving == 0) {
                         if (pos_x <= 25 && pos_y >= 695)  {
                             menuOpened = 0;
                             draw_window();
@@ -997,62 +1000,72 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_window();
                         play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep (70); no_sound();
                     }
-                    if (ascii_char == '1' && panel_opened == 1 && shift == 0) {
+                    if (ascii_char == '1' && panel_opened == 1 && shift == 0 && is_moving == 0) {
                         theme = 1;
+                        pos_y = 708; pos_x = 12;
                         draw_window();
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
                         control_panel();
                     }
-                    if (ascii_char == '2' && panel_opened == 1 && shift == 0) {
+                    if (ascii_char == '2' && panel_opened == 1 && shift == 0 && is_moving == 0) {
                         theme = 2;
+                        pos_y = 708; pos_x = 12;
                         draw_window();
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
                         control_panel();
                     }                        
-                    if (ascii_char == '3' && panel_opened == 1 && shift == 0) {
+                    if (ascii_char == '3' && panel_opened == 1 && shift == 0 && is_moving == 0) {
                         theme = 3;
+                        pos_y = 708; pos_x = 12;
                         draw_window();
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
                         control_panel();
                     }
-                    if (ascii_char == '4' && panel_opened == 1 && shift == 0) {
+                    if (ascii_char == '4' && panel_opened == 1 && shift == 0 && is_moving == 0) {
                         theme = 4;
+                        pos_y = 708; pos_x = 12;
                         draw_window();
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
                         control_panel();
                     }
-                    if (ascii_char == '5' && panel_opened == 1 && shift == 0) {
+                    if (ascii_char == '5' && panel_opened == 1 && shift == 0 && is_moving == 0) {
                         theme = 5;
+                        pos_y = 708; pos_x = 12;
                         draw_window();
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
                         control_panel();
                     }
-                    if (ascii_char == '6' && panel_opened == 1 && shift == 0) {
+                    if (ascii_char == '6' && panel_opened == 1 && shift == 0 && is_moving == 0) {
                         theme = 6;
+                        pos_y = 708; pos_x = 12;
                         draw_window();
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
                         control_panel();
                     }
-                    if (ascii_char == '7' && panel_opened == 1 && shift == 0) {
+                    if (ascii_char == '7' && panel_opened == 1 && shift == 0 && is_moving == 0) {
                         theme = 7;
+                        pos_y = 708; pos_x = 12;
                         draw_window();
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
                         control_panel();
                     }
-                    if (ascii_char == '8' && panel_opened == 1 && shift == 0) {
+                    if (ascii_char == '8' && panel_opened == 1 && shift == 0 && is_moving == 0) {
                         theme = 8;
+                        pos_y = 708; pos_x = 12;
                         draw_window();
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
                         control_panel();
                     }
-                    if (ascii_char == '9' && panel_opened == 1 && shift == 0) {
+                    if (ascii_char == '9' && panel_opened == 1 && shift == 0 && is_moving == 0) {
                         theme = 9;
+                        pos_y = 708; pos_x = 12;
                         draw_window();
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
                         control_panel();
                     }
-                    if (ascii_char == '0' && panel_opened == 1 && shift == 0) {
+                    if (ascii_char == '0' && panel_opened == 1 && shift == 0 && is_moving == 0) {
                         theme = 10;
+                        pos_y = 708; pos_x = 12;
                         draw_window();
                         play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
                         control_panel();
@@ -2975,9 +2988,6 @@ void draw_window() {
     for (int y = 0; y < y_render; y++) {
         int row_offset = (y << 10) + (y << 8);
         for (int x = 0; x < x_render; x++) {
-            if (theme == 11) {
-                gfx_memory[y * x_render + x] = 0x18A3;
-            }
             if (theme == 1) {
                 if (((x ^ y) & 16) == 0) {
                     gfx_memory[row_offset + x] = 0x10A2;
