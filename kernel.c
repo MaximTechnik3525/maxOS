@@ -1664,7 +1664,7 @@ void execute_commands(char* str) {
 }
 
 void render_win() {
-    if (glitch == 0) {
+    if (glitch == 0 && drag != 0) {
     int end_y = win2_y + win2_h;
     int end_x = win2_x + win2_w;
     for (int y = win2_y; y < end_y; y++) {
