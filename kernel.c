@@ -813,7 +813,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_window();
                         render_win();
                         if (explorer_opened == 1) { open_explorer(); }
-                        draw_cursor(pos_x, pos_y);
+                        if (drag == 1) { draw_cursor(pos_x, pos_y); }
                         update_screen();
                     }
                     else if (click == 1 && menuOpened == 1 && delta_x == 0 && delta_y == 0 && is_moving == 0) {
