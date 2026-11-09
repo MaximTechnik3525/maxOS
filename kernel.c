@@ -1903,6 +1903,7 @@ void read(int sector, char* output) {
 int enter_counter = 0;
 int symbols_counter = 0;
 void filew() {
+    drag = 1;
     char str[512] = {0};
     if (disk_exists == 1) {
         read((sectors - 1), str);
