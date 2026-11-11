@@ -2201,16 +2201,20 @@ void power() {
 void progressbar(char* file_des, int xend) {
         for (int y = win2_y + 410; y < win2_y + 425; y++) {
             for (int x = win2_x + 280; x < win2_x + 430; x++) {
-                gfx_memory[y * x_render + x] = 0x0120;
+                gfx_memory[y * x_render + x] = 0x2124;
             }
         }
         for (int y = win2_y + 412; y < win2_y + 423; y++) {
             for (int x = win2_x + 282; x < xend; x++) {
-                if (y < win2_y + 416) {
-                    gfx_memory[y * x_render + x] = 0x0DE5;
+                if (((x + y) & 1) == 0) {
+                    if (y == win2_y + 412) {
+                        gfx_memory[y * x_render + x] = 0xFF9E;
+                    }
+                    else if (y < win2_y + 416) {
+                        gfx_memory[y * x_render + x] = 0x5AEB;
+                    }
+                    else { gfx_memory[y * x_render + x] = 0x10A2; }
                 }
-                else if (y < win2_y + 420) { gfx_memory[y * x_render + x] = 0x03EA; }
-                else if (y < win2_y + 423){ gfx_memory[y * x_render + x] = 0x01A4; }
             }
         }
         print_string(file_des, win2_x + 260, win2_y + 435, 0x0000);
