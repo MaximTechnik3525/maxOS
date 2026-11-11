@@ -1097,7 +1097,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         pos_x -= 10;
                         draw_cursor(pos_x, pos_y);
                     }
-                    if (ascii_char == 'e') {
+                    if (ascii_char == 'e' && is_moving == 0) {
                         if (pos_x <= 25 && pos_y >= 695)  {
                             if (menuOpened == 0 && drag == 0) {
                                 draw_menu();
