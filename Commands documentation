@@ -1,0 +1,81 @@
+========================================================================
+               maxOS v3.9 - OFFICIAL SCRIPTING DOCUMENTATION
+========================================================================
+
+HOW TO CREATE AND RUN A SCRIPT:
+1. Open Notepad from the Start Menu.
+2. Write #app# anywhere in your text so the system recognizes it as an executable script.
+3. Add your commands below or next to #app#.
+4. Press F1 to save the script to disk and run it immediately, OR press F3 to run a live RAM preview without saving.
+
+IMPORTANT NOTES:
+* Maximum script size is 509 characters.
+* The "#" symbol is a strict separator for command arguments (for example: setx#512).
+* Warning: maxOS 3.9 gives scripts direct access to system memory and hardware ports. Incorrect coordinates or infinite loops can crash the system. Use at your own risk!
+
+------------------------------------------------------------------------
+1. LOOPS
+------------------------------------------------------------------------
+Loops repeat the entire command sequence a specified number of times.
+* for#0   - Runs the script 0 times (disables execution).
+* for#5   - Repeats the script 5 times.
+* for#25  - Repeats the script 25 times.
+* for#50  - Repeats the script 50 times.
+* for#75  - Repeats the script 75 times.
+* for#100 - Repeats the script 100 times.
+* for#150 - Repeats the script 150 times.
+
+------------------------------------------------------------------------
+2. COORDINATES
+------------------------------------------------------------------------
+Internal cursor variables (X = horizontal, Y = vertical) used for custom drawing.
+* setx#NUM - Sets the X coordinate to NUM (0 to 1279).
+* sety#NUM - Sets the Y coordinate to NUM (0 to 719).
+* +x#NUM   - Increases the X coordinate by NUM.
+* -x#NUM   - Decreases the X coordinate by NUM.
+* +y#NUM   - Increases the Y coordinate by NUM.
+* -y#NUM   - Decreases the Y coordinate by NUM.
+
+------------------------------------------------------------------------
+3. GRAPHICS & UI
+------------------------------------------------------------------------
+Commands for drawing shapes, text, and custom windows on the screen.
+* win                     - Opens a standard Clear Glass application window frame.
+* outt#TEXT               - Prints TEXT inside the window (stops at space or new line).
+* sq#X#Y#W#H              - Draws a black rectangle at (X, Y) with width W and height H.
+* csq#x#y                 - Draws a 40x40 black square at the current (user_x, user_y) coordinates.
+* fscr#W#H                - Fills a screen area from (0, 0) to width W and height H with light window background color.
+* ton                     - Enables the mouse cursor trail effect.
+* tof                     - Disables the mouse cursor trail effect.
+
+------------------------------------------------------------------------
+4. DESKTOP & SYSTEM STATES
+------------------------------------------------------------------------
+Commands for managing the desktop environment, color themes, and kernel states.
+* redr                    - Redraws the entire desktop and closes open windows.
+* th1 to th10             - Switches the active system color theme (1 through 10).
+* stf                     - Sets system state to Free (drag = 0).
+* stb                     - Sets system state to Busy (drag = 1).
+* stc                     - Sets system state to Critical / Locked input (drag = 2).
+
+------------------------------------------------------------------------
+5. SOUND (PC SPEAKER)
+------------------------------------------------------------------------
+Direct hardware control of the motherboard PC Speaker.
+* beep#FREQ#MS            - Plays a tone at FREQ (Hz) for MS (milliseconds).
+* scoin                   - Plays the classic two-tone coin pickup sound effect.
+
+------------------------------------------------------------------------
+6. SYSTEM CONTROL & POWER
+------------------------------------------------------------------------
+Low-level hardware and storage commands.
+* sleep#MS                - Pauses script execution for MS (milliseconds).
+* fmat                    - Formats all user storage sectors (5000-5010) to empty maxFS2 state.
+* err                     - Triggers a critical system error screen (Code: 0x03) and reboots the PC.
+* rbt                     - Reboots the computer (if supported by hardware/emulator).
+* sht                     - Powers off the computer (if supported by ACPI/APM ports).
+
+------------------------------------------------------------------------
+EXAMPLE SCRIPT (Copy into Notepad and press F3):
+#app# win outt#Hello_maxOS! beep#800#100 scoin
+========================================================================

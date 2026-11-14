@@ -1466,7 +1466,7 @@ void execute_commands(char* str) {
             continue;
         }
         else if (str[i] == '+' && str[i+1] == 'y' && str[i+2] == '#') {
-            char* arg_ptr = &str[i+2];
+            char* arg_ptr = &str[i+3];
             int get_y = parse_number(&arg_ptr);
             if (get_y >= 0 && (user_y + get_y) < y_render) {
                 user_y += get_y;
