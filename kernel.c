@@ -77,6 +77,7 @@ void draw_expbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
 void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_effectbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
+void draw_tdbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void get_cpu(char* buffer);
 void draw_window();
 void wait_mouse(unsigned char type);
@@ -226,6 +227,20 @@ unsigned char effect_icon[12][12] = {
     {0,0,0,0,2,3,3,2,0,0,0,0},
     {0,0,0,0,2,3,3,2,0,0,0,0},
     {0,0,0,0,2,2,2,2,0,0,0,0},
+};
+unsigned char td_icon[12][12] = {
+    {0,0,0,0,2,2,2,2,2,2,2,2},
+    {0,0,0,2,3,3,3,3,3,2,3,2},
+    {0,0,2,2,2,2,2,2,2,3,3,2},
+    {0,0,2,1,1,1,1,1,2,3,3,2},
+    {0,0,2,1,1,1,1,1,2,3,3,2},
+    {0,0,2,1,1,1,1,1,2,3,3,2},
+    {0,0,2,1,1,1,1,1,2,3,3,2},
+    {0,0,2,1,1,1,1,1,2,3,2,0},
+    {0,0,2,2,2,2,2,2,2,2,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
 };
 unsigned char sad_smile_icon[24][24] = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -477,6 +492,8 @@ int open1 = 0;
 int open2 = 0;
 int open3 = 0;
 int app_opened = 0;
+int cube_opened = 0;
+void cube_app();
 char cpu_name[49];
 char ram[32];
 char fs_msg[32];
@@ -868,6 +885,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             draw_window();
                             glitchvoid();
                         }
+                        if (pos_x >= 0 && pos_x <= 250 && pos_y > 560 && pos_y <= 580 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            cube_app();
+                        }
                     }
                 }   
             }
@@ -1153,6 +1175,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             glitch = 1;
                             draw_window();
                             glitchvoid();
+                        }
+                        if (pos_x >= 0 && pos_x <= 250 && pos_y > 560 && pos_y <= 580 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            cube_app();
                         }
                     }
                     if (ascii_char == 'f' && explorer_opened == 1) {
@@ -2200,6 +2227,105 @@ void power() {
     render_win();
 }
 
+const int sin_tab[64] = {
+    0, 25, 50, 74, 98, 121, 142, 162, 180, 197, 212, 225, 236, 245, 251, 255,
+    256, 255, 251, 245, 236, 225, 212, 197, 180, 162, 142, 121, 98, 74, 50, 25,
+    0, -25, -50, -74, -98, -121, -142, -162, -180, -197, -212, -225, -236, -245, -251, -255,
+    -256, -255, -251, -245, -236, -225, -212, -197, -180, -162, -142, -121, -98, -74, -50, -25
+};
+int fast_sin(int angle) { return sin_tab[angle & 63]; }
+int fast_cos(int angle) { return sin_tab[(angle + 16) & 63]; }
+
+void draw_line_3d(int x0, int y0, int x1, int y1, unsigned short color) {
+    int dx = x1 > x0 ? x1 - x0 : x0 - x1;
+    int sx = x0 < x1 ? 1 : -1;
+    int dy = y1 > y0 ? y0 - y1 : y1 - y0;
+    int sy = y0 < y1 ? 1 : -1;
+    int err = dx + dy;
+    while (1) {
+        if (x0 >= win2_x + 2 && x0 < win2_x + win2_w - 2 && y0 >= win2_y + 16 && y0 < win2_y + win2_h - 2) {
+            gfx_memory[y0 * x_render + x0] = color;
+        }
+        if (x0 == x1 && y0 == y1) { break; }
+        int e2 = 2 * err;
+        if (e2 >= dy) { err += dy; x0 += sx; }
+        if (e2 <= dx) { err += dx; y0 += sy; }
+    }
+}
+void draw_3d_cube(int cx, int cy, int size, int angle_x, int angle_y, unsigned short color) {
+    int vx[8] = {-1, 1, 1, -1, -1, 1, 1, -1};
+    int vy[8] = {-1, -1, 1, 1, -1, -1, 1, 1};
+    int vz[8] = {-1, -1, -1, -1, 1, 1, 1, 1};
+    int px[8], py[8];
+    int sx = fast_sin(angle_x), cx_a = fast_cos(angle_x);
+    int sy = fast_sin(angle_y), cy_a = fast_cos(angle_y);
+    for (int i = 0; i < 8; i++) {
+        int x = vx[i] * size;
+        int y = vy[i] * size;
+        int z = vz[i] * size;
+        int y1 = (y * cx_a - z * sx) >> 8;
+        int z1 = (y * sx + z * cx_a) >> 8;
+        int x2 = (x * cy_a + z1 * sy) >> 8;
+        int z2 = (-x * sy + z1 * cy_a) >> 8;
+        int fov = 320;
+        int dist = fov + z2;
+        if (dist < 50) { dist = 50; }
+        px[i] = cx + (x2 * fov) / dist;
+        py[i] = cy + (y1 * fov) / dist;
+    }
+    int edges[12][2] = {
+        {0,1}, {1,2}, {2,3}, {3,0},
+        {4,5}, {5,6}, {6,7}, {7,4},
+        {0,4}, {1,5}, {2,6}, {3,7}
+    };
+    for (int i = 0; i < 12; i++) {
+        draw_line_3d(px[edges[i][0]], py[edges[i][0]], px[edges[i][1]], py[edges[i][1]], color);
+    }
+}
+void cube_app() {
+    drag = 1;
+    cube_opened = 1;
+    int ax = 0;
+    int ay = 0;
+    int cube_size = 95;
+    render_win();
+    print_string("3D engine. W/S - zoom, ESC - exit", win2_x + 8, win2_y + 6, 0x0000);
+    print_string("3D engine. W/S - zoom, ESC - exit", win2_x + 7, win2_y + 5, 0xFFFF);
+    while (1) {
+        unsigned char status = inb(0x64);
+        if (status & 0x01) {
+            if (status & 0x20) {
+                inb(0x60);
+                continue;
+            }
+            unsigned char scan_code = inb(0x60);
+            if (scan_code < 0x80) {
+                char ascii_char = scan_code_to_ascii(scan_code);
+                if (ascii_char == 'E') {
+                    drag = 0;
+                    cube_opened = 0;
+                    draw_window();
+                    play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep(70); no_sound();
+                    break;
+                }
+                else if (ascii_char == 'w' && cube_size < 160) { cube_size += 5; }
+                else if (ascii_char == 's' && cube_size > 30) { cube_size -= 5; }
+            }
+        }
+        for (int y = win2_y + 16; y < win2_y + win2_h - 2; y++) {
+            unsigned short bg = (y < win2_y + 203) ? 0xFF9E : 0xFF7D;
+            for (int x = win2_x + 2; x < win2_x + win2_w - 2; x++) {
+                gfx_memory[y * x_render + x] = bg;
+            }
+        }
+        draw_3d_cube(win2_x + (win2_w / 2), win2_y + (win2_h / 2) + 10, cube_size, ax, ay, 0x0112);
+        ax = (ax + 1) & 63;
+        ay = (ay + 1) & 63;
+        update_screen();
+        sleep(16);
+    }
+}
+
 void progressbar(char* file_des, int xend) {
         for (int y = win2_y + 410; y < win2_y + 425; y++) {
             for (int x = win2_x + 280; x < win2_x + 430; x++) {
@@ -2673,6 +2799,22 @@ void draw_effectbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, i
     print_string("Fake virus (epilepsy warning)", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
     print_string("Fake virus (epilepsy warning)", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
+void draw_tdbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = 4 + x;
+            int screen_y = 566 + y;
+            if (screen_x < x_render && screen_y < y_render && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = td_icon[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x5EFF; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * x_render + screen_x] = 0x1C9F; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * x_render + screen_x] = 0x0192; }
+            }
+        }
+    }
+    print_string("3D engine", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("3D engine", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
+}
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
@@ -2945,6 +3087,7 @@ void draw_menu() {
     draw_passbtn(15, 490, 42, 12, 15, 490, 40, 10, 25, 492);
     draw_panelbtn(15, 510, 42, 12, 15, 510, 40, 10, 25, 512);
     draw_effectbtn(15, 530, 42, 12, 15, 530, 40, 10, 25, 532);
+    draw_tdbtn(15, 550, 42, 12, 15, 550, 40, 10, 25, 552);
     if (theme == 3) {
         print_string("maxOS 3.9 Abrikos", 95, 361, 0x0000);
         print_string("maxOS 3.9 Abrikos", 94, 360, 0xFFFF);
@@ -3014,7 +3157,7 @@ void draw_dock() {
     print_string("Used ram (MB):", 1136, 4, 0xFFFF);
     print_string(used_ram_str, 1266, 5, 0x0000);
     print_string(used_ram_str, 1265, 4, 0xFFFF);
-    if (help_opened == 1 || info_opened == 1 || notepad_opened == 1 || explorer_opened == 1 || pong_opened == 1 || power_opened == 1 || panel_opened == 1 || app_opened == 1 || glitch == 1) {
+    if (cube_opened == 1 || help_opened == 1 || info_opened == 1 || notepad_opened == 1 || explorer_opened == 1 || pong_opened == 1 || power_opened == 1 || panel_opened == 1 || app_opened == 1 || glitch == 1) {
         print_string("Press ESC to close this window", 81, 5, 0x0000);
         print_string("Press ESC to close this window", 80, 4, 0xFFFF);
     }
