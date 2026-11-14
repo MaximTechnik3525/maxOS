@@ -795,6 +795,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             if (win2_y < 0) { win2_y = 0; }
                             if (win2_x + win2_w > 1280) { win2_x = 1280 - win2_w; }
                             if (win2_y + win2_h > 695) { win2_y = 695 - win2_h; }
+                            if (win2_y < 15) { win2_y = 15; }
                             for (int x = win2_x; x < win2_x + win2_w; x++) {
                                 gfx_memory[win2_y * x_render + x] = 0xC618;
                                 gfx_memory[(win2_y + win2_h - 1) * x_render + x] = 0xC618;
@@ -809,7 +810,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     else if (click == 0 && is_drag == 1) {
                         is_moving = 0;
                         is_drag = 0;
-                        pos_y += 17;
+                        pos_y += 100;
                         draw_window();
                         render_win();
                         if (explorer_opened == 1) { open_explorer(); }
@@ -1665,6 +1666,7 @@ void execute_commands(char* str) {
 
 void render_win() {
     if (glitch == 0 && drag != 0) {
+    draw_window();
     int end_y = win2_y + win2_h;
     int end_x = win2_x + win2_w;
     for (int y = win2_y; y < end_y; y++) {
@@ -2927,7 +2929,7 @@ void draw_menu() {
     }
     for (int y = 0; y < y_render - 25; y++) {
         for (int x = 0; x < x_render; x++) {
-            if ((x > 350 && y < y_render) || (y < 350 && x < 351)) {
+            if ((x > 350 && y < y_render && y > 14) || (y < 350 && x < 351 && y > 14)) {
                 if (((x + y) & 1) == 0) {
                     gfx_memory[y * x_render + x] = 0x1000;
                 }
@@ -2985,6 +2987,49 @@ void glitchvoid() {
         back_buffer[rand_pixel] = rand_color;
     }
     glitch_timer++;
+}
+
+void draw_dock() {
+    for (int y = 0; y < 14; y++) {
+        for (int x = 0; x < 1280; x++) {
+            if (y == 0 || y == 13) {
+                gfx_memory[y * x_render + x] = 0xFF9E;
+            }
+            if (((x + y) & 1) == 0) {
+                if (y > 0 && y < 7) {
+                    gfx_memory[y * x_render + x] = 0x5AEB;
+                }
+                else if (y > 7 && y < 13) {
+                    gfx_memory[y * x_render + x] = 0x10A2;
+                }
+            }
+        }
+    }
+    int used_ram = 4 + (drag > 0 ? 2 : 0) + (glitch == 1 ? 2 : 0);
+    char used_ram_str[8];
+    int_str(used_ram, used_ram_str);
+    print_string("maxDock", 6, 5, 0x0000);
+    print_string("maxDock", 5, 4, 0xFFFF);
+    print_string("Used ram (MB):", 1137, 5, 0x0000);
+    print_string("Used ram (MB):", 1136, 4, 0xFFFF);
+    print_string(used_ram_str, 1266, 5, 0x0000);
+    print_string(used_ram_str, 1265, 4, 0xFFFF);
+    if (help_opened == 1 || info_opened == 1 || notepad_opened == 1 || explorer_opened == 1 || pong_opened == 1 || power_opened == 1 || panel_opened == 1 || app_opened == 1 || glitch == 1) {
+        print_string("Press ESC to close this window", 81, 5, 0x0000);
+        print_string("Press ESC to close this window", 80, 4, 0xFFFF);
+    }
+    else {
+        print_string("Have a great session!", 81, 5, 0x0000);
+        print_string("Have a great session!", 80, 4, 0xFFFF);
+    }
+    print_string("Current write sector:", 371, 5, 0x0000);
+    print_string("Current write sector:", 370, 4, 0xFFFF);
+    char sectors_str[8];
+    int_str(sectors, sectors_str);
+    print_string(sectors_str, 561, 5, 0x0000);
+    print_string(sectors_str, 560, 4, 0xFFFF);
+    print_string("Release date: 621191 (reverse it)", 631, 5, 0x0000);
+    print_string("Release date: 621191 (reverse it)", 630, 4, 0xFFFF);
 }
 
 void draw_window() {
@@ -3055,6 +3100,7 @@ void draw_window() {
             }
         }
     }
+    draw_dock();
     for (int y = win_y; y < win_y + win_h; y++) {
         for (int x = win_x; x < win_x + win_w; x++) {
             if (x == 25 || x == 1100 || x == 1108) {
