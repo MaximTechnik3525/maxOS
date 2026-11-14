@@ -2806,8 +2806,8 @@ void draw_tdbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int b
             if (screen_x < x_render && screen_y < y_render && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = td_icon[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x5EFF; }
-                else if (pixel_type2 == 2) { gfx_memory[screen_y * x_render + screen_x] = 0x1C9F; }
-                else if (pixel_type2 == 3) { gfx_memory[screen_y * x_render + screen_x] = 0x0192; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * x_render + screen_x] = 0x0192; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * x_render + screen_x] = 0x1C9F; }
             }
         }
     }
