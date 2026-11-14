@@ -812,7 +812,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             if (win2_y < 0) { win2_y = 0; }
                             if (win2_x + win2_w > 1280) { win2_x = 1280 - win2_w; }
                             if (win2_y + win2_h > 695) { win2_y = 695 - win2_h; }
-                            if (win2_y < 15) { win2_y = 15; }
                             for (int x = win2_x; x < win2_x + win2_w; x++) {
                                 gfx_memory[win2_y * x_render + x] = 0xC618;
                                 gfx_memory[(win2_y + win2_h - 1) * x_render + x] = 0xC618;
@@ -3071,7 +3070,7 @@ void draw_menu() {
     }
     for (int y = 0; y < y_render - 25; y++) {
         for (int x = 0; x < x_render; x++) {
-            if ((x > 350 && y < y_render && y > 14) || (y < 350 && x < 351 && y > 14)) {
+            if ((x > 350 && y < y_render) || (y < 350 && x < 351)) {
                 if (((x + y) & 1) == 0) {
                     gfx_memory[y * x_render + x] = 0x1000;
                 }
@@ -3148,31 +3147,6 @@ void draw_dock() {
             }
         }
     }
-    int used_ram = 4 + (drag > 0 ? 2 : 0) + (glitch == 1 ? 2 : 0);
-    char used_ram_str[8];
-    int_str(used_ram, used_ram_str);
-    print_string("maxDock", 6, 5, 0x0000);
-    print_string("maxDock", 5, 4, 0xFFFF);
-    print_string("Used ram (MB):", 1137, 5, 0x0000);
-    print_string("Used ram (MB):", 1136, 4, 0xFFFF);
-    print_string(used_ram_str, 1266, 5, 0x0000);
-    print_string(used_ram_str, 1265, 4, 0xFFFF);
-    if (cube_opened == 1 || help_opened == 1 || info_opened == 1 || notepad_opened == 1 || explorer_opened == 1 || pong_opened == 1 || power_opened == 1 || panel_opened == 1 || app_opened == 1 || glitch == 1) {
-        print_string("Press ESC to close this window", 81, 5, 0x0000);
-        print_string("Press ESC to close this window", 80, 4, 0xFFFF);
-    }
-    else {
-        print_string("Have a great session!", 81, 5, 0x0000);
-        print_string("Have a great session!", 80, 4, 0xFFFF);
-    }
-    print_string("Current write sector:", 371, 5, 0x0000);
-    print_string("Current write sector:", 370, 4, 0xFFFF);
-    char sectors_str[8];
-    int_str(sectors, sectors_str);
-    print_string(sectors_str, 561, 5, 0x0000);
-    print_string(sectors_str, 560, 4, 0xFFFF);
-    print_string("Release date: 621191 (reverse it)", 631, 5, 0x0000);
-    print_string("Release date: 621191 (reverse it)", 630, 4, 0xFFFF);
 }
 
 void draw_window() {
@@ -3243,7 +3217,6 @@ void draw_window() {
             }
         }
     }
-    draw_dock();
     for (int y = win_y; y < win_y + win_h; y++) {
         for (int x = win_x; x < win_x + win_w; x++) {
             if (x == 25 || x == 1100 || x == 1108) {
