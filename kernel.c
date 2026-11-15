@@ -521,13 +521,23 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         apm_supp = 1;
     }
     for (int y = 0; y < y_render; y++) {
+        int row_offset = (y << 10) + (y << 8);
         for (int x = 0; x < x_render; x++) {
-            gfx_memory[y * x_render + x] = 0x0000;
+                if (((x ^ y) & 16) == 0) {
+                    gfx_memory[row_offset + x] = 0x10A2;
+                }
+                else { gfx_memory[row_offset + x] = 0x2124; }
+        }
+    }
+    for (int y = 0; y < y_render; y++) {
+        for (int x = 0; x < x_render; x++) {
+            if (((x + y) & 1) == 0) { gfx_memory[y * x_render + x] = 0x1000; }
+            else { continue; }
         }
     }
     print_string("=====maxOS v3.9 Boot Menu=====", 10, 15, 0xFFFF);
     print_string("Graphics initialized! 1280x720x16 mode working!", 10, 30, 0xFFFF);
-    print_string("Press [1] to scan disk (can be problems)", 10, 45, 0xFFFF);
+    print_string("Press [1] to scan disk (may cause issues)", 10, 45, 0xFFFF);
     print_string("Press [2] to skip disk scan", 10, 60, 0xFFFF);
     update_screen();
     int choice = 0;
@@ -3111,9 +3121,12 @@ void glitchvoid() {
         }
         unsigned char scan_code = inb(0x60);
         if (scan_code == 0x01) {
+            while (inb(0x64) & 0x01) { inb(0x60); }
             glitch_timer = 0;
             glitch = 0;
             drag = 0;
+            pos_x = 640;
+            pos_y = 360;
             draw_window();
             win2_x = 160; win2_y = 177;
             play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep (70); no_sound();
