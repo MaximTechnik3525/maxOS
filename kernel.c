@@ -535,24 +535,14 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         apm_supp = 1;
     }
     for (int y = 0; y < y_render; y++) {
-        int row_offset = (y << 10) + (y << 8);
         for (int x = 0; x < x_render; x++) {
-                if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x10A2;
-                }
-                else { gfx_memory[row_offset + x] = 0x2124; }
+            gfx_memory[y * x_render + x] = 0x0000;
         }
     }
-    for (int y = 0; y < y_render; y++) {
-        for (int x = 0; x < x_render; x++) {
-            if (((x + y) & 1) == 0) { gfx_memory[y * x_render + x] = 0x1000; }
-            else { continue; }
-        }
-    }
-    print_string("=====maxOS v3.9 Boot Menu=====", 10, 15, 0xFFFF);
+    print_string("=======maxOS v3.9 Boot Menu=======", 10, 15, 0xFFFF);
     print_string("Graphics initialized! 1280x720x16 mode working!", 10, 30, 0xFFFF);
     print_string("Press [1] to scan disk (may cause issues)", 10, 45, 0xFFFF);
-    print_string("Press [2] to skip disk scan", 10, 60, 0xFFFF);
+    print_string("Press [2] to skip disk scan (without ATA driver)", 10, 60, 0xFFFF);
     update_screen();
     int choice = 0;
     while (1) {
@@ -614,10 +604,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     for (int y = 0; y < y_render; y++) {
         int row_offset = (y << 10) + (y << 8);
         for (int x = 0; x < x_render; x++) {
-                if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x10A2;
-                }
-                else { gfx_memory[row_offset + x] = 0x2124; }
+            unsigned short row_color3 = rgb565(2 + (y / 90), 8 + (y / 24), 14 + (y / 42));
+            gfx_memory[row_offset + x] = row_color3;
         }
     }
     sleep (1500);
@@ -2399,10 +2387,8 @@ void shutdown() {
     for (int y = 0; y < y_render; y++) {
         int row_offset = (y << 10) + (y << 8);
         for (int x = 0; x < x_render; x++) {
-            if (((x ^ y) & 16) == 0) {
-                gfx_memory[row_offset + x] = 0x1000;
-            }
-            else { gfx_memory[row_offset + x] = 0x9000; }
+            unsigned short row_color2 = rgb565(12 + (y / 45), 1, 1);
+            gfx_memory[row_offset + x] = row_color2;
         }
     }
     for (int y = 0; y < 720; y++) {
@@ -2416,16 +2402,17 @@ void shutdown() {
     for (int y = 0; y < 720; y++) {
         for (int x = 0; x < 1280; x++) {
             if (((x + y) & 1) == 0) {
-                            if (y >= 386 && y < 392) {
+                if (y >= 386 && y < 392) {
                 gfx_memory[y * x_render + x] = 0xF800;
             }
             else if (y >= 392 && y <= 404) {
                 gfx_memory[y * x_render + x] = 0x5000;
             }
-            else if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
             }
+            if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
         }
     }
+    print_string("maxOS is shutting down...", 551, 421, 0x0000);
     print_string("maxOS is shutting down...", 550, 420, 0xF800);
     update_screen();
     sleep(2000);
@@ -2441,10 +2428,8 @@ void reboot() {
     for (int y = 0; y < y_render; y++) {
         int row_offset = (y << 10) + (y << 8);
         for (int x = 0; x < x_render; x++) {
-            if (((x ^ y) & 16) == 0) {
-                gfx_memory[row_offset + x] = 0x1000;
-            }
-            else { gfx_memory[row_offset + x] = 0x9000; }
+            unsigned short row_color2 = rgb565(12 + (y / 45), 1, 1);
+            gfx_memory[row_offset + x] = row_color2;
         }
     }
     for (int y = 0; y < 720; y++) {
@@ -2458,16 +2443,17 @@ void reboot() {
     for (int y = 0; y < 720; y++) {
         for (int x = 0; x < 1280; x++) {
             if (((x + y) & 1) == 0) {
-                            if (y >= 386 && y < 392) {
+                if (y >= 386 && y < 392) {
                 gfx_memory[y * x_render + x] = 0xF800;
             }
             else if (y >= 392 && y <= 404) {
                 gfx_memory[y * x_render + x] = 0x5000;
             }
-            else if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
             }
+            if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
         }
     }
+    print_string("maxOS is rebooting...", 551, 421, 0x0000);
     print_string("maxOS is rebooting...", 550, 420, 0xF800);
     update_screen();
     sleep(2000);
@@ -2482,7 +2468,8 @@ void error(char* err) {
     drag = 2;
     for (int y = 0; y < y_render; y++) {
         for (int x = 0; x < x_render; x++) {
-            gfx_memory[y * x_render + x] = 0x9800;
+            unsigned short row_color5 = rgb565(8 + (y / 55), 0, 2);
+            gfx_memory[y * x_render + x] = row_color5;
         }
     }
     print_string("maxOS critical error!", 561, 11, 0x0000);
@@ -2497,7 +2484,7 @@ void error(char* err) {
     print_string("You can check error description and code, to get more information.", 10, 90, 0xFFFF);
     for (int y = 0; y < 24; y++) {
         for (int x = 0; x < 24; x++) {
-            int screen_x = 800 + x;
+            int screen_x = 1200 + x;
             int screen_y = 70 + y;
             if (screen_x < x_render && screen_y < y_render && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = sad_smile_icon[y][x];
@@ -3550,13 +3537,10 @@ void pass() {
 
 void login_visual() {
     for (int y = 0; y < y_render; y++) {
+        int row_offset = (y << 10) + (y << 8);
         for (int x = 0; x < x_render; x++) {
-                            int row_offset = (y << 10) + (y << 8);
-
-                            if (((x ^ y) & 16) == 0) {
-                    gfx_memory[row_offset + x] = 0x10A2;
-                }
-                else { gfx_memory[row_offset + x] = 0x2124; }
+            unsigned short row_color4 = rgb565(2 + (y / 90), 8 + (y / 24), 14 + (y / 42));
+            gfx_memory[row_offset + x] = row_color4;
         }
     }
     for (int y = 0; y < y_render; y++) {
@@ -3594,8 +3578,8 @@ void login_visual() {
             }
         }
         }
-        print_string("Welcome", 10, 10, 0x0000);
-        print_string("Welcome", 9, 9, 0xFF9E);
+        print_string("Have a great session!", 16, 16, 0x0000);
+        print_string("Have a great session!", 15, 15, 0xFF9E);
         print_string("Enter password:", 31, 374, 0x0000);
         print_string("Enter password:", 30, 373, 0xFF9E);
         print_string(ftext2, 171, 374, 0x0000);
@@ -3857,9 +3841,6 @@ void login_screen() {
                     }
                     else if (ascii_char == '\E') {
                         if (disk_exists == 1 && str_cmp(ftext2, read_pass)) {
-                            play_sound(600); sleep(100); no_sound();
-                            play_sound(850); sleep(100); no_sound();
-                            play_sound(1100); sleep(120); no_sound();
                             sleep(250);
                             w_mode = 0;
                             drag = 0;
