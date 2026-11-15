@@ -3862,9 +3862,13 @@ void update_screen() {
     for (int y = 0; y < 720; y++) {
         unsigned short* src = &back_buffer[y * 1280];
         unsigned short* dest = (unsigned short*)((unsigned char*)real_framebuffer + (y * (REAL_PITCH * 2)));
-        for (int x = 0; x < 1280; x++) {
-            dest[x] = src[x];
-        }
+        __asm__ __volatile__ (
+            "cld\n\t"
+            "rep movsl"
+            :
+            : "D"(dest), "S"(src), "c"(640)
+            : "memory"
+        );
     }
 }
 
