@@ -1,28 +1,28 @@
 #pragma pack(push, 1)
 typedef struct {
-    unsigned char e_ident[16]; // Магические байты (0x7F, 'E', 'L', 'F')
-    unsigned short e_type;      // Тип файла (2 = Executable)
-    unsigned short e_machine;   // Архитектура (3 = x86 i386)
-    unsigned int   e_version;   // Версия (1)
-    unsigned int   e_entry;     // ТОЧКА ВХОДА (Адрес самой первой инструкции!)
-    unsigned int   e_phoff;     // Смещение до таблицы Program Header
-    unsigned int   e_shoff;     // Смещение до Section Header
-    unsigned int   e_flags;
+    unsigned char e_ident[16];
+    unsigned short e_type;
+    unsigned short e_machine;
+    unsigned int e_version;
+    unsigned int e_entry;
+    unsigned int e_phoff;
+    unsigned int e_shoff;
+    unsigned int e_flags;
     unsigned short e_ehsize;
     unsigned short e_phentsize;
-    unsigned short e_phnum;     // Количество программных заголовков
+    unsigned short e_phnum;
     unsigned short e_shentsize;
     unsigned short e_shnum;
     unsigned short e_shstrndx;
 } Elf32_Ehdr;
 typedef struct {
-    unsigned int p_type;   // Тип сегмента (1 = PT_LOAD, загружаемый)
-    unsigned int p_offset; // Смещение сегмента в файле
-    unsigned int p_vaddr;  // Виртуальный адрес сегмента в ОЗУ
-    unsigned int p_paddr;  // Физический адрес
-    unsigned int p_filesz; // Размер сегмента в файле
-    unsigned int p_memsz;  // Размер сегмента в памяти
-    unsigned int p_flags;  // Права (Read/Write/Execute)
+    unsigned int p_type;
+    unsigned int p_offset;
+    unsigned int p_vaddr;
+    unsigned int p_paddr;
+    unsigned int p_filesz;
+    unsigned int p_memsz;
+    unsigned int p_flags;
     unsigned int p_align;
 } Elf32_Phdr;
 struct multiboot_info {
@@ -33,7 +33,7 @@ struct multiboot_info {
     unsigned int cmdline;
     unsigned int mods_count;
     unsigned int mods_addr;
-    unsigned int syms[4];       // Поля для ELF секций
+    unsigned int syms[4];
     unsigned int mmap_length;
     unsigned int mmap_addr;
     unsigned int drives_length;
@@ -48,10 +48,10 @@ struct multiboot_info {
     unsigned short vbe_interface_off;
     unsigned short vbe_interface_len;
     unsigned long long framebuffer_addr; 
-    unsigned int framebuffer_pitch;     // Длина строки в БАЙТАХ
-    unsigned int framebuffer_width;     // Ширина экрана в пикселях
-    unsigned int framebuffer_height;    // Высота экрана в пикселях
-    unsigned char framebuffer_bpp;       // Количество бит на пиксель (16, 24 или 32)
+    unsigned int framebuffer_pitch;
+    unsigned int framebuffer_width;
+    unsigned int framebuffer_height;
+    unsigned char framebuffer_bpp;
     unsigned char framebuffer_type;
     unsigned char framebuffer_color_info[6];
 };
@@ -3553,9 +3553,9 @@ void login_visual() {
             }
         }
     }
-            for (int y = 0; y < y_render; y++) {
-            for (int x = 0; x < x_render; x++) {
-                if (((x + y) & 1) == 0) {
+    for (int y = 0; y < y_render; y++) {
+        for (int x = 0; x < x_render; x++) {
+            if (((x + y) & 1) == 0) {
                 if (y >= 386 && y < 392) {
                     gfx_memory[y * x_render + x] = 0x5AEB;
                 }
@@ -3563,10 +3563,10 @@ void login_visual() {
                     gfx_memory[y * x_render + x] = 0x10A2;
                 }
             }
-                if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
-            }
+            if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
         }
-        for (int y = 0; y < 12; y++) {
+    }
+    for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
             int screen_x = 10 + x;
             int screen_y = 370 + y;
@@ -3575,16 +3575,16 @@ void login_visual() {
                 if (pixel_type2 == 2) { gfx_memory[screen_y * x_render + screen_x] = 0xFFE0; }
                 else if (pixel_type2 == 3) { gfx_memory[screen_y * x_render + screen_x] = 0x0000; }
                 else if (pixel_type2 == 4) { gfx_memory[screen_y * x_render + screen_x] = 0xFD20; }
+                }
             }
         }
-        }
-        print_string("Have a great session!", 16, 16, 0x0000);
-        print_string("Have a great session!", 15, 15, 0xFF9E);
-        print_string("Enter password:", 31, 374, 0x0000);
-        print_string("Enter password:", 30, 373, 0xFF9E);
-        print_string(ftext2, 171, 374, 0x0000);
-        print_string(ftext2, 170, 373, 0xFF9E);
-        clock();
+    print_string("Have a great session!", 16, 16, 0x0000);
+    print_string("Have a great session!", 15, 15, 0xFF9E);
+    print_string("Enter password:", 31, 374, 0x0000);
+    print_string("Enter password:", 30, 373, 0xFF9E);
+    print_string(ftext2, 171, 374, 0x0000);
+    print_string(ftext2, 170, 373, 0xFF9E);
+    clock();
 }
 
 void login_screen() {
