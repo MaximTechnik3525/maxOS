@@ -2,6 +2,14 @@
 
 ---
 
+## 🚀 How to Run in QEMU (Emulator)
+
+If you want to quickly test **maxOS** without flashing a USB drive, you can run it in **QEMU**:
+* **Linux:** Just run the included `./start.sh` script (make sure it has execution permissions via `chmod +x start.sh`).
+* **Windows:** Open `start.sh` in any text editor, copy the `qemu-system-i386` command with all its flags and the `maxos.iso` image path, and run it in your Windows terminal/PowerShell (adjusting the audio backend flag if needed).
+
+---
+
 ## 💻 How to Run on Real Hardware
 
 To test **maxOS** on a real PC, make sure your hardware meets the following requirements:
