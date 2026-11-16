@@ -705,14 +705,16 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (click == 0 && menuOpened == 0 && show_box == 0 && pos_x <= 25 && pos_y >= 695 && drag == 0) {
                         show_box = 1;
                         for (int y = 670; y < 690; y++) {
-                            for (int x = 20; x < 65; x++) {
-                                gfx_memory[y * x_render + x] = 0x31A6;
+                            for (int x = 20; x < 70; x++) {
+                                if (((x + y) & 1) == 0) {
+                                    gfx_memory[y * x_render + x] = 0x31A6;
+                                }
                             }
                         }
-                        print_string("Menu", 26, 675, 0x0000);
-                        print_string("Menu", 25, 674, 0xFFFF);
+                        print_string("Menu", 28, 677, 0x0000);
+                        print_string("Menu", 27, 676, 0xFFFF);
                     }
-                    else if (pos_x > 25 || pos_y < 695 && drag == 0) {
+                    else if (pos_x > 25 || pos_y < 695 && drag == 0 || click == 1) {
                         if (show_box == 1) {
                             show_box = 0;
                             draw_window();
@@ -846,14 +848,16 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     if (menuOpened == 0 && show_box == 0 && pos_x <= 25 && pos_y >= 695 && drag == 0) {
                         show_box = 1;
                         for (int y = 670; y < 690; y++) {
-                            for (int x = 20; x < 65; x++) {
-                                gfx_memory[y * x_render + x] = 0x31A6;
+                            for (int x = 20; x < 70; x++) {
+                                if (((x + y) & 1) == 0) {
+                                    gfx_memory[y * x_render + x] = 0x31A6;
+                                }
                             }
                         }
-                        print_string("Menu", 26, 675, 0x0000);
-                        print_string("Menu", 25, 674, 0xFFFF);
+                        print_string("Menu", 28, 677, 0x0000);
+                        print_string("Menu", 27, 676, 0xFFFF);
                     }
-                    else if (pos_x > 25 || pos_y < 695 && drag == 0) {
+                    else if (pos_x > 25 || pos_y < 695 && drag == 0 || ascii_char == 'e') {
                         if (show_box == 1) {
                             show_box = 0;
                             draw_window();
