@@ -2984,22 +2984,19 @@ void draw_menu() {
         for (int x = 0; x < 350; x++) {
             if (y == 350 || x == 0 || x == 349) {
                 if (((x + y) & 1) == 0) gfx_memory[y * x_render + x] = 0xFF9E;
-                else continue;
-            }
-            else if (y == 694) {
-                gfx_memory[y * x_render + x] = 0x0000;
+                else { continue; }
             }
             else if (y < 360) {
                 if (((x + y) & 1) == 0 ) gfx_memory[y * x_render + x] = 0x5AEB;
-                else continue;
+                else { continue; }
             }
             else if (y < 375) {
                 if (((x + y) & 1) == 0) gfx_memory[y * x_render + x] = 0x10A2;
-                else continue;
+                else { continue; }
             }
             else if (y > 375) {
                 if (((x + y) & 1) == 0) gfx_memory[y * x_render + x] = 0x18C3;
-                else continue;
+                else { continue; }
             }
             else if (y == 375) {
                 gfx_memory[y * x_render + x] = 0xFFFF;
@@ -3132,12 +3129,9 @@ void draw_window() {
                 if (((x + y) & 1) == 0) { gfx_memory[y * x_render + x] = 0x5AEB; }
                 else { continue; }
             }
-            else if (y < win_y + 24) {
+            else if (y < win_y + 25) {
                 if (((x + y) & 1) == 0) gfx_memory[y * x_render + x] = 0x10A2;
                 else { continue; }
-            }
-            else {
-                gfx_memory[y * x_render + x] = 0x0000;
             }
         }
     }
@@ -3179,7 +3173,15 @@ void screensaver() {
     drag = 2;
     for (int y = 0; y < y_render; y++) {
         for (int x = 0; x < x_render; x++) {
-            gfx_memory[y * x_render + x] = 0x2124;
+            unsigned short row_color6 = rgb565(2 + (y / 90), 8 + (y / 24), 14 + (y / 42));
+            gfx_memory[y * x_render + x] = row_color6;
+        }
+    }
+    for (int y = 0; y < y_render; y++) {
+        for (int x = 0; x < x_render; x++) {
+            if (((x + y) & 1) == 0) {
+                gfx_memory[y * x_render + x] = 0x10A2;
+            }
         }
     }
     int txt_x = 75;
@@ -3197,7 +3199,15 @@ void screensaver() {
         }
         for (int py = txt_y - 20; py < txt_y + 20; py++) {
             for (int px = txt_x - 70; px < txt_x + 70; px++) {
-                gfx_memory[py * x_render + px] = 0x2124;
+                unsigned short row_color6 = rgb565(2 + (py / 90), 8 + (py / 24), 14 + (py / 42));
+                gfx_memory[py * x_render + px] = row_color6;
+            }
+        }
+        for (int py = txt_y - 20; py < txt_y + 20; py++) {
+            for (int px = txt_x - 70; px < txt_x + 70; px++) {
+                if (((px + py) & 1) == 0) {
+                    gfx_memory[py * x_render + px] = 0x10A2;
+                }
             }
         }
         print_string("maxOS", txt_x + 1, txt_y + 1, 0x0000);
