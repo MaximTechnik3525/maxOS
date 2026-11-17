@@ -3128,16 +3128,16 @@ void draw_menu() {
     draw_effectbtn(15, 530, 42, 12, 15, 530, 40, 10, 25, 532);
     draw_tdbtn(15, 550, 42, 12, 15, 550, 40, 10, 25, 552);
     if (theme == 3) {
-        print_string("maxOS 3.9 Abrikos", 95, 361, 0x0000);
-        print_string("maxOS 3.9 Abrikos", 94, 360, 0xFFFF);
+        print_string("maxOS 3.9 Abrikos", 114, 361, 0x0000);
+        print_string("maxOS 3.9 Abrikos", 113, 360, 0xFFFF);
     }
     else if (theme == 4) {
-        print_string("maxOS 3.9 Tora", 105, 361, 0x0000);
-        print_string("maxOS 3.9 Tora", 104, 360, 0xFFFF);
+        print_string("maxOS 3.9 Tora", 124, 361, 0x0000);
+        print_string("maxOS 3.9 Tora", 123, 360, 0xFFFF);
     }
     else {
-        print_string("maxOS 3.9", 127, 361, 0x0000);
-        print_string("maxOS 3.9", 126, 360, 0xFFFF);
+        print_string("maxOS 3.9", 139, 361, 0x0000);
+        print_string("maxOS 3.9", 138, 360, 0xFFFF);
     }
 }
 
