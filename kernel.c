@@ -1635,9 +1635,15 @@ void execute_commands(char* str) {
 
 void render_win() {
     if (glitch == 0 && drag != 0) {
-    draw_window();
     int end_y = win2_y + win2_h;
     int end_x = win2_x + win2_w;
+    for (int y = win2_y + 5; y < end_y + 5; y++) {
+        for (int x = win2_x + 5; x < end_x + 5; x++) {
+            if (((x + y) & 1) == 0 && x < x_render && y < 695) {
+                gfx_memory[y * x_render + x] = 0x0841;
+            }
+        }
+    }
     for (int y = win2_y; y < end_y; y++) {
         for (int x = win2_x; x < end_x; x++) {
             if (y == win2_y || x == win2_x || x == end_x - 1 || y == end_y - 1) {
