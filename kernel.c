@@ -727,8 +727,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             }
         }
     }
-    print_string("maxOS is starting up...", 551, 421, 0x0000);
-    print_string("maxOS is starting up...", 550, 420, 0xFF9E);
+    print_string("maxOS is starting up...", 579, 421, 0x0000);
+    print_string("maxOS is starting up...", 578, 420, 0xFF9E);
     print_string("By MaximTechnik3525", 11, 16, 0x0000);
     print_string("By MaximTechnik3525", 10, 15, 0xFFFF);
     update_screen();
@@ -1378,8 +1378,8 @@ void pong() {
                     render_win();
                     print_string("Pong game - score:", 168, 183, 0x0000);
                     print_string("Pong game - score:", 167, 182, 0xFFFF);
-                    print_string(str_score, 140 + 198, 183, 0x0000);
-                    print_string(str_score, 140 + 197, 182, 0xFFFF);
+                    print_string(str_score, 281, 183, 0x0000);
+                    print_string(str_score, 280, 182, 0xFFFF);
                     if (collisions == 5) {
                         collisions = 0;
                         ball_dx -= 1;
@@ -1743,6 +1743,8 @@ void render_win() {
     }
     for (int y = win2_y; y < end_y; y++) {
         for (int x = win2_x; x < end_x; x++) {
+            if ((y > win2_y + 410 && y < win2_y + 425) && (x > win2_x + 280 && x < win2_x + 430) && explorer_opened == 1) { continue; }
+            else {
             if (y == win2_y || x == win2_x || x == end_x - 1 || y == end_y - 1) {
                 gfx_memory[y * x_render + x] = 0xC618;
                 continue;
@@ -1767,6 +1769,7 @@ void render_win() {
                 if (y < end_y - 1) { gfx_memory[y * x_render + x] = 0xF77D; }
                 else { gfx_memory[y * x_render + x] = 0x0000; }
             }
+        }
         }
     }
     if (help_opened == 1) {
@@ -2372,11 +2375,6 @@ void cube_app() {
 }
 
 void progressbar(char* file_des, int xend) {
-        for (int y = win2_y + 410; y < win2_y + 425; y++) {
-            for (int x = win2_x + 280; x < win2_x + 430; x++) {
-                gfx_memory[y * x_render + x] = 0x2124;
-            }
-        }
         for (int y = win2_y + 412; y < win2_y + 423; y++) {
             for (int x = win2_x + 282; x < xend; x++) {
                 if (((x + y) & 1) == 0) {
@@ -2390,7 +2388,7 @@ void progressbar(char* file_des, int xend) {
                 }
             }
         }
-        print_string(file_des, win2_x + 260, win2_y + 435, 0x0000);
+        print_string(file_des, win2_x + 285, win2_y + 435, 0x0000);
 }
 
 void cpu_win() {
@@ -2438,9 +2436,9 @@ void open_explorer() {
             char sector_str[10];
             int_str(file_id, file_id_str);
             int_str(currentFile, sector_str);
-            print_string(file_id_str, win2_x + 270, line, 0x0000);
-            print_string("/", win2_x + 290, line, 0x0000);
-            print_string(sector_str, win2_x + 300, line, 0x0000);
+            print_string(file_id_str, win2_x + 290, line, 0x0000);
+            print_string("/", win2_x + 300, line, 0x0000);
+            print_string(sector_str, win2_x + 310, line, 0x0000);
             line += 15;
             file_id++;
         }
@@ -3699,8 +3697,8 @@ void login_visual() {
     print_string("Have a great session!", 15, 15, 0xFF9E);
     print_string("Enter password:", 31, 374, 0x0000);
     print_string("Enter password:", 30, 373, 0xFF9E);
-    print_string(ftext2, 171, 374, 0x0000);
-    print_string(ftext2, 170, 373, 0xFF9E);
+    print_string(ftext2, 134, 374, 0x0000);
+    print_string(ftext2, 133, 373, 0xFF9E);
     clock();
 }
 
