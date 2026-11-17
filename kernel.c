@@ -1784,8 +1784,8 @@ void render_win() {
         print_string("You can move windows with cursor on window's title.", win2_x + 10, win2_y + 113, 0x0000);
     }
     else if (info_opened == 1) {
-        print_string("Configuration information. Press Esc to close.", win2_x + 8, win2_y + 6, 0x0000);
-        print_string("Configuration information. Press Esc to close.", win2_x + 7, win2_y + 5, 0xFFFF);
+        print_string("Hardware information. Press Esc to close.", win2_x + 8, win2_y + 6, 0x0000);
+        print_string("Hardware information. Press Esc to close.", win2_x + 7, win2_y + 5, 0xFFFF);
         print_string("Your CPU:", win2_x + 10, win2_y + 23, 0x0000);
         print_string(cpu_name, win2_x + 70, win2_y + 23, 0x0000);
         print_string("Total RAM:", win2_x + 10, win2_y + 38, 0x0000);
@@ -1840,15 +1840,15 @@ void render_win() {
         print_string("Control panel", win2_x + 8, win2_y + 6, 0x0000);
         print_string("Control panel", win2_x +7, win2_y + 5, 0xFFFF);
         print_string("Theme (1, 2, 3, 4, 5, 6, 7, 8, 9, 0):", win2_x + 10, win2_y + 23, 0x0000);
-        print_string(theme_id, win2_x + 361, win2_y + 23, 0x0000);
+        print_string(theme_id, win2_x + 239, win2_y + 23, 0x0000);
         print_string("Cursor speed (shift  +  1/2):", win2_x + 10, win2_y + 38, 0x0000);
-        print_string(cursor_speed_str, win2_x + 280, win2_y + 38, 0x0000);
+        print_string(cursor_speed_str, win2_x + 191, win2_y + 38, 0x0000);
         print_string("Screensaver (shift + 3/4):", win2_x + 10, win2_y + 53, 0x0000);
-        if (scr == 1) { print_string("On", win2_x + 253, win2_y + 53, 0x0320); }
-        if (scr == 0) { print_string("Off", win2_x + 253, win2_y + 53, 0x9000); }
+        if (scr == 1) { print_string("On", win2_x + 173, win2_y + 53, 0x0320); }
+        if (scr == 0) { print_string("Off", win2_x + 173, win2_y + 53, 0x9000); }
         print_string("Cursor trail (shift + 5/6):", win2_x + 10, win2_y + 68, 0x0000);
-        if (tail == 1) { print_string("On", win2_x + 262, win2_y + 68, 0x0320); }
-        if (tail == 0) { print_string("Off", win2_x + 262, win2_y + 68, 0x9000); }
+        if (tail == 1) { print_string("On", win2_x + 179, win2_y + 68, 0x0320); }
+        if (tail == 0) { print_string("Off", win2_x + 179, win2_y + 68, 0x9000); }
     }
     else if (open1 == 1) {
         print_string("Text file", win2_x + 8, win2_y + 6, 0x0000);
