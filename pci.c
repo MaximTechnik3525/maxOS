@@ -26,12 +26,12 @@ void pci_scan(int txt_x, int txt_y) {
                     int_str(vendorId, ven_str);
                     int_str(dev_count, dev_str);
                     print_string("PCI Device found! Vendor ID:", txt_x, txt_y, 0x0000);
-                    print_string(ven_str, txt_x + 260, txt_y, 0x0000);
+                    print_string(ven_str, txt_x + 175, txt_y, 0x0000);
                     if (txt_y < 150 + 400) { txt_y += 15; }
                 }
             }
         }
     }
     print_string("Total devices:", txt_x, txt_y, 0x0000);
-    print_string(dev_str, txt_x + 135, txt_y, 0x0000);
+    print_string(dev_str, txt_x + 91, txt_y, 0x0000);
 }
