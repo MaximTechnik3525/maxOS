@@ -3076,6 +3076,14 @@ void clock() {
     print_string(":", 1233, 703, 0xFFFF);
     print_string("/", 1158, 704, 0x0000);
     print_string("/", 1157, 703, 0xFFFF);
+    if (day == 19 && month == 11) {
+        play_sound(523); sleep(80);
+        play_sound(659); sleep(80);
+        play_sound(784); sleep(80);
+        no_sound();
+        print_string("The era of 3.9 development has ended. Special release day: 19.11.", 6, 6, 0x0000);
+        print_string("The era of 3.9 development has ended. Special release day: 19.11.", 5, 5, 0xFFFF);
+    }
 }
 void draw_menu() {
     menuOpened = 1;
