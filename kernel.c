@@ -601,6 +601,7 @@ int glitch_speed = 12345;
 int is_moving = 0;
 void get_cpu(char* buffer);
 unsigned short rgb565(int r, int g, int b);
+int was_ee = 0;
 unsigned short get_bg_color(int y) {
     if (theme == 1) { return rgb565(2 + (y / 90), 8 + (y / 24), 14 + (y / 42)); }
     if (theme == 2) { return rgb565(12 + (y / 45), 2 + (y / 90), 8 + (y / 45)); }
@@ -1069,6 +1070,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         open2 = 0;
                         open3 = 0;
                         app_opened = 0;
+                        was_ee = 0;
                         draw_window();
                         play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep (70); no_sound();
                     }
@@ -3076,13 +3078,14 @@ void clock() {
     print_string(":", 1233, 703, 0xFFFF);
     print_string("/", 1158, 704, 0x0000);
     print_string("/", 1157, 703, 0xFFFF);
-    if (day == 19 && month == 11) {
+    if (day == 19 && month == 11 && was_ee == 0) {
         play_sound(523); sleep(80);
         play_sound(659); sleep(80);
         play_sound(784); sleep(80);
         no_sound();
-        print_string("The era of 3.9 development has ended. Special release day: 19.11.", 6, 6, 0x0000);
-        print_string("The era of 3.9 development has ended. Special release day: 19.11.", 5, 5, 0xFFFF);
+        print_string("The era of 3.9 development has ended. Special release day: 19.11", 6, 6, 0x0000);
+        print_string("The era of 3.9 development has ended. Special release day: 19.11", 5, 5, 0xFFFF);
+        was_ee = 1;
     }
 }
 void draw_menu() {
