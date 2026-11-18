@@ -969,60 +969,70 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         power_opened = 0;
                     }
                     if (explorer_opened == 1 && ascii_char == '1') {
+                        pos_x = 12; pos_y = 708;
                         draw_window();
                         open_file(5000);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '2') {
+                        pos_x = 12; pos_y = 708;
                         draw_window();
                         open_file(5001);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();(200); sleep(100); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '3') {
+                        pos_x = 12; pos_y = 708;
                         draw_window();
                         open_file(5002);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '4') {
+                        pos_x = 12; pos_y = 708;
                         draw_window();
                         open_file(5003);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '5') {
+                        pos_x = 12; pos_y = 708;
                         draw_window();
                         open_file(5004);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '6') {
+                        pos_x = 12; pos_y = 708;
                         draw_window();
                         open_file(5005);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '7') {
+                        pos_x = 12; pos_y = 708;
                         draw_window();
                         open_file(5006);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '8') {
+                        pos_x = 12; pos_y = 708;
                         draw_window();
                         open_file(5007);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '9') {
+                        pos_x = 12; pos_y = 708;
                         draw_window();
                         open_file(5008);
                         play_sound(400); sleep(80); no_sound();
                         play_sound(600); sleep(120); no_sound();
                     }
                     if (explorer_opened == 1 && ascii_char == '0') {
+                        pos_x = 12; pos_y = 708;
                         draw_window();
                         open_file(5009);
                         play_sound(400); sleep(80); no_sound();
