@@ -808,8 +808,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                                 }
                             }
                         }
-                        print_string("Menu", 28, 677, 0x0000);
-                        print_string("Menu", 27, 676, 0xFFFF);
+                        print_string("Menu", 33, 677, 0x0000);
+                        print_string("Menu", 32, 676, 0xFFFF);
                     }
                     else if (pos_x > 25 || pos_y < 695 && drag == 0 || click == 1) {
                         if (show_box == 1) {
@@ -951,8 +951,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                                 }
                             }
                         }
-                        print_string("Menu", 28, 677, 0x0000);
-                        print_string("Menu", 27, 676, 0xFFFF);
+                        print_string("Menu", 33, 677, 0x0000);
+                        print_string("Menu", 32, 676, 0xFFFF);
                     }
                     else if (pos_x > 25 || pos_y < 695 && drag == 0 || ascii_char == 'e') {
                         if (show_box == 1) {
