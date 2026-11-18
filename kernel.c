@@ -2517,8 +2517,8 @@ void shutdown() {
             if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
         }
     }
-    print_string("maxOS is shutting down...", 551, 421, 0x0000);
-    print_string("maxOS is shutting down...", 550, 420, 0xF800);
+    print_string("maxOS is shutting down...", 576, 421, 0x0000);
+    print_string("maxOS is shutting down...", 575, 420, 0xF800);
     update_screen();
     sleep(2000);
     outw(0xB004, 0x2000);
@@ -2558,8 +2558,8 @@ void reboot() {
             if (y == 385 || y == 405) { gfx_memory[y * x_render + x] = 0xFF9E; }
         }
     }
-    print_string("maxOS is rebooting...", 551, 421, 0x0000);
-    print_string("maxOS is rebooting...", 550, 420, 0xF800);
+    print_string("maxOS is rebooting...", 581, 421, 0x0000);
+    print_string("maxOS is rebooting...", 580, 420, 0xF800);
     update_screen();
     sleep(2000);
     outb(0x64, 0xFE);
@@ -3023,64 +3023,48 @@ void clock() {
     int_str(day, d);
     int_str(month, mo);
     if (hour >= 10) {
-        if (theme != 11) {
-            print_string(h, 1213, 704, 0x0000);
-            print_string(h, 1212, 703, 0xFFFF);
-        }
-        else {
-            print_string(h, 1215, 703, 0xFFFF);
-        }
+        print_string(h, 1213, 704, 0x0000);
+        print_string(h, 1212, 703, 0xFFFF);
     }
     else if (hour < 10) {
-        if (theme != 11) print_string("0", 1208, 704, 0x0000);
+        print_string("0", 1208, 704, 0x0000);
         print_string("0", 1207, 703, 0xFFFF);
-        if (theme != 11) print_string(h, 1218, 704, 0x0000);
+        print_string(h, 1218, 704, 0x0000);
         print_string(h, 1217, 703, 0xFFFF);
     }
     if (min >= 10) {
-        if (theme != 11) {
-            print_string(m, 1250, 704, 0x0000);
-            print_string(m, 1249, 703, 0xFFFF);
-        }
-        else {
-            print_string(m, 1250, 703, 0xFFFF);
-        }
+        print_string(m, 1250, 704, 0x0000);
+        print_string(m, 1249, 703, 0xFFFF);
     }
     else if (min < 10) {
-        if (theme != 11) {
-            print_string("0", 1250, 704, 0x0000);
-            print_string("0", 1249, 703, 0xFFFF);
-            print_string(m, 1260, 704, 0x0000);
-            print_string(m, 1259, 703, 0xFFFF);
-        }
-        else {
-            print_string("0", 1239, 703, 0xFFFF);
-            print_string(m, 1249, 703, 0xFFFF);
-        }
+        print_string("0", 1250, 704, 0x0000);
+        print_string("0", 1249, 703, 0xFFFF);
+        print_string(m, 1260, 704, 0x0000);
+        print_string(m, 1259, 703, 0xFFFF);
     }
     if (day >= 10) {
-        if (theme != 11) print_string(d, 1168, 704, 0x0000);
-        print_string(d, 1167, 703, 0xFFFF);
+        print_string(d, 1142, 704, 0x0000);
+        print_string(d, 1141, 703, 0xFFFF);
     }
     else if (day < 10) {
-        if (theme != 11) print_string("0", 1168, 704, 0x0000);
+        print_string("0", 1168, 704, 0x0000);
         print_string("0", 1167, 703, 0xFFFF);
-        if (theme != 11) print_string(d, 1178, 704, 0x0000);
+        print_string(d, 1178, 704, 0x0000);
         print_string(d, 1177, 703, 0xFFFF);
     }
     if (month >= 10) {
-        if (theme != 11) print_string(mo, 1138, 704, 0x0000);
-        print_string(mo, 1137, 703, 0xFFFF);
+        print_string(mo, 1168, 704, 0x0000);
+        print_string(mo, 1167, 703, 0xFFFF);
     }
     else if (month < 10) {
-        if (theme != 11) print_string("0", 1138, 704, 0x0000);
+        print_string("0", 1138, 704, 0x0000);
         print_string("0", 1137, 703, 0xFFFF);
-        if (theme != 11) print_string(mo, 1138, 704, 0x0000);
+        print_string(mo, 1138, 704, 0x0000);
         print_string(mo, 1137, 703, 0xFFFF);
     }
-    if (theme != 11) print_string(":", 1234, 704, 0x0000);
+    print_string(":", 1234, 704, 0x0000);
     print_string(":", 1233, 703, 0xFFFF);
-    if (theme != 11) print_string("/", 1158, 704, 0x0000);
+    print_string("/", 1158, 704, 0x0000);
     print_string("/", 1157, 703, 0xFFFF);
 }
 void draw_menu() {
@@ -3244,8 +3228,8 @@ void draw_window() {
         for (int x = 0; x < 12; x++) {
             int screen_x = 0;
             int screen_y = 0;
-            screen_x = 1118 + x;
-            screen_y = 700 + y;
+            screen_x = 1120 + x;
+            screen_y = 701 + y;
             if (screen_x < x_render && screen_y < y_render && screen_x >= 0 && screen_y >= 0 && theme != 11) {
                 unsigned char pixel_type2 = clock12[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x2100; }
