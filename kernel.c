@@ -602,6 +602,7 @@ int is_moving = 0;
 void get_cpu(char* buffer);
 unsigned short rgb565(int r, int g, int b);
 int was_ee = 0;
+int sound = 1;
 unsigned short get_bg_color(int y) {
     if (theme == 1) { return rgb565(2 + (y / 90), 8 + (y / 24), 14 + (y / 42)); }
     if (theme == 2) { return rgb565(12 + (y / 45), 2 + (y / 90), 8 + (y / 45)); }
@@ -637,7 +638,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             gfx_memory[y * x_render + x] = 0x0000;
         }
     }
-    print_string("=======maxOS v3.9 Boot Menu=======", 10, 15, 0xFFFF);
+    print_string("=======maxOS Boot Menu=======", 10, 15, 0xFFFF);
     print_string("Graphics initialized! 1280x720x16 mode working!", 10, 30, 0xFFFF);
     print_string("Press [1] to scan disk (may cause issues)", 10, 45, 0xFFFF);
     print_string("Press [2] to skip disk scan (without ATA driver)", 10, 60, 0xFFFF);
@@ -1264,6 +1265,14 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         scr = 1;
                         control_panel();
                     }
+                    if (ascii_char == '7' && panel_opened == 1 && shift == 1) {
+                        sound = 1;
+                        control_panel();
+                    }
+                    if (ascii_char == '8' && panel_opened == 1 && shift == 1) {
+                        sound = 0;
+                        control_panel();
+                    }
                 }
             }
         }
@@ -1818,7 +1827,7 @@ void render_win() {
         else {
             print_string("Disk for read and write not found!", win2_x + 66, win2_y + 83, 0x9000);
         }
-        print_string("OS: maxOS v3.9 build 41455 (official release)", win2_x + 10, win2_y + 98, 0x0000);
+        print_string("OS: maxOS v4.0 build 52119 (unstable)", win2_x + 10, win2_y + 98, 0x0000);
         pci_scan(win2_x + 10, win2_y + 113);
     }
     else if (notepad_opened == 1) {
@@ -1856,6 +1865,13 @@ void render_win() {
         print_string("Cursor speed (shift  +  1/2):", win2_x + 10, win2_y + 38, 0x0000);
         print_string(cursor_speed_str, win2_x + 191, win2_y + 38, 0x0000);
         print_string("Screensaver (shift + 3/4):", win2_x + 10, win2_y + 53, 0x0000);
+        print_string("System sound (shift + 7/8):", win2_x + 10, win2_y + 83, 0x0000);
+        if (sound == 1) {
+            print_string("On", win2_x + 179, win2_y + 83, 0x0320);
+        }
+        else {
+            print_string("Off", win2_x + 179, win2_y + 83, 0x9000);
+        }
         if (scr == 1) { print_string("On", win2_x + 173, win2_y + 53, 0x0320); }
         if (scr == 0) { print_string("Off", win2_x + 173, win2_y + 53, 0x9000); }
         print_string("Cursor trail (shift + 5/6):", win2_x + 10, win2_y + 68, 0x0000);
@@ -2627,15 +2643,17 @@ int str_in(char* main_string, char* substring) {
     return 0;
 }
 void play_sound(unsigned int nfreq) {
-    unsigned int div;
-    unsigned char tmp;
-    div = 1193180 / nfreq;
-    outb(0x43, 0xB6);
-    outb(0x42, (unsigned char) (div & 0xFF));
-    outb(0x42, (unsigned char) ((div >> 8) & 0xFF));
-    tmp = inb(0x61);
-    if (tmp != (tmp | 3)) {
-        outb(0x61, tmp | 3);
+    if (sound == 1) {
+        unsigned int div;
+        unsigned char tmp;
+        div = 1193180 / nfreq;
+        outb(0x43, 0xB6);
+        outb(0x42, (unsigned char) (div & 0xFF));
+        outb(0x42, (unsigned char) ((div >> 8) & 0xFF));
+        tmp = inb(0x61);
+        if (tmp != (tmp | 3)) {
+            outb(0x61, tmp | 3);
+        }
     }
 }
 
@@ -2721,7 +2739,6 @@ void draw_btn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn
     print_string("Help", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
     print_string("Help", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
-
 void draw_cpubtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
@@ -2997,7 +3014,6 @@ char scan_code_to_ascii(unsigned char scan_code) {
     }
 }
 
-int a = 0;
 void draw_char(char c, int start_x, int start_y, unsigned short color) {
     if (c < 32 || c > 126) return;
     int font_idx = c - 32;
