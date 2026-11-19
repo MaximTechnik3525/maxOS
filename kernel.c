@@ -65,7 +65,7 @@ void outw(unsigned short port, unsigned short val);
 void shutdown();
 char scan_code_to_ascii(unsigned char scan_code);
 unsigned short* _gfx_memory_backend;
-unsigned int REAL_PITCH = 1280;
+unsigned int REAL_PITCH = 2560;
 #define gfx_memory_safe(y, x) _gfx_memory_backend[(y) * REAL_PITCH + (x)]
 #define gfx_memory _gfx_memory_backend
 unsigned short back_buffer[921600];
@@ -603,6 +603,7 @@ void get_cpu(char* buffer);
 unsigned short rgb565(int r, int g, int b);
 int was_ee = 0;
 int sound = 1;
+unsigned char REAL_BPP = 16;
 unsigned short get_bg_color(int y) {
     if (theme == 1) { return rgb565(2 + (y / 90), 8 + (y / 24), 14 + (y / 42)); }
     if (theme == 2) { return rgb565(12 + (y / 45), 2 + (y / 90), 8 + (y / 45)); }
@@ -623,7 +624,8 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     struct multiboot_info* mbi = (struct  multiboot_info*) multiboot_info_address;
     real_framebuffer = (unsigned short*)(unsigned long)mbi->framebuffer_addr;
     _gfx_memory_backend = back_buffer;
-    if (mbi->framebuffer_pitch > 0) { REAL_PITCH = mbi->framebuffer_pitch / 2; }
+    if (mbi->framebuffer_pitch > 0) { REAL_PITCH = mbi->framebuffer_pitch; }
+    if (mbi->framebuffer_bpp > 0) { REAL_BPP = mbi->framebuffer_bpp; }
     unsigned short width = mbi->framebuffer_width;
     unsigned short height = mbi->framebuffer_height;
     ram_mb = ((mbi->mem_upper + 1023) / 1024) + 1;
@@ -1075,76 +1077,20 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_window();
                         play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep (70); no_sound();
                     }
-                    if (ascii_char == '1' && panel_opened == 1 && shift == 0 && is_moving == 0) {
-                        theme = 1;
+                    if (ascii_char == '=' && panel_opened == 1 && shift == 1 && is_moving == 0 && theme < 20) {
+                        theme++;
                         pos_y = 708; pos_x = 12;
                         draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
+                        play_sound(800); sleep(60); play_sound(1200); sleep(80); no_sound();
                         control_panel();
                     }
-                    if (ascii_char == '2' && panel_opened == 1 && shift == 0 && is_moving == 0) {
-                        theme = 2;
+                    if (ascii_char == '-' && panel_opened == 1 && shift == 1 && is_moving == 0 && theme > 1) {
+                        theme--;
                         pos_y = 708; pos_x = 12;
                         draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
+                        play_sound(500); sleep(60); play_sound(200); sleep(80); no_sound();
                         control_panel();
                     }                        
-                    if (ascii_char == '3' && panel_opened == 1 && shift == 0 && is_moving == 0) {
-                        theme = 3;
-                        pos_y = 708; pos_x = 12;
-                        draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
-                        control_panel();
-                    }
-                    if (ascii_char == '4' && panel_opened == 1 && shift == 0 && is_moving == 0) {
-                        theme = 4;
-                        pos_y = 708; pos_x = 12;
-                        draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
-                        control_panel();
-                    }
-                    if (ascii_char == '5' && panel_opened == 1 && shift == 0 && is_moving == 0) {
-                        theme = 5;
-                        pos_y = 708; pos_x = 12;
-                        draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
-                        control_panel();
-                    }
-                    if (ascii_char == '6' && panel_opened == 1 && shift == 0 && is_moving == 0) {
-                        theme = 6;
-                        pos_y = 708; pos_x = 12;
-                        draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
-                        control_panel();
-                    }
-                    if (ascii_char == '7' && panel_opened == 1 && shift == 0 && is_moving == 0) {
-                        theme = 7;
-                        pos_y = 708; pos_x = 12;
-                        draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound(); 
-                        control_panel();
-                    }
-                    if (ascii_char == '8' && panel_opened == 1 && shift == 0 && is_moving == 0) {
-                        theme = 8;
-                        pos_y = 708; pos_x = 12;
-                        draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
-                        control_panel();
-                    }
-                    if (ascii_char == '9' && panel_opened == 1 && shift == 0 && is_moving == 0) {
-                        theme = 9;
-                        pos_y = 708; pos_x = 12;
-                        draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
-                        control_panel();
-                    }
-                    if (ascii_char == '0' && panel_opened == 1 && shift == 0 && is_moving == 0) {
-                        theme = 10;
-                        pos_y = 708; pos_x = 12;
-                        draw_window();
-                        play_sound(400); sleep(60); play_sound(750); sleep(100); no_sound();
-                        control_panel();
-                    }
                     if (shift == 1 && ascii_char == 'l' && drag == 0 && disk_exists == 1) {
                         textid2 = 0;
                         for (int i = 0; i < 15; i++) {
@@ -2936,9 +2882,46 @@ void draw_cursor(int mouse_x, int mouse_y) {
                     if (pixel_type == 2) {gfx_memory[screen_y * x_render + screen_x] = 0xCE79;}
                 }
                 if (theme == 11) {
-                    if (pixel_type == 1) {gfx_memory[screen_y * x_render + screen_x] = 0x0000;}
-                    if (pixel_type == 2) {gfx_memory[screen_y * x_render + screen_x] = 0xFFFF;}
+                    if (pixel_type == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x0148; }
+                    if (pixel_type == 2) { gfx_memory[screen_y * x_render + screen_x] = 0x07FF; }
                 }
+                if (theme == 12) {
+                    if (pixel_type == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x4008; }
+                    if (pixel_type == 2) { gfx_memory[screen_y * x_render + screen_x] = 0xF81F; }
+                }
+                if (theme == 13) {
+                    if (pixel_type == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x0240; }
+                    if (pixel_type == 2) { gfx_memory[screen_y * x_render + screen_x] = 0x87E0; }
+                }
+                if (theme == 14) {
+                    if (pixel_type == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x2008; }
+                    if (pixel_type == 2) { gfx_memory[screen_y * x_render + screen_x] = 0xD2FF; }
+                }
+                if (theme == 15) {
+                    if (pixel_type == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x4006; }
+                    if (pixel_type == 2) { gfx_memory[screen_y * x_render + screen_x] = 0xFD59; }
+                }
+                if (theme == 16) {
+                    if (pixel_type == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x4800; }
+                    if (pixel_type == 2) { gfx_memory[screen_y * x_render + screen_x] = 0xF986; }
+                }
+                if (theme == 17) {
+                    if (pixel_type == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x0265; }
+                    if (pixel_type == 2) { gfx_memory[screen_y * x_render + screen_x] = 0x5FF7; }
+                }
+                if (theme == 18) {
+                    if (pixel_type == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x5100; }
+                    if (pixel_type == 2) { gfx_memory[screen_y * x_render + screen_x] = 0xFBE0; }
+                }
+                if (theme == 19) {
+                    if (pixel_type == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x00C6; }
+                    if (pixel_type == 2) { gfx_memory[screen_y * x_render + screen_x] = 0x5EBF; }
+                }
+                if (theme == 20) {
+                    if (pixel_type == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x2088; }
+                    if (pixel_type == 2) { gfx_memory[screen_y * x_render + screen_x] = 0x7FFF; }
+                }
+
             }
         }
     }
@@ -3149,16 +3132,16 @@ void draw_menu() {
     draw_effectbtn(15, 530, 42, 12, 15, 530, 40, 10, 25, 532);
     draw_tdbtn(15, 550, 42, 12, 15, 550, 40, 10, 25, 552);
     if (theme == 3) {
-        print_string("maxOS 3.9 Abrikos", 114, 361, 0x0000);
-        print_string("maxOS 3.9 Abrikos", 113, 360, 0xFFFF);
+        print_string("maxOS 4.0 Abrikos", 114, 361, 0x0000);
+        print_string("maxOS 4.0 Abrikos", 113, 360, 0xFFFF);
     }
     else if (theme == 4) {
-        print_string("maxOS 3.9 Tora", 124, 361, 0x0000);
-        print_string("maxOS 3.9 Tora", 123, 360, 0xFFFF);
+        print_string("maxOS 4.0 Tora", 124, 361, 0x0000);
+        print_string("maxOS 4.0 Tora", 123, 360, 0xFFFF);
     }
     else {
-        print_string("maxOS 3.9", 139, 361, 0x0000);
-        print_string("maxOS 3.9", 138, 360, 0xFFFF);
+        print_string("maxOS 4.0", 139, 361, 0x0000);
+        print_string("maxOS 4.0", 138, 360, 0xFFFF);
     }
 }
 
@@ -3240,6 +3223,23 @@ void draw_window() {
             if (theme == 8) { row_color = rgb565(17 + (y / 65), 24 + (y / 28), 4 + (y / 65)); }
             if (theme == 9) { row_color = rgb565(7 + (y / 65), 0, 1); }
             if (theme == 10) { row_color = rgb565(1 + (y / 300), 2 + (y / 160), 2 + (y / 180)); }
+            if (theme == 11) { row_color = rgb565(0 + (y / 140), 4 + (y / 14), 12 + (y / 38)); }
+            if (theme == 12) { row_color = rgb565(8 + (y / 32), 0 + (y / 120), 14 + (y / 38)); }
+            if (theme == 13) { row_color = rgb565(0 + (y / 90), 6 + (y / 12), 1); }
+            if (theme == 14) { row_color = rgb565(4 + (y / 38), 0 + (y / 80), 10 + (y / 35)); }
+            if (theme == 15) {
+                if (y < 420) {
+                    row_color = rgb565(6 + (y / 25), 0, 14 + (y / 45));
+                }
+                else {
+                    row_color = rgb565(22 + ((y - 420) / 35), 2 + ((y - 420) / 10), 24 - ((y - 420) / 15));
+                }
+            }
+            if (theme == 16) { row_color = rgb565(4 + (y / 28), 0, 1 + (y / 120)); }
+            if (theme == 17) { row_color = rgb565(0 + (y / 80), 8 + (y / 13), 6 + (y / 32)); }
+            if (theme == 18) { row_color = rgb565(10 + (y / 35), 1 + (y / 18), 2); }
+            if (theme == 19) { row_color = rgb565(0, 1 + (y / 22), 3 + (y / 32)); }
+            if (theme == 20) { row_color = rgb565(0 + (y / 34), 38 - (y / 22), 18 + (y / 60)); }
             gfx_memory[row_offset + x] = row_color;
         }
     }
@@ -3995,16 +3995,43 @@ void login_screen() {
     }
 
 void update_screen() {
-    for (int y = 0; y < 720; y++) {
-        unsigned short* src = &back_buffer[y * 1280];
-        unsigned short* dest = (unsigned short*)((unsigned char*)real_framebuffer + (y * (REAL_PITCH * 2)));
-        __asm__ __volatile__ (
-            "cld\n\t"
-            "rep movsl"
-            :
-            : "D"(dest), "S"(src), "c"(640)
-            : "memory"
-        );
+    if (REAL_BPP == 16) {
+        for (int y = 0; y < 720; y++) {
+            unsigned short* src = &back_buffer[y * 1280];
+            unsigned short* dest = (unsigned short*)((unsigned char*)real_framebuffer + (y * (REAL_PITCH)));
+            __asm__ __volatile__ (
+                "cld\n\t"
+                "rep movsl"
+                :
+                : "D"(dest), "S"(src), "c"(640)
+                : "memory"
+            );
+        }
+    }
+    else if (REAL_BPP == 32) {
+        for (int y = 0; y < y_render; y++) {
+            unsigned short* src = &back_buffer[y * 1280];
+            unsigned int* dest = (unsigned int*)((unsigned char*)real_framebuffer + (y * (REAL_PITCH)));
+            for (int x = 0; x < x_render; x++) {
+                    unsigned short c = src[x];
+                    unsigned int r = ((c >> 11) & 0x1F) << 3;
+                    unsigned int g = ((c >> 5) & 0x3F) << 2;
+                    unsigned int b = (c & 0x1F) << 3;
+                    dest[x] = (r << 16) | (g << 8) | b;
+            }
+        }
+    }
+    else if (REAL_BPP == 24) {
+        for (int y = 0; y < y_render; y++) {
+            unsigned short* src = &back_buffer[y * 1280];
+            unsigned char* dest = (unsigned char*)((unsigned char*)real_framebuffer + (y * (REAL_PITCH)));
+            for (int x = 0; x < x_render; x++) {
+                unsigned short c = src[x];
+                dest[x * 3 + 0] = (c & 0x1F) << 3;
+                dest[x * 3 + 1] = ((c >> 5)& 0x3F) << 2;
+                dest[x * 3 + 2] = ((c >> 11) & 0x1F) << 3;
+            }
+        }
     }
 }
 
