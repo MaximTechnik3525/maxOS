@@ -2484,6 +2484,36 @@ void rtl8139_init() {
         }
     }
 }
+void rtl8139_send(void* data, int len) {
+    if (net_found == 0 || len > 1500) { return; }
+    unsigned char* src = (unsigned char*)data;
+    for (int i = 0; i < len; i++) { tx_buffer[tx_cur][i] = src[i]; }
+    while (len < 60) { tx_buffer[tx_cur][len++] = 0; }
+    outl(rtl_iobase + 0x20 + (tx_cur * 4), (unsigned int)tx_buffer[tx_cur]);
+    outl(rtl_iobase + 0x10 + (tx_cur * 4), len);
+    tx_cur = (tx_cur + 1) % 4;
+}
+void send_arp_request() {
+    unsigned char pkt[42];
+    for (int i = 0; i  < 6; i++) {
+        pkt[i] = 0xFF;
+        pkt[6 + i] = mac_addr[i];
+    }
+    pkt[12] = 0x08; pkt[13] = 0x06;
+    pkt[14] = 0x00; pkt[15] = 0x01;
+    pkt[16] = 0x08; pkt[17] = 0x00;
+    pkt[18] = 6; pkt[19] = 4;
+    pkt[20] = 0x00; pkt[21] = 0x01;
+    for (int i = 0; i < 6; i++) {
+        pkt[22 + i] = mac_addr[i]; pkt[32 + i] = 0x00;
+    }
+    pkt[28] = 10; pkt[29] = 0; pkt[30] = 2; pkt[31] = 15;
+    pkt[38] = 10, pkt[39] = 0; pkt[40] = 2; pkt[41] = 2;
+    rtl8139_send(pkt, 42);
+}
+void send_ping_google() {
+    
+}
 
 void progressbar(char* file_des, int xend) {
         for (int y = win2_y + 412; y < win2_y + 423; y++) {
