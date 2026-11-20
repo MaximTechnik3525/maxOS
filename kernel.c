@@ -1081,14 +1081,14 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         theme++;
                         pos_y = 708; pos_x = 12;
                         draw_window();
-                        play_sound(800); sleep(60); play_sound(1200); sleep(80); no_sound();
+                        play_sound(800); sleep(30); no_sound();
                         control_panel();
                     }
                     if (ascii_char == '-' && panel_opened == 1 && shift == 1 && is_moving == 0 && theme > 1) {
                         theme--;
                         pos_y = 708; pos_x = 12;
                         draw_window();
-                        play_sound(500); sleep(60); play_sound(200); sleep(80); no_sound();
+                        play_sound(500); sleep(30); no_sound();
                         control_panel();
                     }                        
                     if (shift == 1 && ascii_char == 'l' && drag == 0 && disk_exists == 1) {
@@ -1806,8 +1806,8 @@ void render_win() {
         int_str(cursor_speed_counter, cursor_speed_str);
         print_string("Control panel", win2_x + 8, win2_y + 6, 0x0000);
         print_string("Control panel", win2_x +7, win2_y + 5, 0xFFFF);
-        print_string("Theme (1, 2, 3, 4, 5, 6, 7, 8, 9, 0):", win2_x + 10, win2_y + 23, 0x0000);
-        print_string(theme_id, win2_x + 239, win2_y + 23, 0x0000);
+        print_string("Color scheme (shift + -/+):", win2_x + 10, win2_y + 23, 0x0000);
+        print_string(theme_id, win2_x + 179, win2_y + 23, 0x0000);
         print_string("Cursor speed (shift  +  1/2):", win2_x + 10, win2_y + 38, 0x0000);
         print_string(cursor_speed_str, win2_x + 191, win2_y + 38, 0x0000);
         print_string("Screensaver (shift + 3/4):", win2_x + 10, win2_y + 53, 0x0000);
@@ -3338,7 +3338,7 @@ void screensaver() {
         }
         print_string("maxOS", txt_x + 1, txt_y + 1, 0x0000);
         print_string("maxOS", txt_x, txt_y, 0xFF9E);
-        if (txt_x < 1210 && was_x == 0) {
+        if (txt_x < 1200 && was_x == 0) {
             txt_x += 3;
         }
         else {
@@ -3350,8 +3350,8 @@ void screensaver() {
             txt_y -= 3;
             was_y = 1;
         }
-        if (txt_y < 30) { was_y = 0; }
-        if (txt_x < 30) { was_x = 0; }
+        if (txt_y < 40) { was_y = 0; }
+        if (txt_x < 75) { was_x = 0; }
         update_screen();
         sleep(10);
     }
