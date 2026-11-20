@@ -2472,7 +2472,7 @@ void rtl8139_init() {
                 outl(rtl_iobase + 0x30, (unsigned int)rx_buffer);
                 outw(rtl_iobase + 0x3C, 0x0005);
                 outl(rtl_iobase + 0x44, 0x0000000F | (1 << 7));
-                outl(rtl_iobase + 0x37, 0x0C);
+                outb(rtl_iobase + 0x37, 0x0C);
                 for (int i = 0; i < 6; i++) {
                     mac_addr[i] = inb(rtl_iobase + i);
                 }
@@ -2541,6 +2541,9 @@ void send_ping_google(unsigned short seq) {
     icmp[2] = icmp_cs >> 8; icmp[3] = icmp_cs & 0xFF;
     rtl8139_send(pkt, 74);
 }
+unsigned char reply_ip[4] = {0};
+unsigned char reply_ttl = 0;
+unsigned short reply_seq = 0;
 int poll_network(int* got_arp, int* got_pong) {
     if (net_found == 0) {
         return 0;
@@ -2575,13 +2578,13 @@ int poll_network(int* got_arp, int* got_pong) {
 void net_app() {
     drag = 1;
     net_opened = 1;
-    if (net_found == 1) {
+    if (net_found == 0) {
         rtl8139_init();
     }
     int got_arp = 0;
     int got_pong = 0;
     int ping_count = 0;
-    int line_y = win2_y + 65;
+    int line_y = win2_y + 68;
     render_win();
     print_string("Network control", win2_x + 8, win2_y + 6, 0x0000);
     print_string("Network control", win2_x + 7, win2_y + 5, 0xFFFF);
@@ -2591,6 +2594,31 @@ void net_app() {
     else {
         print_string("NIC: Realtek RTL8139 - OK! | Local IP: 10.0.2.15 | Gateway: 10.0.2.2", win2_x + 10, win2_y + 38, 0x0000);
         print_string("Press [P] tp ping 8.8.8.8 (Google DNS), [ESC] to close this window.", win2_x + 10, win2_y + 53, 0x0000);
+        send_arp_request();
+    }
+    update_screen();
+    while (1) {
+        poll_network(&got_arp, &got_pong);
+        if (got_pong == 1) {
+            got_pong = 0;
+            play_sound(900); sleep(50); no_sound();
+            char ip0[4], ip1[4], ip2[4], ip3[4], ttl_s[6], seq_s[6];
+            int_str(reply_ip[0], ip0);
+            int_str(reply_ip[1], ip1);
+            int_str(reply_ip[2], ip2);
+            int_str(reply_ip[3], ip3);
+            int_str(reply_ttl, ttl_s);
+            int_str(reply_seq, seq_s);
+            print_string("Reply from:", win2_x + 10, line_y, 0x0320);
+            print_string(ip0, win2_x + 82, line_y, 0x0320);
+            print_string(".", win2_x + 94, line_y, 0x0320);
+            print_string(ip1, win2_x + 82, line_y, 0x0320);
+            print_string(".", win2_x + 94, line_y, 0x0320);
+            print_string(ip2, win2_x + 82, line_y, 0x0320);
+            print_string(".", win2_x + 94, line_y, 0x0320);
+            print_string(ip3, win2_x + 82, line_y, 0x0320);
+            print_string(".", win2_x + 94, line_y, 0x0320);
+        }
     }
 }
 
