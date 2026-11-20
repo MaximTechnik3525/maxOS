@@ -1574,18 +1574,6 @@ void execute_commands(char* str) {
             i = (int)(arg_ptr - str);
             continue;
         }
-        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1' && str[i+3] != '1' & '2' & '3' & '4' & '5' & '6' & '7' & '8' * '9' & '0') {
-            i += 3;
-            theme = 1;
-            draw_window();
-            continue;
-        }
-        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '2' && str[i+3] != '0') {
-            i += 3;
-            theme = 2;
-            draw_window();
-            continue;
-        }
         else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '3') {
             i += 3;
             theme = 3;
@@ -1691,6 +1679,18 @@ void execute_commands(char* str) {
         else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '2' && str[i+3] == '0') {
             i += 4;
             theme = 20;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1') {
+            i += 3;
+            theme = 1;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '2') {
+            i += 3;
+            theme = 2;
             draw_window();
             continue;
         }
@@ -1850,7 +1850,7 @@ void render_win() {
         else {
             print_string("Disk for read and write not found!", win2_x + 66, win2_y + 83, 0x9000);
         }
-        print_string("OS: maxOS v4.0 build 52119 (unstable)", win2_x + 10, win2_y + 98, 0x0000);
+        print_string("OS: maxOS v4.0 build 61602 (stable)", win2_x + 10, win2_y + 98, 0x0000);
         pci_scan(win2_x + 10, win2_y + 113);
     }
     else if (notepad_opened == 1) {
