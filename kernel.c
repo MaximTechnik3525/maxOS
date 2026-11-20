@@ -615,6 +615,23 @@ unsigned short get_bg_color(int y) {
     if (theme == 8) { return rgb565(17 + (y / 65), 24 + (y / 28), 4 + (y / 65)); }
     if (theme == 9) { return rgb565(7 + (y / 65), 0, 1); }
     if (theme == 10) { return rgb565(1 + (y / 300), 2 + (y / 160), 2 + (y / 180)); }
+    if (theme == 11) { return rgb565(0 + (y / 140), 4 + (y / 14), 12 + (y / 38)); }
+    if (theme == 12) { return rgb565(8 + (y / 32), 0 + (y / 120), 14 + (y / 38)); }
+    if (theme == 13) { return rgb565(0 + (y / 90), 6 + (y / 12), 1); }
+    if (theme == 14) { return rgb565(4 + (y / 38), 0 + (y / 80), 10 + (y / 35)); }
+    if (theme == 15) {
+        if (y < 420) {
+            return rgb565(6 + (y / 25), 0, 14 + (y / 45));
+        }
+        else {
+            return rgb565(22 + ((y - 420) / 35), 2 + ((y - 420) / 10), 24 - ((y - 420) / 15));
+        }
+    }
+    if (theme == 16) { return rgb565(4 + (y / 28), 0, 1 + (y / 120)); }
+    if (theme == 17) { return rgb565(0 + (y / 80), 8 + (y / 13), 6 + (y / 32)); }
+    if (theme == 18) { return rgb565(10 + (y / 35), 1 + (y / 18), 2); }
+    if (theme == 19) { return rgb565(0, 1 + (y / 22), 3 + (y / 32)); }
+    if (theme == 20) { return rgb565(0 + (y / 34), 38 - (y / 22), 18 + (y / 60)); }
     return 0x10A2;
 }
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
@@ -1557,63 +1574,123 @@ void execute_commands(char* str) {
             i = (int)(arg_ptr - str);
             continue;
         }
-        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '1') {
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1' && str[i+3] != '1' & '2' & '3' & '4' & '5' & '6' & '7' & '8' * '9' & '0') {
             i += 3;
             theme = 1;
             draw_window();
             continue;
         }
-        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '2') {
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '2' && str[i+3] != '0') {
             i += 3;
             theme = 2;
             draw_window();
             continue;
         }
-        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '3') {
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '3') {
             i += 3;
             theme = 3;
             draw_window();
             continue;
         }
-        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '4') {
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '4') {
             i += 3;
             theme = 4;
             draw_window();
             continue;
         }
-        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '5') {
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '5') {
             i += 3;
             theme = 5;
             draw_window();
             continue;
         }
-        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '6') {
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '6') {
             i += 3;
             theme = 6;
             draw_window();
             continue;
         }
-        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '7') {
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '7') {
             i += 3;
             theme = 7;
             draw_window();
             continue;
         }
-        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '8') {
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '8') {
             i += 3;
             theme = 8;
             draw_window();
             continue;
         }
-        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '9') {
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '9') {
             i += 3;
             theme = 9;
             draw_window();
             continue;
         }
-        else if (str[i] == 't' && str[i+1] == 'h' && str[i+2] == '1' && str[i+3] == '0') {
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1' && str[i+3] == '0') {
             i += 4;
             theme = 10;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1' && str[i+3] == '1') {
+            i += 4;
+            theme = 11;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1' && str[i+3] == '2') {
+            i += 4;
+            theme = 12;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1' && str[i+3] == '3') {
+            i += 4;
+            theme = 13;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1' && str[i+3] == '4') {
+            i += 4;
+            theme = 14;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1' && str[i+3] == '5') {
+            i += 4;
+            theme = 15;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1' && str[i+3] == '6') {
+            i += 4;
+            theme = 16;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1' && str[i+3] == '7') {
+            i += 4;
+            theme = 17;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1' && str[i+3] == '8') {
+            i += 4;
+            theme = 18;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '1' && str[i+3] == '9') {
+            i += 4;
+            theme = 19;
+            draw_window();
+            continue;
+        }
+        else if (str[i] == 'c' && str[i+1] == 's' && str[i+2] == '2' && str[i+3] == '0') {
+            i += 4;
+            theme = 20;
             draw_window();
             continue;
         }
