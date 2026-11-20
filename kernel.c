@@ -601,6 +601,7 @@ int glitch_timer = 0;
 int glitch_speed = 12345; 
 int is_moving = 0;
 void get_cpu(char* buffer);
+void net_app();
 unsigned short rgb565(int r, int g, int b);
 int was_ee = 0;
 int sound = 1;
@@ -767,6 +768,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         read(5011, fs_msg);
     }
     draw_window(); drag = 0;
+    net_app();
     unsigned char packet[3];
     while(1) {
         if (glitch == 1) {
@@ -2511,7 +2513,7 @@ void send_arp_request() {
     pkt[38] = 10, pkt[39] = 0; pkt[40] = 2; pkt[41] = 2;
     rtl8139_send(pkt, 42);
 }
-void send_ping_google(unsigned short seq) {
+void send_ping_gateway(unsigned short seq) {
     unsigned char pkt[74];
     for (int i = 0; i < 6; i++) {
         pkt[i] = router_mac[i];
@@ -2526,7 +2528,7 @@ void send_ping_google(unsigned short seq) {
     ip[8] = 64; ip[9] = 1;
     ip[10] = 0; ip[11] = 0;
     ip[12] = 10; ip[13] = 0; ip[14] = 2; ip[15] = 15;
-    ip[16] = 8;  ip[17] = 8; ip[18] = 8; ip[19] = 8;
+    ip[16] = 10; ip[17] = 0; ip[18] = 2; ip[19] = 2;
     unsigned short ip_cs = net_checksum(ip, 20);
     ip[10] = ip_cs >> 8; ip[11] = ip_cs & 0xFF;
     unsigned char* icmp = &pkt[34];
@@ -2564,6 +2566,12 @@ int poll_network(int* got_arp, int* got_pong) {
             *got_arp = 1;
         }
         else if (eth_type == 0x0800 && pkt[23] == 1 && pkt[34] == 0) {
+            reply_ip[0] = pkt[26];
+            reply_ip[1] = pkt[27];
+            reply_ip[2] = pkt[28];
+            reply_ip[3] = pkt[29];
+            reply_ttl = pkt[22];
+            reply_seq = (pkt[40] << 8 | pkt[41]);
             *got_pong = 1;
         }
     }
@@ -2598,6 +2606,15 @@ void net_app() {
     }
     update_screen();
     while (1) {
+                if (got_arp == 1) {
+                    got_arp = 0;
+                    print_string("ARP resolved: Gateway 10.0.2.2 MAC found!", win2_x + 10, line_y, 0x0112);
+                    line_y += 16;
+                    if (line_y > win2_y + 475) {
+                        line_y = win2_y + 75;
+                    }
+                    update_screen();
+                }
         poll_network(&got_arp, &got_pong);
         if (got_pong == 1) {
             got_pong = 0;
@@ -2612,13 +2629,55 @@ void net_app() {
             print_string("Reply from:", win2_x + 10, line_y, 0x0320);
             print_string(ip0, win2_x + 82, line_y, 0x0320);
             print_string(".", win2_x + 94, line_y, 0x0320);
-            print_string(ip1, win2_x + 82, line_y, 0x0320);
-            print_string(".", win2_x + 94, line_y, 0x0320);
-            print_string(ip2, win2_x + 82, line_y, 0x0320);
-            print_string(".", win2_x + 94, line_y, 0x0320);
-            print_string(ip3, win2_x + 82, line_y, 0x0320);
-            print_string(".", win2_x + 94, line_y, 0x0320);
+            print_string(ip1, win2_x + 100, line_y, 0x0320);
+            print_string(".", win2_x + 112, line_y, 0x0320);
+            print_string(ip2, win2_x + 118, line_y, 0x0320);
+            print_string(".", win2_x + 130, line_y, 0x0320);
+            print_string(ip3, win2_x + 136, line_y, 0x0320);
+            print_string("| bytes=32 | TTL=", win2_x + 152, line_y, 0x0320);
+            print_string(ttl_s, win2_x + 255, line_y, 0x0320);
+            print_string("| seq=", win2_x + 280, line_y, 0x0320);
+            print_string(seq_s, win2_x + 318, line_y, 0x0320);
+            line_y += 16;
+            if (line_y > win2_y + 475) {
+                line_y = win2_y + 75;
+            }
+            update_screen();
         }
+        unsigned char status = inb(0x64);
+        if (status & 0x01) {
+        if (status & 0x20) {
+            inb(0x60);
+            continue;
+        }
+        unsigned char scan_code = inb(0x60);
+        if (scan_code < 0x80) {
+            char ascii_char = scan_code_to_ascii(scan_code);
+            if (ascii_char == 'E') {
+                drag = 0;
+                net_opened = 0;
+                draw_window();
+                play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep(70); no_sound();
+                break;
+            }
+            if (ascii_char == 'p' && net_found == 1) {
+                ping_count++;
+                if (router_mac[0] == 0xFF) {
+                    send_arp_request();
+                    sleep(30);
+                    poll_network(&got_arp, &got_pong);
+                }
+                print_string("Pinging 10.0.2.2 with 32 bytes of data...", win2_x + 10, line_y, 0x0000);
+                line_y += 16;
+                if (line_y > win2_y + 475) {
+                    line_y = win2_y + 75;
+                }
+                send_ping_gateway(ping_count);
+                update_screen();
+            }
+        }
+    }
+        sleep(10);
     }
 }
 
