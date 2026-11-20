@@ -2608,7 +2608,7 @@ void net_app() {
     while (1) {
                 if (got_arp == 1) {
                     got_arp = 0;
-                    print_string("ARP resolved: Gateway 10.0.2.2 MAC found!", win2_x + 10, line_y, 0x0112);
+                    print_string("ARP resolved: Gateway 10.0.2.2 MAC found!", win2_x + 10, line_y, 0x0320);
                     line_y += 16;
                     if (line_y > win2_y + 475) {
                         line_y = win2_y + 75;
