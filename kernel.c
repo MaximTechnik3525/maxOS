@@ -2541,6 +2541,58 @@ void send_ping_google(unsigned short seq) {
     icmp[2] = icmp_cs >> 8; icmp[3] = icmp_cs & 0xFF;
     rtl8139_send(pkt, 74);
 }
+int poll_network(int* got_arp, int* got_pong) {
+    if (net_found == 0) {
+        return 0;
+    }
+    if ((inb(rtl_iobase + 0x37) & 0x01) != 0) {
+        return 0;
+    }
+    unsigned short* hdr = (unsigned short*)(rx_buffer + rx_offset);
+    unsigned short status = hdr[0];
+    unsigned short len = hdr[1];
+    unsigned char* pkt = rx_buffer + rx_offset + 4;
+    if (status & 0x01) {
+        unsigned short eth_type = (pkt[12] << 8 | pkt[13]);
+        if (eth_type == 0x0806 && pkt[21] == 2) {
+            for (int i = 0; i < 6; i++) {
+                router_mac[i] = pkt[22 + i];
+            }
+            *got_arp = 1;
+        }
+        else if (eth_type == 0x0800 && pkt[23] == 1 && pkt[34] == 0) {
+            *got_pong = 1;
+        }
+    }
+    rx_offset = (rx_offset + len + 4 + 3) & ~3;
+    if (rx_offset >= 8192) {
+        rx_offset %= 8192;
+    }
+    outw(rtl_iobase + 0x38, rx_offset - 16);
+    outw(rtl_iobase + 0x3E, 0x05);
+    return 1;
+}
+void net_app() {
+    drag = 1;
+    net_opened = 1;
+    if (net_found == 1) {
+        rtl8139_init();
+    }
+    int got_arp = 0;
+    int got_pong = 0;
+    int ping_count = 0;
+    int line_y = win2_y + 65;
+    render_win();
+    print_string("Network control", win2_x + 8, win2_y + 6, 0x0000);
+    print_string("Network control", win2_x + 7, win2_y + 5, 0xFFFF);
+    if (net_found == 0) {
+        print_string("RTL8139 Network card not found! Check your PC or emulator", win2_x + 10, win2_y + 23, 0x0000);
+    }
+    else {
+        print_string("NIC: Realtek RTL8139 - OK! | Local IP: 10.0.2.15 | Gateway: 10.0.2.2", win2_x + 10, win2_y + 38, 0x0000);
+        print_string("Press [P] tp ping 8.8.8.8 (Google DNS), [ESC] to close this window.", win2_x + 10, win2_y + 53, 0x0000);
+    }
+}
 
 void progressbar(char* file_des, int xend) {
         for (int y = win2_y + 412; y < win2_y + 423; y++) {
