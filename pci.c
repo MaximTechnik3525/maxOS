@@ -35,3 +35,8 @@ void pci_scan(int txt_x, int txt_y) {
     print_string("Total devices:", txt_x, txt_y, 0x0000);
     print_string(dev_str, txt_x + 91, txt_y, 0x0000);
 }
+void pci_write_config(unsigned char bus, unsigned char slot, unsigned char func, unsigned char offset, unsigned int value) {
+    unsigned int address = (unsigned int)(((unsigned int)bus << 16) | ((unsigned int)slot << 11) | ((unsigned int)func << 8 | (offset & 0xFC) | 0x80000000));
+    outl(0x0CF8, address);
+    outl(0x0CFC, value);
+}
