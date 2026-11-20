@@ -2511,8 +2511,35 @@ void send_arp_request() {
     pkt[38] = 10, pkt[39] = 0; pkt[40] = 2; pkt[41] = 2;
     rtl8139_send(pkt, 42);
 }
-void send_ping_google() {
-    
+void send_ping_google(unsigned short seq) {
+    unsigned char pkt[74];
+    for (int i = 0; i < 6; i++) {
+        pkt[i] = router_mac[i];
+        pkt[6 + i] = mac_addr[i];
+    }
+    pkt[12] = 0x08; pkt[13] = 0x00;
+    unsigned char* ip = &pkt[14];
+    ip[0] = 0x45; ip[1] = 0x00;
+    ip[2] = 0x00; ip[3] = 60;
+    ip[4] = 0x00; ip[5] = seq;
+    ip[6] = 0x00; ip[7] = 0x00;
+    ip[8] = 64; ip[9] = 1;
+    ip[10] = 0; ip[11] = 0;
+    ip[12] = 10; ip[13] = 0; ip[14] = 2; ip[15] = 15;
+    ip[16] = 8;  ip[17] = 8; ip[18] = 8; ip[19] = 8;
+    unsigned short ip_cs = net_checksum(ip, 20);
+    ip[10] = ip_cs >> 8; ip[11] = ip_cs & 0xFF;
+    unsigned char* icmp = &pkt[34];
+    icmp[0] = 8; icmp[1] = 0;
+    icmp[2] = 0; icmp[3] = 0;
+    icmp[4] = 0x12; icmp[5] = 0x34;
+    icmp[6] = seq >> 8; icmp[7] = seq & 0xFF;
+    for (int i = 0; i < 32; i++) {
+        icmp[8 + i] = 'A' + (i % 26);
+    }
+    unsigned short icmp_cs = net_checksum(icmp, 40);
+    icmp[2] = icmp_cs >> 8; icmp[3] = icmp_cs & 0xFF;
+    rtl8139_send(pkt, 74);
 }
 
 void progressbar(char* file_des, int xend) {
