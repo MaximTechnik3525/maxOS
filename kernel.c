@@ -590,6 +590,7 @@ int open2 = 0;
 int open3 = 0;
 int app_opened = 0;
 int cube_opened = 0;
+int net_opened = 0;
 void cube_app();
 char cpu_name[49];
 char ram[32];
@@ -2422,6 +2423,65 @@ void cube_app() {
         ay = (ay + 1) & 63;
         update_screen();
         sleep(16);
+    }
+}
+
+unsigned int pci_read_config(unsigned char bus, unsigned char slot, unsigned char func, unsigned char offset);
+void pci_write_config(unsigned char bus, unsigned char slot, unsigned char func, unsigned char offset, unsigned int value);
+unsigned int inl(unsigned short port);
+void outl(unsigned short port, unsigned int data);
+unsigned short rtl_iobase = 0;
+unsigned char mac_addr[6] = {0};
+unsigned char router_mac[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+unsigned char rx_buffer[8192 + 16 + 1500] __attribute__((aligned(4)));
+unsigned char tx_buffer[4][1536] __attribute__((aligned(4)));
+int tx_cur = 0;
+unsigned short rx_offset = 0;
+int net_found = 0;
+void net_app();
+
+unsigned short htons(unsigned short v) { return (v << 8) | (v >> 8); }
+unsigned short net_checksum(void* vdata, int length) {
+    unsigned char* data = (unsigned char*)vdata;
+    unsigned int acc = 0;
+    for (int i = 0; i + 1 < length; i += 2) {
+        unsigned short word = (data[i] << 8) | data[i + 1];
+        acc += word;
+    }
+    if (length & 1) {
+        acc += data[length - 1] << 8;
+    }
+    while (acc >> 16) {
+        acc = (acc & 0xFFFF) + (acc >> 16);
+    }
+    return (unsigned short)(~acc);
+}
+void rtl8139_init() {
+    net_found = 0;
+    for (int bus = 0; bus < 8; bus++) {
+        for (int slot = 0; slot < 32; slot++) {
+            unsigned int id = pci_read_config(bus, slot, 0, 0);
+            if ((id & 0xFFFF) == 0x10EC && ((id >> 16) & 0xFFFF) == 0x8139) {
+                unsigned int bar0 = pci_read_config(bus, slot, 0, 0x10);
+                rtl_iobase = bar0 & 0xFFFC;
+                unsigned int cmd = pci_read_config(bus, slot, 0, 0x04);
+                pci_write_config(bus, slot, 0, 0x04, cmd | 0x05);
+                outb(rtl_iobase + 0x52, 0x00);
+                outb(rtl_iobase + 0x37, 0x10);
+                while ((inb(rtl_iobase + 0x37) & 0x10) != 0);
+                outl(rtl_iobase + 0x30, (unsigned int)rx_buffer);
+                outw(rtl_iobase + 0x3C, 0x0005);
+                outl(rtl_iobase + 0x44, 0x0000000F | (1 << 7));
+                outl(rtl_iobase + 0x37, 0x0C);
+                for (int i = 0; i < 6; i++) {
+                    mac_addr[i] = inb(rtl_iobase + i);
+                }
+                rx_offset = 0;
+                tx_cur = 0;
+                net_found = 1;
+                return;
+            }
+        }
     }
 }
 
