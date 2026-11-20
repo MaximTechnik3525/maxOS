@@ -78,6 +78,7 @@ void draw_pongbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int
 void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_effectbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_tdbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
+void draw_netbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void get_cpu(char* buffer);
 void draw_window();
 void wait_mouse(unsigned char type);
@@ -241,6 +242,20 @@ unsigned char td_icon[12][12] = {
     {0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0},
+};
+unsigned char net_icon[12][12] = {
+    {0,0,0,1,1,1,1,1,1,0,0,0},
+    {0,0,1,3,3,2,2,3,2,1,0,0},
+    {0,1,3,3,2,2,3,3,3,2,1,0},
+    {1,3,3,2,2,2,2,3,3,2,2,1},
+    {1,2,2,2,3,3,2,2,2,2,2,1},
+    {1,2,2,3,3,3,3,2,2,3,2,1},
+    {1,2,2,2,3,3,2,2,3,3,2,1},
+    {1,2,3,2,2,2,2,2,3,2,2,1},
+    {0,1,3,3,2,2,2,2,2,2,1,0},
+    {0,0,1,2,2,2,3,3,2,1,0,0},
+    {0,0,0,1,1,1,1,1,1,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0}
 };
 unsigned char sad_smile_icon[24][24] = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -768,7 +783,6 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         read(5011, fs_msg);
     }
     draw_window(); drag = 0;
-    net_app();
     unsigned char packet[3];
     while(1) {
         if (glitch == 1) {
@@ -950,6 +964,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             menuOpened = 0;
                             draw_window();
                             cube_app();
+                        }
+                        if (pos_x >= 0 && pos_x <= 250 && pos_y > 580 && pos_y <= 600 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            net_app();
                         }
                     }
                 }   
@@ -1198,6 +1217,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             menuOpened = 0;
                             draw_window();
                             cube_app();
+                        }
+                        if (pos_x >= 0 && pos_x <= 250 && pos_y > 580 && pos_y <= 600 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            net_app();
                         }
                     }
                     if (ascii_char == 'f' && explorer_opened == 1) {
@@ -3165,6 +3189,22 @@ void draw_tdbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int b
     print_string("3D engine", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
     print_string("3D engine", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
+void draw_netbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = 4 + x;
+            int screen_y = 586 + y;
+            if (screen_x < x_render && screen_y < y_render && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = net_icon[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x0192; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * x_render + screen_x] = 0x1C9F; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * x_render + screen_x] = 0x07E0; }
+            }
+        }
+    }
+    print_string("Network control", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("Network control", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
+}
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
@@ -3464,6 +3504,7 @@ void draw_menu() {
     draw_panelbtn(15, 510, 42, 12, 15, 510, 40, 10, 25, 512);
     draw_effectbtn(15, 530, 42, 12, 15, 530, 40, 10, 25, 532);
     draw_tdbtn(15, 550, 42, 12, 15, 550, 40, 10, 25, 552);
+    draw_netbtn(15, 570, 42, 12, 15, 570, 40, 10, 25, 572);
     if (theme == 3) {
         print_string("maxOS 4.0 Abrikos", 114, 361, 0x0000);
         print_string("maxOS 4.0 Abrikos", 113, 360, 0xFFFF);
