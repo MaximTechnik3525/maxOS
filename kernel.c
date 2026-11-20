@@ -2618,8 +2618,8 @@ void net_app() {
     int ping_count = 0;
     int line_y = win2_y + 68;
     render_win();
-    print_string("Network control", win2_x + 8, win2_y + 6, 0x0000);
-    print_string("Network control", win2_x + 7, win2_y + 5, 0xFFFF);
+    print_string("Network control. Please, do not spam with ping", win2_x + 8, win2_y + 6, 0x0000);
+    print_string("Network control. Please, do not spam with ping", win2_x + 7, win2_y + 5, 0xFFFF);
     if (net_found == 0) {
         print_string("RTL8139 Network card not found! Check your PC or emulator", win2_x + 10, win2_y + 23, 0x0000);
     }
@@ -2697,6 +2697,7 @@ void net_app() {
                     line_y = win2_y + 75;
                 }
                 send_ping_gateway(ping_count);
+                sleep(50);
                 update_screen();
             }
         }
