@@ -1983,7 +1983,7 @@ void render_win() {
         else {
             print_string("Disk for read and write not found!", win2_x + 66, win2_y + 83, 0x9000);
         }
-        print_string("OS: maxOS v4.0 build 72215 (stable)", win2_x + 10, win2_y + 98, 0x0000);
+        print_string("OS: maxOS v4.0 build 81625 (stable)", win2_x + 10, win2_y + 98, 0x0000);
         pci_scan(win2_x + 10, win2_y + 113);
     }
     else if (notepad_opened == 1) {
@@ -2057,8 +2057,8 @@ void render_win() {
         print_string("Application", win2_x + 7, win2_y + 5, 0xFFFF);
     }
     if (synth_opened == 1) {
-        print_string("Synthezator. Not realistic", win2_x + 8, win2_y + 6, 0x0000);
-        print_string("Synthezator. Not realistic", win2_x + 7, win2_y + 5, 0xFFFF);
+        print_string("Synthesizer", win2_x + 8, win2_y + 6, 0x0000);
+        print_string("Synthesizer", win2_x + 7, win2_y + 5, 0xFFFF);
         for (int y = win2_y + 24; y < win2_y + 76; y++) {
             for (int x = win2_x + 120; x < win2_x + win2_w - 120; x++) {
                 if (y == win2_y + 24 || y == win2_y + 75 || x == win2_x + 120 || x == win2_x + win2_w - 121) {
@@ -2076,7 +2076,7 @@ void render_win() {
             }
         }
         if (sound == 0) {
-            print_string("WARNING: system sound is off!", win2_x + 135, win2_y + 45, 0xF800);
+            print_string("WARNING: system sound is off! Enable it in the control panel.", win2_x + 135, win2_y + 45, 0xF800);
         }
         else {
             print_string("KEYS [1 - 0] to play notes (Hold to sustain)", win2_x + 135, win2_y + 34, 0x07FF);
@@ -2630,7 +2630,6 @@ int tx_cur = 0;
 unsigned short rx_offset = 0;
 int net_found = 0;
 void net_app();
-
 unsigned short htons(unsigned short v) { return (v << 8) | (v >> 8); }
 unsigned short net_checksum(void* vdata, int length) {
     unsigned char* data = (unsigned char*)vdata;
@@ -3385,8 +3384,8 @@ void draw_synthbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, in
             }
         }
     }
-    print_string("Synthezator", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
-    print_string("Synthezator", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
+    print_string("Synthesizer", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("Synthesizer", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
 void synth_app() {
     drag = 1;
