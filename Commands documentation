@@ -53,7 +53,7 @@ Commands for drawing shapes, text, and custom windows on the screen.
 ------------------------------------------------------------------------
 Commands for managing the desktop environment, color themes, and kernel states.
 * redr                    - Redraws the entire desktop and closes open windows.
-* th1 to th10             - Switches the active system color theme (1 through 10).
+* cs1 to cs20             - Switches the active system color scheme (1 through 20).
 * stf                     - Sets system state to Free (drag = 0).
 * stb                     - Sets system state to Busy (drag = 1).
 * stc                     - Sets system state to Critical / Locked input (drag = 2).
