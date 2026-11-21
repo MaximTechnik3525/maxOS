@@ -1292,6 +1292,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     else if (ascii_char == 's' && synth_opened == 1) {
                         for (int f = 1400; f > 250; f -= 60) {
                             play_sound(f);
+                            sleep(8);
                         }
                         no_sound();
                     }
@@ -2105,7 +2106,7 @@ void render_win() {
             int bx = kb_x + black_pos[i] * 90 + 64;
             for (int y = kb_y; y < kb_y + 130; y++) {
                 for (int x = bx; x < bx + 50; x++) {
-                    if (x == bx || x < bx + 49 || y == kb_y + 129) {
+                    if (x == bx || x == bx + 49 || y == kb_y + 129) {
                         gfx_memory[y * x_render + x] = 0x4A49;
                     }
                     else {
