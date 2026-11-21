@@ -1,4 +1,4 @@
-# maxOS (v3.9 ISO Release)
+# maxOS (ISO Release)
 
 ---
 
@@ -18,7 +18,7 @@ To test **maxOS** on a real PC, make sure your hardware meets the following requ
 * **Audio:** A built-in **PC Speaker** is required for system alerts and startup/shutdown melodies.
 
 ### Installation Steps:
-1. Download the `maxos.iso` image from the latest release.
+1. Download the `maxos.iso` image from the latest release or commit (commits are not realeses, may be issues, bugs and problems).
 2. Flash the ISO image onto a USB drive using **Rufus**, **Ventoy**, or `dd` in Linux.
 3. Boot your PC from the USB drive.
 
