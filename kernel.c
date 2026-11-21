@@ -79,6 +79,7 @@ void draw_offbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
 void draw_effectbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_tdbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_netbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
+void draw_synthbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void get_cpu(char* buffer);
 void draw_window();
 void wait_mouse(unsigned char type);
@@ -256,6 +257,20 @@ unsigned char net_icon[12][12] = {
     {0,0,1,2,2,2,3,3,2,1,0,0},
     {0,0,0,1,1,1,1,1,1,0,0,0},
     {0,0,0,0,0,0,0,0,0,0,0,0}
+};
+unsigned char synth_icon[12][12] = {
+    {0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,1,1,1,1,1,1,1,1,1,1,0},
+    {0,1,2,2,1,1,2,2,1,1,1,0},
+    {0,1,2,2,1,1,2,2,1,1,1,0},
+    {0,1,2,2,1,1,2,2,1,1,1,0},
+    {0,1,2,2,1,1,2,2,1,1,1,0},
+    {0,1,2,2,1,1,2,2,1,1,1,0},
+    {0,1,2,2,1,1,2,2,1,1,1,0},
+    {0,1,2,2,1,1,2,2,1,1,1,0},
+    {0,1,2,2,1,1,2,2,1,1,1,0},
+    {0,1,1,1,1,1,1,1,1,1,1,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0},
 };
 unsigned char sad_smile_icon[24][24] = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -618,9 +633,11 @@ int is_moving = 0;
 void get_cpu(char* buffer);
 void net_app();
 unsigned short rgb565(int r, int g, int b);
+unsigned char REAL_BPP = 16;
 int was_ee = 0;
 int sound = 1;
-unsigned char REAL_BPP = 16;
+int synth_opened = 0;
+void synth_app();
 unsigned short get_bg_color(int y) {
     if (theme == 1) { return rgb565(2 + (y / 90), 8 + (y / 24), 14 + (y / 42)); }
     if (theme == 2) { return rgb565(12 + (y / 45), 2 + (y / 90), 8 + (y / 45)); }
@@ -970,6 +987,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             draw_window();
                             net_app();
                         }
+                        if (pos_x >= 0 && pos_x <= 250 && pos_y > 600 && pos_y <= 620 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            synth_app();
+                        }
                     }
                 }   
             }
@@ -982,6 +1004,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                 unsigned char scan_code = inb(0x60);
                 if (scan_code == 0x2A || scan_code == 0x36) { shift = 1; }
                 else if (scan_code == 0xAA || scan_code == 0xB6) { shift = 0; }
+                if (scan_code >= 0x80 && synth_opened == 1) {
+                    no_sound();
+                }
                 if (scan_code < 0x80 && w_mode == 0 && drag != 2) { // KEYBOARD CLICKS
                     timer = 0;
                     char ascii_char = scan_code_to_ascii(scan_code);
@@ -1113,6 +1138,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         open3 = 0;
                         app_opened = 0;
                         was_ee = 0;
+                        synth_opened = 0;
                         draw_window();
                         play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep (70); no_sound();
                     }
@@ -1223,6 +1249,75 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             draw_window();
                             net_app();
                         }
+                        if (pos_x >= 0 && pos_x <= 250 && pos_y > 600 && pos_y <= 620 && menuOpened == 1)  {
+                            menuOpened = 0;
+                            draw_window();
+                            synth_app();
+                        }
+                    }
+                    if (ascii_char == '1' && synth_opened == 1) {
+                        play_sound(100);
+                    }
+                    else if (ascii_char == '2' && synth_opened == 1) {
+                        play_sound(200);
+                    }
+                    else if (ascii_char == '3' && synth_opened == 1) {
+                        play_sound(300);
+                    }
+                    else if (ascii_char == '4' && synth_opened == 1) {
+                        play_sound(400);
+                    }
+                    else if (ascii_char == '5' && synth_opened == 1) {
+                        play_sound(500);
+                    }
+                    else if (ascii_char == '6' && synth_opened == 1) {
+                        play_sound(600);
+                    }
+                    else if (ascii_char == '7' && synth_opened == 1) {
+                        play_sound(700);
+                    }
+                    else if (ascii_char == '8' && synth_opened == 1) {
+                        play_sound(800);
+                    }
+                    else if (ascii_char == '9' && synth_opened == 1) {
+                        play_sound(900);
+                    }
+                    else if (ascii_char == '0' && synth_opened == 1) {
+                        play_sound(1000);
+                    }
+                    else if (ascii_char == 'a' && synth_opened == 1) {
+                        play_sound(988); sleep(80); play_sound(1318); sleep(220); no_sound();
+                        no_sound();
+                    }
+                    else if (ascii_char == 's' && synth_opened == 1) {
+                        for (int f = 1400; f > 250; f -= 60) {
+                            play_sound(f);
+                        }
+                        no_sound();
+                    }
+                    else if (ascii_char == 'd' && synth_opened == 1) {
+                        for (int i = 0; i < 6; i++) {
+                            play_sound(900); sleep(45);
+                            play_sound(650); sleep(45);
+                        }
+                        no_sound();
+                    }
+                    else if (ascii_char == 'f' && synth_opened == 1) {
+                        int notes[6] = {523, 659, 784, 1046, 784, 1046};
+                        for (int i = 0; i < 6; i++) {
+                            play_sound(notes[i]);
+                            sleep(75);
+                        }
+                        no_sound();
+                    }
+                    else if (ascii_char == 'g' && synth_opened == 1) {
+                        play_sound(440); sleep(120); no_sound(); sleep(30);
+                        play_sound(440); sleep(120); no_sound(); sleep(30);
+                        play_sound(440); sleep(120); no_sound(); sleep(30);
+                        play_sound(349); sleep(90);
+                        play_sound(523); sleep(45);
+                        play_sound(440); sleep(180);
+                        no_sound();
                     }
                     if (ascii_char == 'f' && explorer_opened == 1) {
                         createdFiles = 0;
@@ -1831,14 +1926,25 @@ void render_win() {
             else if (y < win2_y + 43 && explorer_opened == 1) { 
                 gfx_memory[y * x_render + x] = 0x7BEF; 
             }
-            else if (pong_opened != 1) {
+            else if (pong_opened != 1 && synth_opened != 1) {
                 if (y < win2_y + 203) { gfx_memory[y * x_render + x] = 0xFF9E; }
                 else if (y < end_y - 1) { gfx_memory[y * x_render + x] = 0xF77D; }
                 else { gfx_memory[y * x_render + x] = 0x0000; }
             }
-            else {
+            else if (pong_opened == 1) {
                 if (y < end_y - 1) { gfx_memory[y * x_render + x] = 0xF77D; }
                 else { gfx_memory[y * x_render + x] = 0x0000; }
+            }
+            else if (synth_opened == 1) {
+                if (y < win2_y + 203) {
+                    gfx_memory[y * x_render + x] = 0xA388;
+                }
+                else if (y >= win2_y + 203 && y < win2_y + 403) {
+                    gfx_memory[y * x_render + x] = 0x82A5;
+                }
+                else {
+                    gfx_memory[y * x_render + x] = 0x5182;
+                }
             }
         }
         }
@@ -1949,6 +2055,54 @@ void render_win() {
     else if (app_opened == 1) {
         print_string("Application", win2_x + 8, win2_y + 6, 0x0000);
         print_string("Application", win2_x + 7, win2_y + 5, 0xFFFF);
+    }
+    if (synth_opened == 1) {
+        print_string("Synthezator. Not realistic", win2_x + 8, win2_y + 6, 0x0000);
+        print_string("Synthezator. Not realistic", win2_x + 7, win2_y + 5, 0xFFFF);
+        if (sound == 0) {
+            print_string("WARNING: system sound is off!", win2_x + 11, win2_y + 24, 0x0000);
+            print_string("WARNING: system sound is off!", win2_x + 10, win2_y + 23, 0xFFFF);
+        }
+        else {
+            print_string("Press 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 to play.", win2_x + 11, win2_y + 24, 0x0000);
+            print_string("Press 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 to play.", win2_x + 10, win2_y + 23, 0xFFFF);
+            print_string("Press a, s, d, f, g to play integrated sounds.", win2_x + 11, win2_y + 39, 0x0000);
+            print_string("Press a, s, d, f, g to play integrated sounds.", win2_x + 10, win2_y + 38, 0xFFFF);
+        }
+        for (int y = win2_y + 53; y < win2_y + 203; y++) {
+            for (int x = win2_x + 10; x < win2_x + win2_w - 10; x++) {
+                if (x >= win2_x + 10 && x <= win2_x + 100) {
+                    gfx_memory[y * x_render + x] = 0xFFFF;
+                }
+                else if (x > win2_x + 100 && x <= win2_x + 190) {
+                    gfx_memory[y * x_render + x] = 0x0000;
+                }
+                else if (x > win2_x + 190 && x <= win2_x + 280) {
+                    gfx_memory[y * x_render + x] = 0xFFFF;
+                }
+                else if (x > win2_x + 280 && x <= win2_x + 370) {
+                    gfx_memory[y * x_render + x] = 0x0000;
+                }
+                else if (x >= win2_x + 370 && x <= win2_x + 460) {
+                    gfx_memory[y * x_render + x] = 0xFFFF;
+                }
+                else if (x > win2_x + 460 && x <= win2_x + 550) {
+                    gfx_memory[y * x_render + x] = 0x0000;
+                }
+                else if (x > win2_x + 550 && x <= win2_x + 640) {
+                    gfx_memory[y * x_render + x] = 0xFFFF;
+                }
+                else if (x > win2_x + 640 && x <= win2_x + 730) {
+                    gfx_memory[y * x_render + x] = 0x0000;
+                }
+                else if (x > win2_x + 730 && x <= win2_x + 820) {
+                    gfx_memory[y * x_render + x] = 0xFFFF;
+                }
+                else if (x > win2_x + 820 && x <= win2_x + 910) {
+                    gfx_memory[y * x_render + x] = 0x0000;
+                }
+            }
+        }
     }
 }
 }
@@ -3206,6 +3360,26 @@ void draw_netbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int 
     print_string("Network control", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
     print_string("Network control", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
+void draw_synthbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = 4 + x;
+            int screen_y = 606 + y;
+            if (screen_x < x_render && screen_y < y_render && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = synth_icon[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x0000; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * x_render + screen_x] = 0xFFFF; }
+            }
+        }
+    }
+    print_string("Synthezator", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("Synthezator", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
+}
+void synth_app() {
+    drag = 1;
+    synth_opened = 1;
+    render_win();
+}
 void draw_cursor(int mouse_x, int mouse_y) {
     for (int y = 0; y < 12; y++) {
         for (int x = 0; x < 12; x++) {
@@ -3506,6 +3680,7 @@ void draw_menu() {
     draw_effectbtn(15, 530, 42, 12, 15, 530, 40, 10, 25, 532);
     draw_tdbtn(15, 550, 42, 12, 15, 550, 40, 10, 25, 552);
     draw_netbtn(15, 570, 42, 12, 15, 570, 40, 10, 25, 572);
+    draw_synthbtn(15, 590, 42, 12, 15, 590, 40, 10, 25, 592);
     if (theme == 3) {
         print_string("maxOS 4.0 Abrikos", 114, 361, 0x0000);
         print_string("maxOS 4.0 Abrikos", 113, 360, 0xFFFF);
