@@ -261,16 +261,16 @@ unsigned char net_icon[12][12] = {
 unsigned char synth_icon[12][12] = {
     {0,0,0,0,0,0,0,0,0,0,0,0},
     {0,1,1,1,1,1,1,1,1,1,1,0},
-    {0,1,2,2,1,1,2,2,1,1,1,0},
-    {0,1,2,2,1,1,2,2,1,1,1,0},
-    {0,1,2,2,1,1,2,2,1,1,1,0},
-    {0,1,2,2,1,1,2,2,1,1,1,0},
-    {0,1,2,2,1,1,2,2,1,1,1,0},
-    {0,1,2,2,1,1,2,2,1,1,1,0},
-    {0,1,2,2,1,1,2,2,1,1,1,0},
-    {0,1,2,2,1,1,2,2,1,1,1,0},
+    {0,1,4,4,4,4,4,4,4,4,1,0},
+    {0,1,2,2,3,2,3,2,2,3,1,0},
+    {0,1,2,2,3,2,3,2,2,3,1,0},
+    {0,1,2,2,3,2,3,2,2,3,1,0},
+    {0,1,2,2,2,2,2,2,2,2,1,0},
+    {0,1,2,1,2,1,2,1,2,1,1,0},
+    {0,1,2,1,2,1,2,1,2,1,1,0},
     {0,1,1,1,1,1,1,1,1,1,1,0},
     {0,0,0,0,0,0,0,0,0,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0}
 };
 unsigned char sad_smile_icon[24][24] = {
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0},
@@ -3367,8 +3367,10 @@ void draw_synthbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, in
             int screen_y = 606 + y;
             if (screen_x < x_render && screen_y < y_render && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = synth_icon[y][x];
-                if (pixel_type2 == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x0000; }
+                if (pixel_type2 == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x5182; }
                 else if (pixel_type2 == 2) { gfx_memory[screen_y * x_render + screen_x] = 0xFFFF; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * x_render + screen_x] = 0x0000; }
+                else if (pixel_type2 == 4) { gfx_memory[screen_y * x_render + screen_x] = 0x07FF; }
             }
         }
     }
