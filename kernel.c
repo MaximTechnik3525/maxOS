@@ -2059,47 +2059,58 @@ void render_win() {
     if (synth_opened == 1) {
         print_string("Synthezator. Not realistic", win2_x + 8, win2_y + 6, 0x0000);
         print_string("Synthezator. Not realistic", win2_x + 7, win2_y + 5, 0xFFFF);
+        for (int y = win2_y + 24; y < win2_y + 76; y++) {
+            for (int x = win2_x + 120; x < win2_x + win2_w - 120; x++) {
+                if (y == win2_y + 24 || y == win2_y + 75 || x == win2_x + 120 || x == win2_x + win2_w - 121) {
+                    gfx_memory[y * x_render + x] = 0x07FF;
+                }
+                else {
+                    gfx_memory[y * x_render + x] = 0x0841;
+                }
+            }
+        }
+        for (int y = win2_y + 28; y < win2_y + 72; y += 4) {
+            for (int x = win2_x + 25; x < win2_x + 100; x += 4) {
+                gfx_memory[y * x_render + x] = 0x5182;
+                gfx_memory[y * x_render + (win2_x + win2_w - 125 + (x - win2_x))] = 0x5182;
+            }
+        }
         if (sound == 0) {
-            print_string("WARNING: system sound is off!", win2_x + 11, win2_y + 24, 0x0000);
-            print_string("WARNING: system sound is off!", win2_x + 10, win2_y + 23, 0xFFFF);
+            print_string("WARNING: system sound is off!", win2_x + 135, win2_y + 45, 0xF800);
         }
         else {
-            print_string("Press 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 to play.", win2_x + 11, win2_y + 24, 0x0000);
-            print_string("Press 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 to play.", win2_x + 10, win2_y + 23, 0xFFFF);
-            print_string("Press a, s, d, f, g to play integrated sounds.", win2_x + 11, win2_y + 39, 0x0000);
-            print_string("Press a, s, d, f, g to play integrated sounds.", win2_x + 10, win2_y + 38, 0xFFFF);
+            print_string("KEYS [1 - 0] to play notes (Hold to sustain)", win2_x + 135, win2_y + 34, 0x07FF);
+            print_string("FX: [A, S, D, F, G]", win2_x + 135, win2_y + 54, 0x87E0);
         }
-        for (int y = win2_y + 53; y < win2_y + 203; y++) {
-            for (int x = win2_x + 10; x < win2_x + win2_w - 10; x++) {
-                if (x >= win2_x + 10 && x <= win2_x + 100) {
-                    gfx_memory[y * x_render + x] = 0xFFFF;
+        int kb_x = win2_x + 33;
+        int kb_y = win2_y + 95;
+        for (int y = kb_y - 4; y < kb_y + 224; y++) {
+            for (int x = kb_x - 4; x < kb_x + 904; x++) {
+                gfx_memory[y * x_render + x] = 0x5182;
+            }
+        }
+        char* key_nums[10] = {"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"};
+        for (int i = 0; i < 10; i++) {
+            int kx = kb_x + i * 90;
+            for (int y = kb_y; y < kb_y + 220; y++) {
+                unsigned short col = (y > kb_y + 205) ? 0xCE79 : 0xFFFF;
+                for (int x = kx; x < kx + 88; x++) {
+                    gfx_memory[y * x_render + x] = col;
                 }
-                else if (x > win2_x + 100 && x <= win2_x + 190) {
-                    gfx_memory[y * x_render + x] = 0x0000;
-                }
-                else if (x > win2_x + 190 && x <= win2_x + 280) {
-                    gfx_memory[y * x_render + x] = 0xFFFF;
-                }
-                else if (x > win2_x + 280 && x <= win2_x + 370) {
-                    gfx_memory[y * x_render + x] = 0x0000;
-                }
-                else if (x >= win2_x + 370 && x <= win2_x + 460) {
-                    gfx_memory[y * x_render + x] = 0xFFFF;
-                }
-                else if (x > win2_x + 460 && x <= win2_x + 550) {
-                    gfx_memory[y * x_render + x] = 0x0000;
-                }
-                else if (x > win2_x + 550 && x <= win2_x + 640) {
-                    gfx_memory[y * x_render + x] = 0xFFFF;
-                }
-                else if (x > win2_x + 640 && x <= win2_x + 730) {
-                    gfx_memory[y * x_render + x] = 0x0000;
-                }
-                else if (x > win2_x + 730 && x <= win2_x + 820) {
-                    gfx_memory[y * x_render + x] = 0xFFFF;
-                }
-                else if (x > win2_x + 820 && x <= win2_x + 910) {
-                    gfx_memory[y * x_render + x] = 0x0000;
+            }
+            print_string(key_nums[i], kx + 41, kb_y + 190, 0x0000);
+        }
+        int black_pos[7] = {0, 1, 3, 4, 5, 7, 8};
+        for (int i = 0; i < 7; i++) {
+            int bx = kb_x + black_pos[i] * 90 + 64;
+            for (int y = kb_y; y < kb_y + 130; y++) {
+                for (int x = bx; x < bx + 50; x++) {
+                    if (x == bx || x < bx + 49 || y == kb_y + 129) {
+                        gfx_memory[y * x_render + x] = 0x4A49;
+                    }
+                    else {
+                        gfx_memory[y * x_render + x] = 0x0000;
+                    }
                 }
             }
         }
