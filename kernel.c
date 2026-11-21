@@ -1698,11 +1698,11 @@ void execute_commands(char* str) {
         }
         else if (str[i] == 'o' && str[i+1] == 'u' && str[i+2] == 't' && str[i+3] == 't' && str[i+4] == '#') {
             char* arg_ptr = &str[i + 5];
-            int text_x = 170;
-            int text_y = 200;
+            int text_x = win2_x + 10;
+            int text_y = win2_y + 23;
             while (*arg_ptr != ' ' && *arg_ptr != '\0' && *arg_ptr != '\n' && *arg_ptr != '\r') {
                 draw_char(*arg_ptr, text_x, text_y, 0x0000);
-                text_x += 9;
+                text_x += 6;
                 arg_ptr++;
             }
             i = (int)(arg_ptr - str);
@@ -2274,8 +2274,8 @@ void filew() {
             print_string("*Notepad: text file", 167, 182, 0xFFFF);
         }
     }
-    update_screen();
     print_string(ftext, 170, 200, text_col);
+    update_screen();
     while (1) {
         unsigned char status = inb(0x64);
         if (status & 0x01) {
