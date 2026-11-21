@@ -2654,14 +2654,14 @@ void net_app() {
             print_string(ip0, win2_x + 82, line_y, 0x0320);
             print_string(".", win2_x + 94, line_y, 0x0320);
             print_string(ip1, win2_x + 100, line_y, 0x0320);
-            print_string(".", win2_x + 112, line_y, 0x0320);
-            print_string(ip2, win2_x + 118, line_y, 0x0320);
-            print_string(".", win2_x + 130, line_y, 0x0320);
-            print_string(ip3, win2_x + 136, line_y, 0x0320);
-            print_string("| bytes=32 | TTL=", win2_x + 152, line_y, 0x0320);
-            print_string(ttl_s, win2_x + 255, line_y, 0x0320);
-            print_string("| seq=", win2_x + 280, line_y, 0x0320);
-            print_string(seq_s, win2_x + 318, line_y, 0x0320);
+            print_string(".", win2_x + 106, line_y, 0x0320);
+            print_string(ip2, win2_x + 112, line_y, 0x0320);
+            print_string(".", win2_x + 118, line_y, 0x0320);
+            print_string(ip3, win2_x + 124, line_y, 0x0320);
+            print_string("| bytes=32 | TTL=", win2_x + 140, line_y, 0x0320);
+            print_string(ttl_s, win2_x + 243, line_y, 0x0320);
+            print_string("| seq=", win2_x + 268, line_y, 0x0320);
+            print_string(seq_s, win2_x + 306, line_y, 0x0320);
             line_y += 16;
             if (line_y > win2_y + 475) {
                 line_y = win2_y + 75;
@@ -3642,7 +3642,7 @@ void draw_window() {
             int screen_y = 0;
             screen_x = 1120 + x;
             screen_y = 701 + y;
-            if (screen_x < x_render && screen_y < y_render && screen_x >= 0 && screen_y >= 0 && theme != 11) {
+            if (screen_x < x_render && screen_y < y_render && screen_x >= 0 && screen_y >= 0) {
                 unsigned char pixel_type2 = clock12[y][x];
                 if (pixel_type2 == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x2100; }
                 else if (pixel_type2 == 2) { gfx_memory[screen_y * x_render + screen_x] = 0xFFFA; }
