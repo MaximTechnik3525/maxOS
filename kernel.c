@@ -2625,7 +2625,7 @@ void net_app() {
     }
     else {
         print_string("NIC: Realtek RTL8139 - OK! | Local IP: 10.0.2.15 | Gateway: 10.0.2.2", win2_x + 10, win2_y + 38, 0x0000);
-        print_string("Press [P] tp ping 8.8.8.8 (Google DNS), [ESC] to close this window.", win2_x + 10, win2_y + 53, 0x0000);
+        print_string("Press [P] tp ping 10.0.2.2 (Google DNS), [ESC] to close this window.", win2_x + 10, win2_y + 53, 0x0000);
         send_arp_request();
     }
     update_screen();
