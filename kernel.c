@@ -638,6 +638,8 @@ int was_ee = 0;
 int sound = 1;
 int synth_opened = 0;
 void synth_app();
+int uptime_sec = 0;
+int last_rtc_sec = -1;
 unsigned short get_bg_color(int y) {
     if (theme == 1) { return rgb565(2 + (y / 90), 8 + (y / 24), 14 + (y / 42)); }
     if (theme == 2) { return rgb565(12 + (y / 45), 2 + (y / 90), 8 + (y / 45)); }
@@ -820,6 +822,15 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
         if (currentMin != m && drag == 0) {
             currentMin = m;
             draw_window();
+        }
+        unsigned char raw_sec2 = read_rtc_register(0x00);
+        int s = bcd_to_binary(raw_sec2);
+        if (last_rtc_sec == -1) {
+            last_rtc_sec = s;
+        }
+        else if (last_rtc_sec != s) {
+            last_rtc_sec = s;
+            uptime_sec++;
         }
         }
         unsigned char status = inb(0x64);
@@ -1966,8 +1977,8 @@ void render_win() {
         print_string("Hardware information. Press Esc to close.", win2_x + 7, win2_y + 5, 0xFFFF);
         print_string("Your CPU:", win2_x + 10, win2_y + 23, 0x0000);
         print_string(cpu_name, win2_x + 70, win2_y + 23, 0x0000);
-        print_string("Total RAM:", win2_x + 10, win2_y + 38, 0x0000);
-        print_string(ram, win2_x + 76, win2_y + 38, 0x0000);
+        print_string("Total RAM (MB):", win2_x + 10, win2_y + 38, 0x0000);
+        print_string(ram, win2_x + 106, win2_y + 38, 0x0000);
         print_string("Bootloader:", win2_x + 10, win2_y + 53, 0x0000);
         print_string(bootloader, win2_x + 82, win2_y + 53, 0x0000);
         print_string("APM support:", win2_x + 10, win2_y + 68, 0x0000);
@@ -1985,7 +1996,18 @@ void render_win() {
             print_string("Disk for read and write not found!", win2_x + 66, win2_y + 83, 0x9000);
         }
         print_string("OS: maxOS v4.0 build 81625 (stable)", win2_x + 10, win2_y + 98, 0x0000);
-        pci_scan(win2_x + 10, win2_y + 113);
+        int up_m = uptime_sec / 60;
+        int up_s = uptime_sec % 60;
+        char up_m_str[10];
+        char up_s_str[10];
+        int_str(up_m, up_m_str);
+        int_str(up_s, up_s_str);
+        print_string("System uptime:", win2_x + 10, win2_y + 113, 0x0000);
+        print_string(up_m_str, win2_x + 100, win2_y + 113, 0x0000);
+        print_string("min,", win2_x + 124, win2_y + 113, 0x0000);
+        print_string(up_s_str, win2_x + 148, win2_y + 113, 0x0000);
+        print_string("sec", win2_x + 166, win2_y + 113, 0x0000);
+        pci_scan(win2_x + 10, win2_y + 128);
     }
     else if (notepad_opened == 1) {
         print_string("F1 to save and run, F2 to save and exit, F3 to preview file, Esc to exit without saving.", win2_x + 10, win2_y + 463, 0x0000);
@@ -2255,7 +2277,6 @@ void filew() {
     update_screen();
     print_string(ftext, 170, 200, text_col);
     while (1) {
-        update_screen();
         unsigned char status = inb(0x64);
         if (status & 0x01) {
             if (status & 0x20) {
@@ -2273,7 +2294,6 @@ void filew() {
                         textid++;
                         ftext[textid] = '\0';
                         symbols_counter++;
-                        draw_window();
                         render_win();
                         if (str_cmp(ftext, str)) {
                             if (str_in(ftext, "#app#")) {
@@ -2295,8 +2315,8 @@ void filew() {
                                 print_string("*Notepad: text file", 167, 182, 0xFFFF);
                             }
                         }
-                        update_screen();
                         print_string(ftext, 170, 200, text_col);
+                        update_screen();
                     }
                 }
                 else if (ascii_char == 'B') {
@@ -2315,7 +2335,6 @@ void filew() {
                             symbols_counter--;
                         }
                         ftext[textid] = '\0';
-                        draw_window();
                         render_win();
                         if (str_cmp(ftext, str)) {
                             if (str_in(ftext, "#app#")) {
@@ -2337,8 +2356,8 @@ void filew() {
                                 print_string("*Notepad: text file", 167, 182, 0xFFFF);
                             }
                         }
-                        update_screen();
                         print_string(ftext, 170, 200, text_col);
+                        update_screen();
                     }
                 }
                 if (shift_p == 1 && ascii_char != '00') {
@@ -2386,7 +2405,6 @@ void filew() {
                         if (ascii_char == 'b') { ftext[textid] = 'B'; textid++; ftext[textid] = '\0'; }
                         if (ascii_char == 'n') { ftext[textid] = 'N'; textid++; ftext[textid] = '\0'; }
                         if (ascii_char == 'm') { ftext[textid] = 'M'; textid++; ftext[textid] = '\0'; }
-                        draw_window();
                         render_win();
                         if (str_cmp(ftext, str)) {
                             if (str_in(ftext, "#app#")) {
@@ -2408,8 +2426,8 @@ void filew() {
                                 print_string("*Notepad: text file", 167, 182, 0xFFFF);
                             }
                         }
-                        update_screen();
                         print_string(ftext, 170, 200, text_col);
+                        update_screen();
                     }
                 }
                 else if (shift_p == 0 && enter_counter < 24 && ascii_char == '\E') {
@@ -2418,7 +2436,6 @@ void filew() {
                     ftext[textid] = '\0';
                     enter_counter++;
                     symbols_counter = 0;
-                    draw_window();
                     render_win();
                         if (str_cmp(ftext, str)) {
                             if (str_in(ftext, "#app#")) {
@@ -2440,8 +2457,8 @@ void filew() {
                                 print_string("*Notepad: text file", 167, 182, 0xFFFF);
                             }
                         }
-                        update_screen();
                         print_string(ftext, 170, 200, text_col);
+                        update_screen();
                 }
                 else if (ascii_char == 'F') {
                     if (createdFiles < 10 && disk_exists == 1) {
