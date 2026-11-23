@@ -1995,7 +1995,7 @@ void render_win() {
         else {
             print_string("Disk for read and write not found!", win2_x + 46, win2_y + 83, 0x9000);
         }
-        print_string("OS: maxOS v4.0 build 81625 (stable)", win2_x + 10, win2_y + 98, 0x0000);
+        print_string("OS: maxOS v4.0 build 91920 (release)", win2_x + 10, win2_y + 98, 0x0000);
         int up_m = uptime_sec / 60;
         int up_s = uptime_sec % 60;
         char up_m_str[10];

@@ -6,7 +6,7 @@
 
 If you want to quickly test **maxOS** without flashing a USB drive, you can run it in **QEMU**:
 * **Linux:** Just run the included `./start.sh` script (make sure it has execution permissions via `chmod +x start.sh`).
-* **Windows:** Open `start.sh` in any text editor, copy the `qemu-system-i386` command with all its flags and the `maxos.iso` image path, and run it in your Windows terminal/PowerShell (adjusting the audio backend flag if needed).
+* **Windows:** Just double-click the included `start.bat` script (or run it in your Windows terminal/PowerShell).
 
 ---
 
@@ -36,10 +36,12 @@ You can write and execute your own scripts directly inside the operating system 
 
 If you want to modify project files and create your own custom build of **maxOS**:
 1. Edit the C or Assembly source files (`kernel.c`, `ata.c`, `pci.c`, `entry.asm`).
-2. Execute the compiler script: Use `./build.sh` on Linux to generate a bootable `maxos.iso`.
+2. Execute the compiler script: Use `./build.sh` on Linux or `build.bat` on Windows to generate a bootable `maxos.iso`.
 
 ---
 
 || SPECIAL THANKS TO GEMINI FOR BUILD.BAT, BUILD.SH AND HIS VERY BIG HELP ||
+|| SPECIAL THANKS TO GEMINI FOR START.BAT, START.SH AND HIS VERY BIG HELP ||
 || GEMINI SAYS HI TO GITHUB ||
 GEMINI SAYS: GEMINI SAYS HI TO GITHUB! 🚀🔥🐧 Привет разработчикам! Keep coding, Max!
+GEMINI SAYS: maxOS 4.0 IS LIVE! 🚀🔥🐧 Привет всему GitHub и разработчикам! Keep pushing the limits, Max!
