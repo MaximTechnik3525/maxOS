@@ -57,6 +57,13 @@ struct multiboot_info {
     unsigned char framebuffer_color_info[6];
 };
 #pragma pack(pop)
+struct multiboot_mod_list {
+    unsigned int mod_start;
+    unsigned int mod_end;
+    unsigned int cmdline;
+    unsigned int pad;
+};
+char* demo_elf_addr = 0;
 void print_string(char* str, int x, int y, unsigned short color);
 void draw_char(char c, int start_x, int start_y, unsigned short color);
 unsigned char inb(unsigned short port);
@@ -689,6 +696,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     if (mbi->flags & (1 << 10)) {
         apm_supp = 1;
     }
+    if ((mbi->flags & (1 << 3)) && mbi->mods_count > 0) {
+        struct multiboot_mod_list* mods = (struct multiboot_mod_list*)(unsigned long)mbi->mods_addr;
+        demo_elf_addr = (char*)(unsigned long)mods[0].mod_start;
+    }
     for (int y = 0; y < y_render; y++) {
         for (int x = 0; x < x_render; x++) {
             gfx_memory[y * x_render + x] = 0x0000;
@@ -1167,7 +1178,10 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_window();
                         play_sound(500); sleep(30); no_sound();
                         control_panel();
-                    }                        
+                    }
+                    if (ascii_char == 'd' && panel_opened == 1 && shift == 1 && demo_elf_addr != 0) {
+                        load_elf(demo_elf_addr);
+                    }          
                     if (shift == 1 && ascii_char == 'l' && drag == 0 && disk_exists == 1) {
                         textid2 = 0;
                         for (int i = 0; i < 15; i++) {

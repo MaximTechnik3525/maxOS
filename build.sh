@@ -10,17 +10,20 @@ gcc -m32 -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -Wall -Wextra
 # Компилируем драйвер жесткого диска ATA
 gcc -m32 -c ata.c -o ata.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-# === ИСПРАВЛЕНО 1: Добавили компиляцию нашего нового PCI-драйвера! ===
+# Компилируем PCI-драйвер
 gcc -m32 -c pci.c -o pci.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-echo "=== [2/3] Линковка бинарного файла ядра ==="
-# === ИСПРАВЛЕНО 2: Добавили pci.o в цепочку линковщика ld ===
+echo "=== [2/3] Линковка ядра и сборка внешних ELF-приложений ==="
 ld -m elf_i386 --no-warn-rwx-segments -T linker.ld entry.o kernel.o ata.o pci.o -o mykernel.bin
+
+gcc -m32 -c demo.c -o demo_game.o -std=gnu99 -ffreestanding -O2
+ld -m elf_i386 --no-warn-rwx-segments -T app.ld demo_game.o -o demo.elf
 
 echo "=== [3/3] Создание структуры и генерация загрузочного диска ==="
 mkdir -p iso/boot/grub
 
 cp mykernel.bin iso/boot/
+cp demo.elf iso/boot/
 
 cat << 'EOF' > iso/boot/grub/grub.cfg
 font=video
@@ -48,6 +51,7 @@ set gfxpayload=keep
 menuentry "maxOS" {
     search --no-floppy --set=root --file /boot/mykernel.bin
     multiboot /boot/mykernel.bin
+    module /boot/demo.elf
     boot
 }
 EOF
