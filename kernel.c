@@ -1,3 +1,4 @@
+#include "maxos_api.h"
 #pragma pack(push, 1)
 typedef struct {
     unsigned char e_ident[16];
@@ -1554,7 +1555,9 @@ int was_screen = 0;
 int load_elf(char* file_buffer) {
     Elf32_Ehdr* ehdr = (Elf32_Ehdr*)file_buffer;
     if (ehdr->e_ident[0] != 0x7F || ehdr->e_ident[1] != 'E' ||
-    ehdr->e_ident[2] != 'L' || ehdr->e_ident[3] != 'F') { return 0; }
+        ehdr->e_ident[2] != 'L' || ehdr->e_ident[3] != 'F') {
+            return 0;
+    }
     if (ehdr->e_type != 2 || ehdr->e_machine != 3) { return -1; }
     Elf32_Phdr* phdr = (Elf32_Phdr*)((unsigned int)file_buffer + ehdr->e_phoff);
     for (int i = 0; i < ehdr->e_phnum; i++) {
@@ -1569,8 +1572,21 @@ int load_elf(char* file_buffer) {
             }
         }
     }
-    void (*entry_point)() = (void (*)())(ehdr->e_entry);
-    entry_point();
+    maxos_api_t api;
+    api.back_buffer = back_buffer;
+    api.screen_w = x_render;
+    api.screen_h = y_render;
+    api.update_screen = update_screen;
+    api.print_string = print_string;
+    api.sleep = sleep;
+    api.play_sound = play_sound;
+    api.no_sound = no_sound;
+    api.inb = inb;
+    api.outb = outb;
+    void (*entry_point)(maxos_api_t*) = (void (*)(maxos_api_t*))(ehdr->e_entry);
+    entry_point(&api);
+    draw_window();
+    update_screen();
     return 1;
 }
 void execute_commands(char* str) {
