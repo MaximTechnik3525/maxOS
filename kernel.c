@@ -2086,6 +2086,7 @@ void render_win() {
         print_string("Cursor trail (shift + 5/6):", win2_x + 10, win2_y + 68, 0x0000);
         if (tail == 1) { print_string("On", win2_x + 179, win2_y + 68, 0x0320); }
         if (tail == 0) { print_string("Off", win2_x + 179, win2_y + 68, 0x9000); }
+        print_string("Press shift + D to open ELF demo app.", win2_x + 10, win2_y + 98, 0x0000);
     }
     else if (open1 == 1) {
         print_string("Text file", win2_x + 8, win2_y + 6, 0x0000);

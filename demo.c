@@ -17,8 +17,8 @@ void _start(maxos_api_t* api) {
             }
         }
 
-        api->print_string("EXTERNAL ELF APP RUNNING IN MAXOS!", 20, 20, 0x07FF);
-        api->print_string("Use [W A S D] to move, [ESC] to return to maxOS Desktop", 20, 40, 0xFFFF);
+        api->print_string("EXTERNAL DEMO ELF APP FOR MAXOS.", 20, 20, 0x07FF);
+        api->print_string("Use [W, A, S, D] to move square, [ESC] to exit to desktop.", 20, 40, 0xFFFF);
 
         for (int y = py; y < py + size; y++) {
             for (int x = px; x < px + size; x++) {
