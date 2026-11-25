@@ -11,5 +11,7 @@ typedef struct {
     void (*no_sound)();
     unsigned char (*inb)(unsigned short port);
     void (*outb)(unsigned short port, unsigned char data);
+    unsigned char* wad_addr;
+    unsigned int wad_size;
 } maxos_api_t;
 #endif

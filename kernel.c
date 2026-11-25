@@ -64,6 +64,9 @@ struct multiboot_mod_list {
     unsigned int pad;
 };
 char* demo_elf_addr = 0;
+char* doom_elf_addr = 0;
+unsigned char* doom_wad_addr = 0;
+unsigned int doom_wad_size = 0;
 void print_string(char* str, int x, int y, unsigned short color);
 void draw_char(char c, int start_x, int start_y, unsigned short color);
 unsigned char inb(unsigned short port);
@@ -88,6 +91,7 @@ void draw_effectbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, i
 void draw_tdbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_netbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void draw_synthbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
+void draw_doombtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y);
 void get_cpu(char* buffer);
 void draw_window();
 void wait_mouse(unsigned char type);
@@ -375,6 +379,20 @@ unsigned char clear_icon[12][12] = {
     {0,3,3,3,3,3,3,3,3,3,3,0},
     {0,3,3,3,3,3,3,3,3,3,3,0},
     {0,0,0,0,0,0,0,0,0,0,0,0},
+};
+unsigned char doom_icon[12][12] = {
+    {0,0,0,1,1,1,1,1,1,0,0,0},
+    {0,0,1,2,2,2,2,2,2,1,0,0},
+    {0,1,2,2,1,1,1,1,2,2,1,0},
+    {1,2,2,1,3,3,3,3,1,2,2,1},
+    {1,2,1,3,3,4,4,3,3,1,2,1},
+    {1,2,1,3,4,4,4,4,3,1,2,1},
+    {1,2,1,3,3,4,4,3,3,1,2,1},
+    {1,2,2,1,3,3,3,3,1,2,2,1},
+    {0,1,2,2,1,1,1,1,2,2,1,0},
+    {0,0,1,2,2,2,2,2,2,1,0,0},
+    {0,0,0,1,1,1,1,1,1,0,0,0},
+    {0,0,0,0,0,0,0,0,0,0,0,0}
 };
 // const unsigned char max_font[] = {
 //     0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00, // 32 (пробел)
@@ -698,7 +716,12 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
     }
     if ((mbi->flags & (1 << 3)) && mbi->mods_count > 0) {
         struct multiboot_mod_list* mods = (struct multiboot_mod_list*)(unsigned long)mbi->mods_addr;
-        demo_elf_addr = (char*)(unsigned long)mods[0].mod_start;
+        if (mbi->mods_count >= 1) { demo_elf_addr = (char*)(unsigned long)mods[0].mod_start; }
+        if (mbi->mods_count >= 2) { doom_elf_addr = (char*)(unsigned long)mods[1].mod_start; }
+        if (mbi->mods_count >= 3) {
+            doom_wad_addr = (unsigned char*)(unsigned long)mods[2].mod_start;
+            doom_wad_size = mods[2].mod_end - mods[2].mod_start;
+        }
     }
     for (int y = 0; y < y_render; y++) {
         for (int x = 0; x < x_render; x++) {
@@ -1015,6 +1038,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             draw_window();
                             synth_app();
                         }
+                        if (pos_x >= 0 && pos_x <= 250 && pos_y > 620 && pos_y <= 640 && menuOpened == 1 && doom_elf_addr != 0)  {
+                            menuOpened = 0;
+                            draw_window();
+                            load_elf(doom_elf_addr);
+                        }
                     }
                 }   
             }
@@ -1179,9 +1207,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         play_sound(500); sleep(30); no_sound();
                         control_panel();
                     }
-                    if (ascii_char == 'd' && panel_opened == 1 && shift == 1 && demo_elf_addr != 0) {
+                    if (ascii_char == 'm' && panel_opened == 1 && shift == 1 && demo_elf_addr != 0) {
                         load_elf(demo_elf_addr);
-                    }          
+                    }
                     if (shift == 1 && ascii_char == 'l' && drag == 0 && disk_exists == 1) {
                         textid2 = 0;
                         for (int i = 0; i < 15; i++) {
@@ -1279,6 +1307,11 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                             menuOpened = 0;
                             draw_window();
                             synth_app();
+                        }
+                        if (pos_x >= 0 && pos_x <= 250 && pos_y > 620 && pos_y <= 640 && menuOpened == 1 && doom_elf_addr != 0)  {
+                            menuOpened = 0;
+                            draw_window();
+                            load_elf(doom_elf_addr);
                         }
                     }
                     if (ascii_char == '1' && synth_opened == 1) {
@@ -1597,6 +1630,8 @@ int load_elf(char* file_buffer) {
     api.no_sound = no_sound;
     api.inb = inb;
     api.outb = outb;
+    api.wad_addr = doom_wad_addr;
+    api.wad_size = doom_wad_size;
     void (*entry_point)(maxos_api_t*) = (void (*)(maxos_api_t*))(ehdr->e_entry);
     entry_point(&api);
     draw_window();
@@ -2025,7 +2060,7 @@ void render_win() {
         else {
             print_string("Disk for read and write not found!", win2_x + 46, win2_y + 83, 0x9000);
         }
-        print_string("OS: maxOS v4.0 build 91920 (release)", win2_x + 10, win2_y + 98, 0x0000);
+        print_string("OS: maxOS v4.1 build 101909 (stable)", win2_x + 10, win2_y + 98, 0x0000);
         int up_m = uptime_sec / 60;
         int up_s = uptime_sec % 60;
         char up_m_str[10];
@@ -2086,7 +2121,7 @@ void render_win() {
         print_string("Cursor trail (shift + 5/6):", win2_x + 10, win2_y + 68, 0x0000);
         if (tail == 1) { print_string("On", win2_x + 179, win2_y + 68, 0x0320); }
         if (tail == 0) { print_string("Off", win2_x + 179, win2_y + 68, 0x9000); }
-        print_string("Press shift + D to open ELF demo app.", win2_x + 10, win2_y + 98, 0x0000);
+        print_string("Press shift + M to open ELF demo app.", win2_x + 10, win2_y + 98, 0x0000);
     }
     else if (open1 == 1) {
         print_string("Text file", win2_x + 8, win2_y + 6, 0x0000);
@@ -3436,6 +3471,23 @@ void draw_synthbtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, in
     print_string("Synthesizer", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
     print_string("Synthesizer", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
 }
+void draw_doombtn(int btn2_x, int btn2_y, int btn2_w, int btn2_h, int btn_x, int btn_y, int btn_w, int btn_h, int txt_pos_x, int txt_pos_y) {
+    for (int y = 0; y < 12; y++) {
+        for (int x = 0; x < 12; x++) {
+            int screen_x = 4 + x;
+            int screen_y = 626 + y;
+            if (screen_x < x_render && screen_y < y_render && screen_x >= 0 && screen_y >= 0) {
+                unsigned char pixel_type2 = doom_icon[y][x];
+                if (pixel_type2 == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x5000; }
+                else if (pixel_type2 == 2) { gfx_memory[screen_y * x_render + screen_x] = 0xC800; }
+                else if (pixel_type2 == 3) { gfx_memory[screen_y * x_render + screen_x] = 0xF800; }
+                else if (pixel_type2 == 4) { gfx_memory[screen_y * x_render + screen_x] = 0xFFE0; }
+            }
+        }
+    }
+    print_string("DOOM (Shareware)", txt_pos_x - 4, txt_pos_y + 16, 0x0000);
+    print_string("DOOM (Shareware)", txt_pos_x - 5, txt_pos_y + 15, 0xFFFF);
+}
 void synth_app() {
     drag = 1;
     synth_opened = 1;
@@ -3742,17 +3794,18 @@ void draw_menu() {
     draw_tdbtn(15, 550, 42, 12, 15, 550, 40, 10, 25, 552);
     draw_netbtn(15, 570, 42, 12, 15, 570, 40, 10, 25, 572);
     draw_synthbtn(15, 590, 42, 12, 15, 590, 40, 10, 25, 592);
+    draw_doombtn(15, 610, 42, 12, 15, 610, 40, 10, 25, 612);
     if (theme == 3) {
-        print_string("maxOS 4.0 Abrikos", 114, 361, 0x0000);
-        print_string("maxOS 4.0 Abrikos", 113, 360, 0xFFFF);
+        print_string("maxOS 4.1 Abrikos", 114, 361, 0x0000);
+        print_string("maxOS 4.1 Abrikos", 113, 360, 0xFFFF);
     }
     else if (theme == 4) {
-        print_string("maxOS 4.0 Tora", 124, 361, 0x0000);
-        print_string("maxOS 4.0 Tora", 123, 360, 0xFFFF);
+        print_string("maxOS 4.1 Tora", 124, 361, 0x0000);
+        print_string("maxOS 4.1 Tora", 123, 360, 0xFFFF);
     }
     else {
-        print_string("maxOS 4.0", 139, 361, 0x0000);
-        print_string("maxOS 4.0", 138, 360, 0xFFFF);
+        print_string("maxOS 4.1", 139, 361, 0x0000);
+        print_string("maxOS 4.1", 138, 360, 0xFFFF);
     }
 }
 

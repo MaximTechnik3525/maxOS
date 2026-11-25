@@ -1,29 +1,35 @@
 #!/bin/bash
 set -e
 
-echo "=== [1/3] Компиляция исходного кода maxOS ==="
+echo "=== [1/4] Компиляция исходного кода maxOS ==="
 nasm -f elf32 entry.asm -o entry.o
-
-# Компилируем главное ядро
 gcc -m32 -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -Wall -Wextra
-
-# Компилируем драйвер жесткого диска ATA
 gcc -m32 -c ata.c -o ata.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
-
-# Компилируем PCI-драйвер
 gcc -m32 -c pci.c -o pci.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
 
-echo "=== [2/3] Линковка ядра и сборка внешних ELF-приложений ==="
+echo "=== [2/4] Линковка ядра и demo.elf ==="
 ld -m elf_i386 --no-warn-rwx-segments -T linker.ld entry.o kernel.o ata.o pci.o -o mykernel.bin
-
 gcc -m32 -c demo.c -o demo_game.o -std=gnu99 -ffreestanding -O2
 ld -m elf_i386 --no-warn-rwx-segments -T app.ld demo_game.o -o demo.elf
 
-echo "=== [3/3] Создание структуры и генерация загрузочного диска ==="
+echo "=== [3/4] Компиляция порта DOOM (doom.elf) ==="
+rm -f doom/i_main.c doom/w_file_posix.c doom/w_file_win32.c doom/i_allegromusic.c doom/i_allegrosound.c doom/i_sdlmusic.c doom/i_sdlsound.c
+rm -rf doom_obj
+mkdir -p doom_obj
+for f in doom/*.c; do
+    base=$(basename "$f" .c)
+    gcc -m32 -c "$f" -o "doom_obj/${base}.o" -std=gnu99 -ffreestanding -fno-builtin -U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0 -O2 -Idoom
+done
+LIBGCC=$(gcc -m32 -print-libgcc-file-name)
+ld -m elf_i386 --no-warn-rwx-segments -T app.ld doom_obj/*.o "$LIBGCC" -o doom.elf
+
+echo "=== [4/4] Создание структуры и генерация загрузочного диска ==="
 mkdir -p iso/boot/grub
 
 cp mykernel.bin iso/boot/
 cp demo.elf iso/boot/
+cp doom.elf iso/boot/
+cp doom1.WAD iso/boot/doom1.wad
 
 cat << 'EOF' > iso/boot/grub/grub.cfg
 font=video
@@ -52,6 +58,8 @@ menuentry "maxOS" {
     search --no-floppy --set=root --file /boot/mykernel.bin
     multiboot /boot/mykernel.bin
     module /boot/demo.elf
+    module /boot/doom.elf
+    module /boot/doom1.wad
     boot
 }
 EOF
@@ -60,7 +68,7 @@ grub-mkrescue -o maxos.iso iso
 
 echo "============================================="
 echo " Сборка завершена успешно!"
-echo " maxOS запускается в QEMU!"
+echo " maxOS + DOOM запускаются в QEMU!"
 echo "============================================="
 
 qemu-system-i386 -hda maxos.iso -m 256M -vga std -machine pc,acpi=off,pcspk-audiodev=snd0 -device sb16,audiodev=snd0 -audiodev alsa,id=snd0 -netdev user,id=net0 -device rtl8139,netdev=net0
