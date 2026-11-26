@@ -694,6 +694,14 @@ unsigned short get_bg_color(int y) {
     if (theme == 18) { return rgb565(10 + (y / 35), 1 + (y / 18), 2); }
     if (theme == 19) { return rgb565(0, 1 + (y / 22), 3 + (y / 32)); }
     if (theme == 20) { return rgb565(0 + (y / 34), 38 - (y / 22), 18 + (y / 60)); }
+    if (theme == 21) {
+        if (y < 450) {
+            return rgb565(3 + (y / 30), 0, 0);
+        }
+        else {
+            return rgb565(18 + ((y - 450) / 22), (y - 450) / 28, 0);
+        }
+    }
     return 0x10A2;
 }
 void kmain(unsigned long multiboot_info_address, unsigned long magic) {
@@ -1193,7 +1201,7 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                         draw_window();
                         play_sound(150); sleep(70); no_sound(); sleep(50); play_sound(100); sleep (70); no_sound();
                     }
-                    if (ascii_char == '=' && panel_opened == 1 && shift == 1 && is_moving == 0 && theme < 20) {
+                    if (ascii_char == '=' && panel_opened == 1 && shift == 1 && is_moving == 0 && theme < 21) {
                         theme++;
                         pos_y = 708; pos_x = 12;
                         draw_window();
@@ -3582,7 +3590,10 @@ void draw_cursor(int mouse_x, int mouse_y) {
                     if (pixel_type == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x2088; }
                     if (pixel_type == 2) { gfx_memory[screen_y * x_render + screen_x] = 0x7FFF; }
                 }
-
+                if (theme == 21) {
+                    if (pixel_type == 1) { gfx_memory[screen_y * x_render + screen_x] = 0x4000; }
+                    if (pixel_type == 2) { gfx_memory[screen_y * x_render + screen_x] = 0xFA20; }
+                }
             }
         }
     }
@@ -3803,6 +3814,10 @@ void draw_menu() {
         print_string("maxOS 4.1 Tora", 124, 361, 0x0000);
         print_string("maxOS 4.1 Tora", 123, 360, 0xFFFF);
     }
+    else if (theme == 21) {
+        print_string("maxOS 4.1 DOOM: Rip & Tear!", 91, 361, 0x0000);
+        print_string("maxOS 4.1 DOOM: Rip & Tear!", 90, 360, 0xFFFF);
+    }
     else {
         print_string("maxOS 4.1", 139, 361, 0x0000);
         print_string("maxOS 4.1", 138, 360, 0xFFFF);
@@ -3904,6 +3919,14 @@ void draw_window() {
             if (theme == 18) { row_color = rgb565(10 + (y / 35), 1 + (y / 18), 2); }
             if (theme == 19) { row_color = rgb565(0, 1 + (y / 22), 3 + (y / 32)); }
             if (theme == 20) { row_color = rgb565(0 + (y / 34), 38 - (y / 22), 18 + (y / 60)); }
+            if (theme == 21) {
+            if (y < 450) {
+                row_color = rgb565(3 + (y / 30), 0, 0);
+            }
+            else {
+                row_color = rgb565(18 + ((y - 450) / 22), (y - 450) / 28, 0);
+            }
+        }
             gfx_memory[row_offset + x] = row_color;
         }
     }
