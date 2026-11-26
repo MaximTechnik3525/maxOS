@@ -54,6 +54,7 @@ char *snd_musiccmd = "";
 
 // Low-level sound and music modules we are using
 
+extern sound_module_t maxos_pcspeaker_module;
 static sound_module_t *sound_module = NULL;
 static music_module_t *music_module = NULL;
 
@@ -73,6 +74,7 @@ static int snd_mport = 0;
 
 static sound_module_t *sound_modules[] = 
 {
+    &maxos_pcspeaker_module,
     #ifdef FEATURE_SOUND
     &DG_sound_module,
     #endif

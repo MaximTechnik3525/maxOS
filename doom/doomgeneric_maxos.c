@@ -3,9 +3,59 @@
 #include "doomkeys.h"
 #include <stddef.h>
 #include <stdarg.h>
+#include "i_sound.h"
+#include "w_wad.h"
 static maxos_api_t* sys_api;
 static unsigned int ticks_ms = 0;
 static int doom_running = 1;
+static snddevice_t maxos_devs[] = { SNDDEVICE_SB, SNDDEVICE_PCSPEAKER };
+static boolean I_MaxOS_Init(boolean p) { (void)p; return true; }
+static void I_MaxOS_Shut(void) { if (sys_api) sys_api->no_sound(); }
+static int I_MaxOS_Lump(sfxinfo_t *sfx) {
+    char name[16];
+    extern int snprintf(char* s, size_t n, const char* f, ...);
+    snprintf(name, 16, "dp%s", sfx->name);
+    return W_CheckNumForName(name);
+}
+static void I_MaxOS_Upd(void) {}
+static void I_MaxOS_Par(int c, int v, int s) { (void)c, (void)v, (void)s; }
+static boolean I_MaxOS_Play(int c) { (void)c; return false; }
+static int I_MaxOS_Start(sfxinfo_t *sfx, int ch, int vol, int sep) {
+    (void)vol; (void)sep;
+    if (!sys_api || !sfx || sfx->lumpnum < 0) {
+        return -1;
+    }
+    int len = W_LumpLength(sfx->lumpnum);
+    const unsigned char* d = (const unsigned char*)W_CacheLumpNum(sfx->lumpnum, 1);
+    if (!d || len <= 8) return -1;
+    if (d[0] == 0 && d[1] == 0) {
+        int count = d[2] | (d[3] << 8);
+        if (count > len - 4) count = len - 4;
+        int step = (count > 12) ? (count / 12) : 1;
+        for (int i = 0; i < count; i += step) {
+            unsigned char t = d[4 + i];
+            if (t == 0) sys_api->no_sound();
+            else sys_api->play_sound(140 + t * 32);
+            sys_api->sleep(2);
+        }
+    } else if (d[0] == 3 && d[1] == 0) {
+        int count = len - 8;
+        int step = (count > 14) ? (count / 14) : 1;
+        for (int i = 0; i < count; i += step) {
+            int amp = (int)d[8 + i] - 128;
+            if (amp < 0) amp = -amp;
+            if (amp < 6) sys_api->no_sound();
+            else sys_api->play_sound(120 + amp * 16);
+            sys_api->sleep(2);
+        }
+    }
+    sys_api->no_sound();
+    return ch;
+}
+sound_module_t maxos_pcspeaker_module = {
+    maxos_devs, 2, I_MaxOS_Init, I_MaxOS_Shut, I_MaxOS_Lump,
+    I_MaxOS_Upd, I_MaxOS_Par, I_MaxOS_Start, I_MaxOS_Upd, I_MaxOS_Play, NULL
+};
 void DG_Init() {
     ticks_ms = 0;
     doom_running = 1;
@@ -55,6 +105,14 @@ static unsigned char scancode_to_doom(unsigned char sc) {
         case 0x0F: return KEY_TAB;
         case 0x15: return 'y';
         case 0x31: return 'n';
+        case 0x02: return '1';
+        case 0x03: return '2';
+        case 0x04: return '3';
+        case 0x05: return '4';
+        case 0x06: return '5';
+        case 0x07: return '6';
+        case 0x08: return '7';
+
         default: return 0;
     }
 }
@@ -74,26 +132,6 @@ int DG_GetKey(int* pressed, unsigned char* doomKey) {
         unsigned char clean_sc = sc & 0x7F;
         unsigned char dk = scancode_to_doom(clean_sc);
         if (dk != 0) {
-            if (is_pressed == 1) {
-                if (dk == KEY_FIRE) {
-                    sys_api->play_sound(950); sys_api->sleep(4);
-                    sys_api->play_sound(320); sys_api->sleep(6);
-                    unsigned int noise = 0xACE1;
-                    for (int i = 0; i < 18; i++) {
-                        noise = noise * 1103515245 + 12345;
-                        unsigned int base_freq = 450 - (i * 18);
-                        unsigned int freq = base_freq + ((noise >> 16) % (2600 - i * 110));
-                        sys_api->play_sound(freq);
-                        sys_api->sleep(2);
-                    }
-                    sys_api->no_sound();
-                }
-                else if (dk == KEY_USE) {
-                    sys_api->play_sound(480); sys_api->sleep(8);
-                    sys_api->play_sound(820); sys_api->sleep(12);
-                    sys_api->no_sound();
-                }
-            }
             *pressed = is_pressed;
             *doomKey = dk;
             return 1;
@@ -136,7 +174,7 @@ typedef struct {
     int in_use;
 } MEM_FILE;
 static MEM_FILE wad_file;
-void* fopen(const char* filename, const char* mode) {
+FILE* fopen(const char* filename, const char* mode) {
     (void)mode;
     if (!sys_api || !sys_api->wad_addr) {
         return NULL;
@@ -155,16 +193,18 @@ void* fopen(const char* filename, const char* mode) {
     wad_file.size = sys_api->wad_size;
     wad_file.pos = 0;
     wad_file.in_use = 1;
-    return &wad_file;
+    return (FILE*)&wad_file;
 }
-int fclose(void* stream) {
-    if (stream == &wad_file) {
+
+int fclose(FILE* stream) {
+    if (stream == (FILE*)&wad_file) {
         wad_file.in_use = 0;
     }
     return 0;
 }
-size_t fread(void* ptr, size_t size, size_t nmemb, void* stream) {
-    if (stream != &wad_file || !wad_file.in_use) {
+
+size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream) {
+    if (stream != (FILE*)&wad_file || !wad_file.in_use) {
         return 0;
     }
     size_t total = size * nmemb;
@@ -178,12 +218,14 @@ size_t fread(void* ptr, size_t size, size_t nmemb, void* stream) {
     wad_file.pos += total;
     return total / size;
 }
-size_t fwrite(const void* ptr, size_t size, size_t nmemb, void* stream) {
+
+size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream) {
     (void)ptr; (void)size; (void)nmemb; (void)stream;
     return 0;
 }
-int fseek(void* stream, long offset, int whence) {
-    if (stream != &wad_file || !wad_file.in_use) {
+
+int fseek(FILE* stream, long offset, int whence) {
+    if (stream != (FILE*)&wad_file || !wad_file.in_use) {
         return -1;
     }
     long new_pos = 0;
@@ -205,13 +247,15 @@ int fseek(void* stream, long offset, int whence) {
     wad_file.pos = (unsigned int)new_pos;
     return 0;
 }
-long ftell(void* stream) {
-    if (stream != &wad_file || !wad_file.in_use) {
+
+long ftell(FILE* stream) {
+    if (stream != (FILE*)&wad_file || !wad_file.in_use) {
         return -1;
     }
     return (long)wad_file.pos;
 }
-int fflush(void* stream) { (void)stream; return 0; }
+
+int fflush(FILE* stream) { (void)stream; return 0; }
 int remove(const char* path) { (void)path; return 0; }
 int rename(const char* oldp, const char* newp) { (void)oldp; (void)newp; return 0; }
 int mkdir(const char* path, unsigned int mode) { (void)path; (void)mode; return 0; }
@@ -220,7 +264,8 @@ int puts(const char* s) { (void)s; return 0; }
 int putchar(int c) { return c; }
 void exit(int status) { (void)status; doom_running = 0; while (1); }
 static int err_y = 80;
-int fprintf(void* stream, const char* fmt, ...) {
+
+int fprintf(FILE* stream, const char* fmt, ...) {
     (void)stream;
     if (sys_api && fmt) {
         sys_api->print_string((char*)fmt, 20, err_y, 0xF800);
@@ -229,8 +274,9 @@ int fprintf(void* stream, const char* fmt, ...) {
     }
     return 0;
 }
+
 extern int vsnprintf(char* str, size_t size, const char* format, va_list ap);
-int vfprintf(void* stream, const char* fmt, va_list ap) {
+int vfprintf(FILE* stream, const char* fmt, va_list ap) {
     (void)stream;
     if (sys_api && fmt) {
         char buf[256];
@@ -241,16 +287,12 @@ int vfprintf(void* stream, const char* fmt, va_list ap) {
     }
     return 0;
 }
+
 void _start(maxos_api_t* api) {
     sys_api = api;
     heap_ptr = (unsigned char*)0x4000000;
-    // for (int y = 0; y < api->screen_h; y++) {
-    //     for (int x = 0; x < api->screen_w; x++) {
-    //         api->back_buffer[y * api->screen_w + x] = 0x0000;
-    //     }
-    // }
     api->print_string("Loading DOOM (Shareware)...", 20, 20, 0xF800);
-    api->print_string("Controls: WASD/ARROWS - move, CTRL - fire, SPACE - use, F12 - exit to maxOS.", 20, 40, 0xFFFF);
+    api->print_string("Controls: [WASD/ARROWS] - Move, [CTRL] - Fire, [SPACE] - Use, [1-7] - Change weapon, [F12] - Exit to maxOS.", 20, 40, 0xFFFF);
     api->update_screen();
         char dbg[64];
     extern int snprintf(char* str, size_t size, const char* format, ...);
@@ -262,8 +304,8 @@ void _start(maxos_api_t* api) {
         api->print_string("ERROR: WAD NOT LOADED BY GRUB!", 20, 60, 0xF800);
     }
     api->update_screen();
-    char* argv[] = {"doom", "-iwad", "doom1.wad"};
-    doomgeneric_Create(3, argv);
+    char* argv[] = {"doom", "-iwad", "doom1.wad", "-sfxvolume", "15"};
+    doomgeneric_Create(5, argv);
     while (doom_running) {
         doomgeneric_Tick();
     }
