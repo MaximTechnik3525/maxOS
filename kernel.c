@@ -65,6 +65,7 @@ struct multiboot_mod_list {
 };
 char* demo_elf_addr = 0;
 char* doom_elf_addr = 0;
+char* game_elf_addr = 0;
 unsigned char* doom_wad_addr = 0;
 unsigned int doom_wad_size = 0;
 void print_string(char* str, int x, int y, unsigned short color);
@@ -730,6 +731,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
             doom_wad_addr = (unsigned char*)(unsigned long)mods[2].mod_start;
             doom_wad_size = mods[2].mod_end - mods[2].mod_start;
         }
+        if (mbi->mods_count >= 4) {
+            game_elf_addr = (char*)(unsigned long)mods[3].mod_start;
+        }
     }
     for (int y = 0; y < y_render; y++) {
         for (int x = 0; x < x_render; x++) {
@@ -1217,6 +1221,9 @@ void kmain(unsigned long multiboot_info_address, unsigned long magic) {
                     }
                     if (ascii_char == 'm' && panel_opened == 1 && shift == 1 && demo_elf_addr != 0) {
                         load_elf(demo_elf_addr);
+                    }
+                    if (ascii_char == 'n' && panel_opened == 1 && shift == 1 && game_elf_addr != 0) {
+                        load_elf(game_elf_addr);
                     }
                     if (shift == 1 && ascii_char == 'l' && drag == 0 && disk_exists == 1) {
                         textid2 = 0;
